@@ -1,0 +1,75 @@
+import torch
+
+from .conditioning_block import ConditioningBlock
+from .modulate import Modulate
+from .attention import MultiHeadSelfAttention
+
+class AdaLNZeroBlock(ConditioningBlock):
+    def __init__(self, embed_dim:int, conditioning_dim:int, hidden_size:int, 
+                 n_head:int):
+        super().__init__(embed_dim, conditioning_dim)
+
+        self.conditioning_mlp = torch.nn.Sequential(torch.nn.SiLU(),
+                                                    torch.nn.Linear(conditioning_dim, 6*conditioning_dim, bias=True))
+
+        self.layer_norm1 = torch.nn.LayerNorm(embed_dim)
+        self.modulate1 = Modulate()
+        self.attention = MultiHeadSelfAttention(embed_dim, n_head, True)
+        self.modulate2 = Modulate()
+
+        self.layer_norm2 = torch.nn.LayerNorm(embed_dim)
+        self.modulate3 = Modulate()
+        self.linear1 = torch.nn.Linear(embed_dim, hidden_size)
+        self.act = torch.nn.GELU(approximate="tanh")
+        self.linear2 = torch.nn.Linear(hidden_size, embed_dim)
+        self.modulate4 = Modulate()
+
+    def forward(self, x:torch.Tensor, conditioning:torch.Tensor,
+                conditioning_mask:torch.Tensor|None=None) -> torch.Tensor:
+        
+        context_size = x.shape[1]
+
+        if conditioning_mask is None:
+            conditioning_mask = torch.ones(context_size, dtype=bool)
+
+        #Conditioning MLP
+        gamma1, beta1, alpha1, gamma2, beta2, alpha2 = self.conditioning_mlp(conditioning).chunk(6, dim=2)
+
+        gamma1 : torch.Tensor = gamma1.clone()
+        beta1 : torch.Tensor = beta1.clone()
+        alpha1 : torch.Tensor = alpha1.clone()
+        gamma2 : torch.Tensor = gamma2.clone()
+        beta2 : torch.Tensor = beta2.clone()
+        alpha2 : torch.Tensor = alpha2.clone()
+
+        #scale -> gamma, alpha 
+        #shift -> beta
+        for scale in [gamma1, gamma2, alpha1, alpha2]:
+            scale[torch.bitwise_not(conditioning_mask)] = 0.0
+
+        for shift in [beta1, beta2]:
+            shift[torch.bitwise_not(conditioning_mask)] = 0.0
+
+        #First part (before first +)
+        y1 = self.layer_norm1(x)
+        y1 = self.modulate1(y1, shift=gamma1, scale=beta1)
+        y1 = self.attention(y1)
+        y1 = self.modulate2(y1, scale=alpha1)
+
+        #First +
+        y1 = y1+x
+
+        #Second part
+        y2 = self.layer_norm2(y1)
+        y2 = self.modulate3(y2, scale=gamma2, shift=beta2)
+        
+        y2 = self.linear1(y2)
+        y2 = self.act(y2)
+        y2 = self.linear2(y2)
+
+        y2 = self.modulate4(y2, scale=alpha2) 
+
+        #Second +
+        y2 = y2+y1
+
+        return y2

@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=61.2", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "world_machine"
+authors = [{name = "Elton Cardoso do Nascimento", email = "e233840@dac.unicamp.br"}]
+description = ""
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Intended Audience :: Science/Research",
+]
+requires-python = ">= 3.10"
+dynamic = ["version"]
+dependencies = [
+    "torch",
+    "tensordict",
+
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.urls]
+#Homepage = "https://hiaac.unicamp.br"
+"Bug Tracker" = "https://github.com/EltonCN/WorldMachine/issues"
+# Documentation =
+
+[project.optional-dependencies]
+
+
+[tool.setuptools]
+include-package-data = true
+package-dir = {"" = "src/world_machine"}
+license-files = ["LICENSE"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools_scm]
