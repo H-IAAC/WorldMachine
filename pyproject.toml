@@ -35,7 +35,7 @@ content-type = "text/markdown"
 
 [tool.setuptools]
 include-package-data = true
-package-dir = {"" = "src/world_machine"}
+package-dir = {"" = "src"}
 license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]

@@ -61,13 +61,12 @@ class WorldMachineBuilder:
             self._blocks.append(BlockContainer(
                 block, sensorial_dimension=sensorial_dimension))
 
-    def create_model(self) -> WorldMachine:
-        wm = WorldMachine(self._state_size, self._max_context_size)
+    def build(self) -> WorldMachine:
+        wm = WorldMachine(self._state_size, self._max_context_size,
+                          torch.nn.ModuleList(self._blocks),
+                          torch.nn.ModuleDict(self._sensorial_encoders),
+                          torch.nn.ModuleDict(self._sensorial_decoders),
+                          self._state_encoder,
+                          self._state_decoder)
         
-        wm.sensorial_encoders = torch.nn.ModuleDict(self._sensorial_encoders)
-        wm.sensorial_decoders = torch.nn.ModuleDict(self._sensorial_decoders)
-
-        wm.blocks = torch.nn.Sequential(*self._blocks)
-
-        wm.state_encoder = self._state_encoder
-        wm.state_decoder = self._state_decoder
+        return wm

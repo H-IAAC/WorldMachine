@@ -1,5 +1,7 @@
 import numpy as np
 
+from world_machine_experiments.shared.split_data import split_data_dict
+
 def _state_transition_matrix() -> np.ndarray:
     t = 0.1
 
@@ -34,20 +36,23 @@ def _observation_matrix(generator:np.random.Generator) -> np.ndarray:
 
     return H
 
-def toy1d_data(n_sequence:int=10000, sequence_lenght:int=1000,
-               seed:int|None=None) -> dict[str, np.ndarray]:
-    generator = np.random.default_rng(seed=seed)
+def toy1d_data(n_sequence:int=10000, sequence_length:int=1000,
+               generator_numpy:np.random.Generator|None=None) -> dict[str, np.ndarray]:
     
+    if generator_numpy is None:
+        generator_numpy = np.random.Generator()
+    generator = generator_numpy
+
     H = _observation_matrix(generator) #NOSONAR
     F = _state_transition_matrix()
 
     #Sequence generation
     state = np.zeros((n_sequence, 3))
 
-    states = np.empty((sequence_lenght, n_sequence, 3))
-    state_controls = np.empty((sequence_lenght, n_sequence, 3))
+    states = np.empty((sequence_length, n_sequence, 3))
+    state_controls = np.empty((sequence_length, n_sequence, 3))
 
-    for i in range(sequence_lenght):
+    for i in range(sequence_length):
         state :np.ndarray = np.dot(F, state.reshape(-1, 3).T).T.reshape(state.shape)
         
         Gu = _state_control(state, generator) #NOSONAR
@@ -76,9 +81,12 @@ def toy1d_data(n_sequence:int=10000, sequence_lenght:int=1000,
 
     #Measurements
     next_states = np.roll(states, shift=-1, axis=0)
-    measurements = np.dot(H, next_states.reshape(-1, 3).T).T.reshape(states.shape)
+    measurements = np.dot(H, next_states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, 2))
 
     data = {"states":states, "state_controls":state_controls,
             "next_measurements":measurements}
 
     return data
+
+def toy1d_data_splitted(toy1d_data:dict[str, np.ndarray]) -> dict[str, dict[str, np.ndarray]]:
+    return split_data_dict(toy1d_data)

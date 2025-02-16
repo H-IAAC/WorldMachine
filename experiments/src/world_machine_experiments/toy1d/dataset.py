@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset, random_split
 from tensordict import TensorDict
+from hamilton.function_modifiers import subdag, source
 
 class Toy1dDataset(Dataset):
     def __init__(self, data:dict[str, np.ndarray], context_size:int,
@@ -32,42 +33,22 @@ class Toy1dDataset(Dataset):
         items = [TensorDict(), TensorDict()]
         for i in range(2):
             items[i]["state_decoded"] = torch.Tensor(self._data["states"][item_index, start+i:end+i])
-            items[i]["sensorial0"] = torch.Tensor(self._data["state_controls"][item_index, start+i:end+i])
-            items[i]["sensorial1"] = torch.Tensor(self._data["next_measurements"][item_index, start+i:end+i])
+            items[i]["state_control"] = torch.Tensor(self._data["state_controls"][item_index, start+i:end+i])
+            items[i]["next_measurement"] = torch.Tensor(self._data["next_measurements"][item_index, start+i:end+i])
 
             if self._return_dimensions is not None:
                 items[i]["state_decoded"] = items[i]["state_decoded"][:, self._return_dimensions]
 
         return TensorDict({"inputs":items[0], "targets":items[1]}, batch_size=[])
     
-def _separate_data(x_all):
-    size_all = len(x_all)
 
-    cut1 = int(0.6*size_all)
-    cut2 = int(0.8*size_all)
 
-    x_train = x_all[0:cut1]
-
-    x_val = x_all[cut1:cut2]
-
-    x_test = x_all[cut2:]
-
-    return x_train, x_val, x_test
-
-def toy1d_datasets(toy1d_data:dict[str, np.ndarray], context_size:int, 
+def toy1d_datasets(toy1d_data_splitted:dict[str, dict[str, np.ndarray]], context_size:int, 
              state_dimensions:list[int]|None=None) -> dict[str, Toy1dDataset]:
-    data_split = {}
-    for name in ["train", "val", "test"]:
-        data_split[name] = {"states":None, "state_controls":None, "next_measurements":None}
-    
-    for dimension in ["states", "state_controls", "next_measurements"]:
-        (data_split["train"][dimension], 
-         data_split["val"][dimension], 
-         data_split["test"][dimension]) = _separate_data(toy1d_data[dimension])
 
     datasets = {}
     for name in ["train", "val", "test"]:
-        datasets[name] = Toy1dDataset(data_split[name], 
+        datasets[name] = Toy1dDataset(toy1d_data_splitted[name], 
                                       context_size=context_size, 
                                       return_state_dimensions=state_dimensions)
         

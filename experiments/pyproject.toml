@@ -36,7 +36,7 @@ content-type = "text/markdown"
 
 [tool.setuptools]
 include-package-data = true
-package-dir = {"" = "src/wm_experiments"}
+package-dir = {"" = "src"}
 license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
