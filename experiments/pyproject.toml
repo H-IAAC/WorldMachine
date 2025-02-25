@@ -18,7 +18,9 @@ dynamic = ["version"]
 dependencies = [
     "torch",
     "tensordict",
-    "numpy"
+    "numpy",
+    "docstring_parser",
+    "sf-hamilton"
 
 ]
 
@@ -45,3 +47,6 @@ namespaces = false
 
 [tool.setuptools_scm]
 root = ".."
+
+[tool.isort]
+known_first_party = ["world_machine", "world_machine_experiments"]

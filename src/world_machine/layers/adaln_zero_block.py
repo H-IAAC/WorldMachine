@@ -6,7 +6,7 @@ from .attention import MultiHeadSelfAttention
 
 class AdaLNZeroBlock(ConditioningBlock):
     def __init__(self, embed_dim:int, conditioning_dim:int, hidden_size:int, 
-                 n_head:int):
+                 n_head:int, dropout_rate:float=0.0):
         super().__init__(embed_dim, conditioning_dim)
 
         self.conditioning_mlp = torch.nn.Sequential(torch.nn.SiLU(),
@@ -15,13 +15,16 @@ class AdaLNZeroBlock(ConditioningBlock):
         self.layer_norm1 = torch.nn.LayerNorm(embed_dim)
         self.modulate1 = Modulate()
         self.attention = MultiHeadSelfAttention(embed_dim, n_head, True)
+        self.dropout_attention = torch.nn.Dropout(dropout_rate)
         self.modulate2 = Modulate()
 
         self.layer_norm2 = torch.nn.LayerNorm(embed_dim)
         self.modulate3 = Modulate()
         self.linear1 = torch.nn.Linear(embed_dim, hidden_size)
+        self.dropout_linear1 = torch.nn.Dropout(dropout_rate)
         self.act = torch.nn.GELU(approximate="tanh")
         self.linear2 = torch.nn.Linear(hidden_size, embed_dim)
+        self.dropout_linear2 = torch.nn.Dropout(dropout_rate)
         self.modulate4 = Modulate()
 
     def forward(self, x:torch.Tensor, conditioning:torch.Tensor,
@@ -53,7 +56,7 @@ class AdaLNZeroBlock(ConditioningBlock):
         #First part (before first +)
         y1 = self.layer_norm1(x)
         y1 = self.modulate1(y1, shift=gamma1, scale=beta1)
-        y1 = self.attention(y1)
+        y1 = self.dropout_attention(self.attention(y1))
         y1 = self.modulate2(y1, scale=alpha1)
 
         #First +
@@ -64,8 +67,8 @@ class AdaLNZeroBlock(ConditioningBlock):
         y2 = self.modulate3(y2, scale=gamma2, shift=beta2)
         
         y2 = self.linear1(y2)
-        y2 = self.act(y2)
-        y2 = self.linear2(y2)
+        y2 = self.dropout_linear1(self.act(y2))
+        y2 = self.dropout_linear2(self.linear2(y2))
 
         y2 = self.modulate4(y2, scale=alpha2) 
 

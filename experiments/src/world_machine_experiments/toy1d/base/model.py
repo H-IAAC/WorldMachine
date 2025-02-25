@@ -1,13 +1,14 @@
 import torch
 
-from world_machine import WorldMachineBuilder, WorldMachine
+from world_machine import WorldMachine, WorldMachineBuilder
+from world_machine_experiments.toy1d.dimensions import Dimensions
 
-from .dimensions import Dimensions
 
-def toy1d_model_untrained(block_configuration:list[Dimensions], state_dimensions:list[int]|None=None,
-                          h_ensure_random_seed:None=None) -> WorldMachine:
+def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimensions: list[int] | None = None,
+                          h_ensure_random_seed: None = None) -> WorldMachine:
 
-    decoded_state_size = len(state_dimensions) if state_dimensions is not None else 3
+    decoded_state_size = len(
+        state_dimensions) if state_dimensions is not None else 3
 
     state_size = 6
     max_context_size = 200
@@ -15,19 +16,16 @@ def toy1d_model_untrained(block_configuration:list[Dimensions], state_dimensions
     builder = WorldMachineBuilder(state_size,
                                   max_context_size)
 
-    
-
-    builder.add_sensorial_dimension("state_control", state_size, 
+    builder.add_sensorial_dimension("state_control", state_size,
                                     torch.nn.Linear(3, state_size),
                                     torch.nn.Linear(state_size, 3))
-    
-    builder.add_sensorial_dimension("next_measurement", state_size, 
+
+    builder.add_sensorial_dimension("next_measurement", state_size,
                                     torch.nn.Linear(2, state_size),
                                     torch.nn.Linear(state_size, 2))
 
     builder.state_encoder = torch.nn.Linear(decoded_state_size, state_size)
     builder.state_decoder = torch.nn.Linear(state_size, decoded_state_size)
-
 
     for config in block_configuration:
         if config == Dimensions.STATE:
