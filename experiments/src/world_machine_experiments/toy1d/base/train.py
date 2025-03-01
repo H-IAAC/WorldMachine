@@ -32,14 +32,19 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               learning_rate: float,
                               weight_decay: float,
                               device: str = "cpu",
-                              accumulation_steps: int = 1) -> dict[str, WorldMachine | dict[str, np.ndarray]]:
+                              accumulation_steps: int = 1,
+                              mask_sensorial_data: float | None = None,
+                              generator_numpy: np.random.Generator | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray]]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
 
     toy1d_model_untrained.to(device)
 
-    trainer = Trainer(False)
+    if generator_numpy is None:
+        generator_numpy = np.random.default_rng(0)
+
+    trainer = Trainer(False, mask_sensorial_data, generator_numpy)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
     trainer.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
 

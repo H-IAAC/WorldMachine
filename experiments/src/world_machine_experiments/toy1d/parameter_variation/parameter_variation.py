@@ -69,6 +69,7 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
     with tqdm.tqdm(total=len(futures)) as pbar:
         for future in as_completed(futures):
+            future.result()
             pbar.update(1)
 
     result = {"experiment_paths": paths, "base_dir": output_dir}

@@ -1,9 +1,10 @@
-from matplotlib.figure import Figure
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
+from matplotlib.figure import Figure
 
 acronyms = ["MSE"]
+
+
 def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
                               custom_plots: dict[str, list[str]] = None,
                               log_y_axis: bool = True) -> dict[str, Figure]:
@@ -22,12 +23,14 @@ def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
 
     colormap = plt.cm.nipy_spectral
     colors = colormap(np.linspace(0, 1, len(train_history)))
-    color_map = {variation_names[i]:colors[i] for i in range(len(variation_names))}
+    color_map = {variation_names[i]: colors[i]
+                 for i in range(len(variation_names))}
 
     plot_args = {"fmt": "o-", "capsize": 5.0, "markersize": 4}
 
-    plot_combinations = {"":variation_names}
-    plot_combinations.update(custom_plots)
+    plot_combinations = {"": variation_names}
+    if custom_plots is not None:
+        plot_combinations.update(custom_plots)
 
     figures = {}
     for combination_name in plot_combinations:
@@ -42,11 +45,11 @@ def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
                 for variation_name in combination:
 
                     plt.errorbar(epochs,
-                                train_history[variation_name][key],
-                                train_history[variation_name][key+"_std"],
-                                label=variation_name,
-                                color=color_map[variation_name],
-                                **plot_args)
+                                 train_history[variation_name][key],
+                                 train_history[variation_name][key+"_std"],
+                                 label=variation_name,
+                                 color=color_map[variation_name],
+                                 **plot_args)
 
                 name_format = name.replace("_", " ").title()
 
