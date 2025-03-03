@@ -1,12 +1,13 @@
 import torch
 
+from .attention import MultiHeadSelfAttention
 from .conditioning_block import ConditioningBlock
 from .modulate import Modulate
-from .attention import MultiHeadSelfAttention
+
 
 class AdaLNZeroBlock(ConditioningBlock):
-    def __init__(self, embed_dim:int, conditioning_dim:int, hidden_size:int, 
-                 n_head:int, dropout_rate:float=0.0):
+    def __init__(self, embed_dim: int, conditioning_dim: int, hidden_size: int,
+                 n_head: int, dropout_rate: float = 0.0):
         super().__init__(embed_dim, conditioning_dim)
 
         self.conditioning_mlp = torch.nn.Sequential(torch.nn.SiLU(),
@@ -27,52 +28,51 @@ class AdaLNZeroBlock(ConditioningBlock):
         self.dropout_linear2 = torch.nn.Dropout(dropout_rate)
         self.modulate4 = Modulate()
 
-    def forward(self, x:torch.Tensor, conditioning:torch.Tensor,
-                conditioning_mask:torch.Tensor|None=None) -> torch.Tensor:
-        
+    def forward(self, x: torch.Tensor, conditioning: torch.Tensor,
+                conditioning_mask: torch.Tensor | None = None) -> torch.Tensor:
+
         context_size = x.shape[1]
 
         if conditioning_mask is None:
             conditioning_mask = torch.ones(context_size, dtype=bool)
 
-        #Conditioning MLP
-        gamma1, beta1, alpha1, gamma2, beta2, alpha2 = self.conditioning_mlp(conditioning).chunk(6, dim=2)
+        # Conditioning MLP
+        conditioning_data = self.conditioning_mlp(conditioning)
 
-        gamma1 : torch.Tensor = gamma1.clone()
-        beta1 : torch.Tensor = beta1.clone()
-        alpha1 : torch.Tensor = alpha1.clone()
-        gamma2 : torch.Tensor = gamma2.clone()
-        beta2 : torch.Tensor = beta2.clone()
-        alpha2 : torch.Tensor = alpha2.clone()
+        conditioning_data *= conditioning_mask.unsqueeze(-1)
 
-        #scale -> gamma, alpha 
-        #shift -> beta
-        for scale in [gamma1, gamma2, alpha1, alpha2]:
-            scale[torch.bitwise_not(conditioning_mask)] = 0.0
+        # scale -> gamma, alpha
+        # shift -> beta
+        gamma1, beta1, alpha1, gamma2, beta2, alpha2 = conditioning_data.chunk(
+            6, dim=2)
 
-        for shift in [beta1, beta2]:
-            shift[torch.bitwise_not(conditioning_mask)] = 0.0
+        gamma1: torch.Tensor
+        beta1: torch.Tensor
+        alpha1: torch.Tensor
+        gamma2: torch.Tensor
+        beta2: torch.Tensor
+        alpha2: torch.Tensor
 
-        #First part (before first +)
+        # First part (before first +)
         y1 = self.layer_norm1(x)
         y1 = self.modulate1(y1, shift=gamma1, scale=beta1)
         y1 = self.dropout_attention(self.attention(y1))
         y1 = self.modulate2(y1, scale=alpha1)
 
-        #First +
+        # First +
         y1 = y1+x
 
-        #Second part
+        # Second part
         y2 = self.layer_norm2(y1)
         y2 = self.modulate3(y2, scale=gamma2, shift=beta2)
-        
+
         y2 = self.linear1(y2)
         y2 = self.dropout_linear1(self.act(y2))
         y2 = self.dropout_linear2(self.linear2(y2))
 
-        y2 = self.modulate4(y2, scale=alpha2) 
+        y2 = self.modulate4(y2, scale=alpha2)
 
-        #Second +
+        # Second +
         y2 = y2+y1
 
         return y2
