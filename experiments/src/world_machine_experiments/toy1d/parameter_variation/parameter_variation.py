@@ -1,4 +1,5 @@
 import glob
+import multiprocessing as mp
 import os
 from concurrent.futures import (
     Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed, wait)
@@ -19,6 +20,10 @@ from world_machine_experiments.shared.load_train_history import (
 from world_machine_experiments.shared.parameter_variation_plots import (
     parameter_variation_plots)
 from world_machine_experiments.toy1d import multiple
+
+
+def worker_initializer(lock):
+    tqdm.tqdm.set_lock(lock)
 
 
 def toy1d_parameter_variation_worker_func(inputs):
@@ -48,7 +53,10 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
     os.makedirs(output_dir, exist_ok=True)
 
-    executor = ProcessPoolExecutor(n_worker)
+    lock = mp.RLock()
+
+    executor = ProcessPoolExecutor(
+        n_worker,  initializer=worker_initializer, initargs=(lock,))
 
     futures: list[Future] = []
     paths = {}

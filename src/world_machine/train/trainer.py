@@ -168,8 +168,8 @@ class Trainer:
 
             batch_size = inputs["state_decoded"].shape[0]
             seq_len = inputs["state_decoded"].shape[1]
+            sensorial_masks = None
             if self._mask_sensorial_data is not None and mode == MODE_TRAIN:
-                # start_time = time.time()
                 with torch.no_grad():
                     if "sensorial_masks" not in inputs:
                         sensorial_masks = TensorDict(
@@ -182,34 +182,46 @@ class Trainer:
                     else:
                         sensorial_masks = inputs["sensorial_masks"]
 
-                    # get_masks_time = time.time()
-
                     sensorial_masks = generate_masks(sensorial_masks,
                                                      self._mask_sensorial_data, batch_size, device)
 
-                    # generate_masks_time = time.time()
-
-                    # print("GET MASKS", get_masks_time-start_time, "| GENERATE MASKS",
-                    #      generate_masks_time-get_masks_time, "| TOTAL TIME", generate_masks_time-start_time)
-            else:
-                if "sensorial_masks" in inputs:
-                    sensorial_masks = inputs["sensorial_masks"]
-                else:
-                    sensorial_masks = None
+            elif "sensorial_masks" in inputs:
+                sensorial_masks = inputs["sensorial_masks"]
 
             logits: TensorDict = model(
                 inputs["state_decoded"], inputs, sensorial_masks)
 
-            losses: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
+            targets_sensorial_masks = None
+            if "sensorial_masks" in targets:
+                targets_sensorial_masks = targets["sensorial_masks"]
 
+            losses: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
             for dimension in self._criterions:
+                if len(self._criterions[dimension]) == 0:
+                    continue
+
+                logits_dim = logits[dimension]
+                targets_dim = targets[dimension]
+
+                if (dimension != "state_decoded" and
+                        targets_sensorial_masks is not None and
+                        dimension in targets_sensorial_masks):
+
+                    logits_dim = logits_dim[targets_sensorial_masks[dimension]]
+                    targets_dim = targets_dim[targets_sensorial_masks[dimension]]
+
                 losses[dimension] = {}
                 for criterion_name in self._criterions[dimension]:
+                    if criterion_name not in self._train_criterions[dimension]:
+                        torch.set_grad_enabled(False)
+
                     losses[dimension][criterion_name] = self._criterions[dimension][criterion_name](
-                        logits[dimension], targets[dimension])
+                        logits_dim, targets_dim)
 
                     total_loss[dimension][criterion_name] += losses[dimension][criterion_name] * \
                         targets.size(0)
+
+                    torch.set_grad_enabled(mode == MODE_TRAIN)
 
             optimizer_loss = torch.tensor(
                 0, dtype=torch.float32, device=device)

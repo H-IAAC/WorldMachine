@@ -48,6 +48,10 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
     trainer.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
 
+    trainer.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss())
+    trainer.add_sensorial_criterion(
+        "mse", "next_measurement", torch.nn.MSELoss())
+
     history = trainer(toy1d_model_untrained, toy1d_dataloaders,
                       optimizer, n_epoch, accumulation_steps)
 
