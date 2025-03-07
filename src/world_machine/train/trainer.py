@@ -90,13 +90,12 @@ class Trainer:
                                 weight: float = 1.0) -> None:
         if sensorial_dimension not in self._criterions:
             self._criterions[sensorial_dimension] = {}
+        if sensorial_dimension not in self._train_criterions:
+            self._train_criterions[sensorial_dimension] = set()
 
         self._criterions[sensorial_dimension][name] = criterion
 
         if train:
-            if sensorial_dimension not in self._train_criterions:
-                self._train_criterions[sensorial_dimension] = set()
-
             self._train_criterions[sensorial_dimension][name] = weight
 
     def __call__(self, wm: WorldMachine,

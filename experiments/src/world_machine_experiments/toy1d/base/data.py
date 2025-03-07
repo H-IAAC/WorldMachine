@@ -89,8 +89,8 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     measurements = np.dot(
         H, next_states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, 2))
 
-    data = {"states": states, "state_controls": state_controls,
-            "next_measurements": measurements}
+    data = {"state_decoded": states, "state_control": state_controls,
+            "next_measurement": measurements}
 
     return data
 
