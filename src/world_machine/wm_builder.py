@@ -1,7 +1,8 @@
 import torch
 
-from .layers import BlockContainer, TransformDecoderBlock, AdaLNZeroBlock
+from .layers import AdaLNZeroBlock, BlockContainer, TransformDecoderBlock
 from .world_machine import WorldMachine
+
 
 class WorldMachineBuilder:
     def __init__(self, state_size: int, max_context_size: int):
@@ -9,32 +10,46 @@ class WorldMachineBuilder:
         self._max_context_size = max_context_size
 
         self._sensorial_dimensions: dict[str, int] = {}
-        self._sensorial_encoders : dict[str, torch.nn.Module] = {}
-        self._sensorial_decoders : dict[str, torch.nn.Module] = {}
+        self._sensorial_encoders: dict[str, torch.nn.Module] = {}
+        self._sensorial_decoders: dict[str, torch.nn.Module] = {}
 
         self._blocks: list[BlockContainer] = []
 
         self._state_encoder = torch.nn.Identity()
+        self._state_decoder = torch.nn.Identity()
+
+        self._detach_decoder: set[str] = set()
 
     @property
     def state_encoder(self) -> torch.nn.Module:
         return self._state_encoder
-    
+
     @state_encoder.setter
-    def state_encoder(self, encoder:torch.nn.Module):
+    def state_encoder(self, encoder: torch.nn.Module):
         self._state_encoder = encoder
 
     @property
     def state_decoder(self) -> torch.nn.Module:
         return self._state_decoder
-    
+
     @state_decoder.setter
-    def state_decoder(self, decoder:torch.nn.Module):
+    def state_decoder(self, decoder: torch.nn.Module):
         self._state_decoder = decoder
 
+    @property
+    def detach_state_decoder(self) -> bool:
+        return "state" in self._detach_decoder
+
+    @detach_state_decoder.setter
+    def detach_state_decoder(self, value: bool) -> None:
+        self._detach_decoder.add("state")
 
     def add_sensorial_dimension(self, dimension_name: str, dimension_size: int,
-                                encoder:torch.nn.Module|None=None, decoder:torch.nn.Module|None=None):
+                                encoder: torch.nn.Module | None = None,
+                                decoder: torch.nn.Module | None = None, detach_decoder: bool = False):
+
+        assert dimension_name != "state"
+
         self._sensorial_dimensions[dimension_name] = dimension_size
 
         if encoder is not None:
@@ -42,9 +57,12 @@ class WorldMachineBuilder:
         if decoder is not None:
             self._sensorial_decoders[dimension_name] = decoder
 
+        if detach_decoder:
+            self._detach_decoder.add(dimension_name)
+
     def add_block(self, count: int = 1, sensorial_dimension: str = "",
                   dropout_rate: float = 0.1, hidden_size_multiplier: int = 4,
-                  n_attention_head:int=1):
+                  n_attention_head: int = 1):
         for _ in range(count):
             if sensorial_dimension == "":
                 block = TransformDecoderBlock(self._state_size,
@@ -67,6 +85,7 @@ class WorldMachineBuilder:
                           torch.nn.ModuleDict(self._sensorial_encoders),
                           torch.nn.ModuleDict(self._sensorial_decoders),
                           self._state_encoder,
-                          self._state_decoder)
-        
+                          self._state_decoder,
+                          self._detach_decoder)
+
         return wm

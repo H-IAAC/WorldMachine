@@ -10,11 +10,12 @@ class WorldMachine(torch.nn.Module):
                  sensorial_encoders: torch.nn.ModuleDict | None = None,
                  sensorial_decoders: torch.nn.ModuleDict | None = None,
                  state_encoder: torch.nn.Module | None = None,
-                 state_decoder: torch.nn.Module | None = None
+                 state_decoder: torch.nn.Module | None = None,
+                 detach_decoders: set[str] = None
                  ):
         super().__init__()
 
-        self.blocks = blocks
+        self._blocks = blocks
 
         if sensorial_encoders is None:
             sensorial_encoders = torch.nn.ModuleDict()
@@ -31,6 +32,10 @@ class WorldMachine(torch.nn.Module):
         if state_decoder is None:
             state_decoder = torch.nn.Identity()
         self._state_decoder = state_decoder
+
+        if detach_decoders is None:
+            detach_decoders = set()
+        self._detach_decoders = detach_decoders
 
         self._positional_encoder = SinePositionalEncoding(
             state_size, max_context_size)
@@ -62,17 +67,27 @@ class WorldMachine(torch.nn.Module):
 
         y = x
         # Main prediction+update
-        for block in self.blocks:
+        for block in self._blocks:
             y = block(y, sensorial_masks)
 
         # ???
         # y["state"] -= self.positional_encoder()
 
+        state: torch.Tensor = y["state"]
+        state_detached = state.detach()
+
         # Sensorial decoding from state
         for name in self._sensorial_decoders:
-            y[name] = self._sensorial_decoders[name](y["state"])
+            s = state
+            if name in self._detach_decoders:
+                s = state_detached
+
+            y[name] = self._sensorial_decoders[name](s)
 
         # State decoding
-        y["state_decoded"] = self._state_decoder(y["state"])
+        s = state
+        if "state" in self._detach_decoders:
+            s = state_detached
+        y["state_decoded"] = self._state_decoder(s)
 
         return y
