@@ -20,7 +20,11 @@ class Toy1dDataset(WorldMachineDataset):
         size = self._n_sequence*int((self._sequence_size-1)/context_size)
 
         super().__init__(
-            ["state_control", "next_measurement"], size, True, False)
+            ["state_control", "next_measurement"],
+            size=size,
+            state_size=6,
+            has_state_decoded=True,
+            has_masks=False)
 
     def get_dimension_item(self, dimension: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         item_index = index // self._items_in_sequence
