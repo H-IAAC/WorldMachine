@@ -40,13 +40,22 @@ class WorldMachine(torch.nn.Module):
         self._positional_encoder = SinePositionalEncoding(
             state_size, max_context_size)
 
-    def forward(self, state: torch.Tensor,
+    def forward(self, state: torch.Tensor | None = None,
+                state_decoded: torch.Tensor | None = None,
                 sensorial_data: TensorDict | None = None,
                 sensorial_masks: TensorDict | None = None) -> TensorDict:
 
-        device = state.device
-        batch_size = state.shape[0]
-        seq_len = state.shape[1]
+        if state_decoded is not None:
+            device = state_decoded.device
+            batch_size = state_decoded.shape[0]
+            seq_len = state_decoded.shape[1]
+        elif state is not None:
+            device = state.device
+            batch_size = state.shape[0]
+            seq_len = state.shape[1]
+        else:
+            raise ValueError(
+                "'state_decoded' or 'state' must but not None, but both is None.")
 
         if sensorial_data is None:
             sensorial_data = TensorDict(device=device)
@@ -57,13 +66,19 @@ class WorldMachine(torch.nn.Module):
                 sensorial_masks[name] = torch.ones(
                     (batch_size, seq_len), dtype=bool, device=device)
 
-        # Sensorial encoding
         x: TensorDict = sensorial_data.copy()
-        for name in self._sensorial_encoders:
-            x[name] = self._sensorial_encoders[name](sensorial_data[name])
 
         # State encoding
-        x["state"] = self._state_encoder(state) + self._positional_encoder()
+        if state_decoded is not None:
+            x["state"] = self._state_encoder(
+                state_decoded) + self._positional_encoder()
+        else:
+            x["state"] = state
+
+        # Sensorial encoding
+
+        for name in self._sensorial_encoders:
+            x[name] = self._sensorial_encoders[name](sensorial_data[name])
 
         y = x
         # Main prediction+update
@@ -91,3 +106,9 @@ class WorldMachine(torch.nn.Module):
         y["state_decoded"] = self._state_decoder(s)
 
         return y
+
+    def __call__(self, state: torch.Tensor | None = None,
+                 state_decoded: torch.Tensor | None = None,
+                 sensorial_data: TensorDict | None = None,
+                 sensorial_masks: TensorDict | None = None):
+        return super().__call__(state, state_decoded, sensorial_data, sensorial_masks)

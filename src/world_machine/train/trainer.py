@@ -188,7 +188,7 @@ class Trainer:
                 sensorial_masks = inputs["sensorial_masks"]
 
             logits: TensorDict = model(
-                inputs["state_decoded"], inputs, sensorial_masks)
+                state_decoded=inputs["state_decoded"], sensorial_data=inputs, sensorial_masks=sensorial_masks)
 
             targets_sensorial_masks = None
             if "sensorial_masks" in targets:
