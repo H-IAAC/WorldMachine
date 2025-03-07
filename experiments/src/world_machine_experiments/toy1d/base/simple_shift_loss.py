@@ -6,6 +6,7 @@ def toy1d_simple_shift_loss(toy1d_dataloaders: dict[str, DataLoader]) -> float:
     mse = torch.nn.MSELoss()
 
     total_loss = torch.tensor(0, dtype=torch.float32)
+    n = 0
 
     for item in toy1d_dataloaders["train"]:
         inputs: torch.Tensor = item["inputs"]
@@ -14,6 +15,11 @@ def toy1d_simple_shift_loss(toy1d_dataloaders: dict[str, DataLoader]) -> float:
         prev_values = inputs["state_decoded"][:, :, 0]
         next_values = targets["state_decoded"][:, :, 0]
 
-        total_loss += mse(prev_values, next_values)
+        total_loss += mse(prev_values, next_values) * targets.size(0)
 
-    return total_loss.item()
+        n += targets.size(0)
+
+    total_loss = total_loss.item()
+    total_loss /= n
+
+    return total_loss
