@@ -59,13 +59,12 @@ MODE_EVALUATE = 1
 
 class Trainer:
     def __init__(self, discover_state: bool, mask_sensorial_data: float | None = None,
-                 generator_numpy: np.random.Generator | None = None):
-
-        if discover_state:
-            raise NotImplementedError()
+                 generator_numpy: np.random.Generator | None = None,
+                 stable_state_epochs: int = 1):
 
         self._discover_state = discover_state
         self._mask_sensorial_data = mask_sensorial_data
+        self._stable_state_epochs = stable_state_epochs
 
         if generator_numpy is None:
             generator_numpy = np.random.default_rng(0)
@@ -165,8 +164,14 @@ class Trainer:
             inputs: torch.Tensor = item["inputs"]
             targets: torch.Tensor = item["targets"]
 
-            batch_size = inputs["state_decoded"].shape[0]
-            seq_len = inputs["state_decoded"].shape[1]
+            if "state_decoded" in inputs:
+                batch_size = inputs["state_decoded"].shape[0]
+                seq_len = inputs["state_decoded"].shape[1]
+            else:
+                batch_size = inputs["state"].shape[0]
+                seq_len = inputs["state"].shape[1]
+            state_size = model._state_size
+
             sensorial_masks = None
             if self._mask_sensorial_data is not None and mode == MODE_TRAIN:
                 with torch.no_grad():
@@ -187,8 +192,32 @@ class Trainer:
             elif "sensorial_masks" in inputs:
                 sensorial_masks = inputs["sensorial_masks"]
 
-            logits: TensorDict = model(
-                state_decoded=inputs["state_decoded"], sensorial_data=inputs, sensorial_masks=sensorial_masks)
+            if self._discover_state:
+                if "state" not in inputs:
+                    # TODO: use generator
+                    # state = torch.rand((batch_size, seq_len, state_size), device=device)
+                    state = torch.normal(
+                        0, 1, (batch_size, seq_len, state_size), device=device)
+                    state = (2*state)+1
+
+                else:
+                    state = inputs["state"]
+
+                logits: TensorDict = model(
+                    state=state, sensorial_data=inputs, sensorial_masks=sensorial_masks)
+
+                state_next = logits["state"]
+                state_current = torch.roll(state_next, 1, 0)
+                state_current[0] = state[0]
+
+                indexes = item["index"]
+
+                if (self._epoch_index % self._stable_state_epochs == 0):
+                    loader.dataset.set_state(indexes, state_current)
+
+            else:
+                logits: TensorDict = model(
+                    state_decoded=inputs["state_decoded"], sensorial_data=inputs, sensorial_masks=sensorial_masks)
 
             targets_sensorial_masks = None
             if "sensorial_masks" in targets:
@@ -281,6 +310,8 @@ class Trainer:
                use_wandb: bool = False,
                early_stop: Callable[[float], bool] | None = None) -> dict[str, np.ndarray]:
 
+        self._epoch_index = 0
+
         hist: dict[str, np.ndarray | dict[str, np.ndarray]
                    | dict[str, dict[str, np.ndarray]]] = {}
         for dimension in self._criterions:
@@ -299,7 +330,6 @@ class Trainer:
 
         print("VAL ", end="")
         print_info(loss_val["optimizer_loss"], -1, n_epoch)
-
         for epoch in range(n_epoch):
             start_time = time.time()
 
@@ -349,6 +379,8 @@ class Trainer:
             if (early_stop is not None and
                     early_stop(loss_val["optimizer_loss"])):
                 break
+
+            self._epoch_index += 1
 
         result = {}
         result["optimizer_loss_train"] = hist["optimizer_loss"]["train"]

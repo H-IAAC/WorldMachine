@@ -24,6 +24,10 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                                     torch.nn.Linear(2, state_size),
                                     torch.nn.Linear(state_size, 2))
 
+    builder.add_sensorial_dimension("state_decoded", state_size,
+                                    torch.nn.Linear(3, state_size),
+                                    torch.nn.Linear(state_size, 3))
+
     builder.state_encoder = torch.nn.Linear(decoded_state_size, state_size)
     builder.state_decoder = torch.nn.Linear(state_size, decoded_state_size)
 
@@ -34,5 +38,7 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
             builder.add_block(sensorial_dimension="state_control")
         elif config == Dimensions.NEXT_MEASUREMENT:
             builder.add_block(sensorial_dimension="next_measurement")
+        elif config == Dimensions.STATE_AS_SENSORIAL:
+            builder.add_block(sensorial_dimension="state_decoded")
 
     return builder.build()

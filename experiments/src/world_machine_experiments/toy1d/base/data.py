@@ -40,7 +40,8 @@ def _observation_matrix(generator: np.random.Generator) -> np.ndarray:
 
 
 def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
-               generator_numpy: np.random.Generator | None = None) -> dict[str, np.ndarray]:
+               generator_numpy: np.random.Generator | None = None,
+               use_state_control: bool = True) -> dict[str, np.ndarray]:
 
     if generator_numpy is None:
         generator_numpy = np.random.default_rng(0)
@@ -50,7 +51,7 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     F = _state_transition_matrix()
 
     # Sequence generation
-    state = np.zeros((n_sequence, 3))
+    state = (2*generator.random((n_sequence, 3)))-1
 
     states = np.empty((sequence_length, n_sequence, 3))
     state_controls = np.empty((sequence_length, n_sequence, 3))
@@ -60,10 +61,12 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
             F, state.reshape(-1, 3).T).T.reshape(state.shape)
 
         Gu = _state_control(state, generator)  # NOSONAR
-        state += Gu
+
+        if use_state_control:
+            state += Gu
 
         state[1] = np.clip(state[1], -1, 1)
-        state[2] = np.clip(state[1], -1, 1)
+        state[2] = np.clip(state[2], -1, 1)
 
         states[i] = state
         state_controls[i] = Gu

@@ -34,6 +34,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               device: str = "cpu",
                               accumulation_steps: int = 1,
                               mask_sensorial_data: float | None = None,
+                              discover_state: bool = False,
+                              stable_state_epochs: int = 1,
                               generator_numpy: np.random.Generator | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray]]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
@@ -44,7 +46,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     if generator_numpy is None:
         generator_numpy = np.random.default_rng(0)
 
-    trainer = Trainer(False, mask_sensorial_data, generator_numpy)
+    trainer = Trainer(discover_state, mask_sensorial_data,
+                      generator_numpy, stable_state_epochs)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
     trainer.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
 

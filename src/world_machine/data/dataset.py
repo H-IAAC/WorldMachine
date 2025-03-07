@@ -88,7 +88,7 @@ class WorldMachineDataset(Dataset, abc.ABC):
             self._states_filename = filename
             WorldMachineDataset._states_filenames.append(filename)
 
-        self._states[indexes] = states.cpu()
+        self._states[indexes.cpu()] = states.detach().cpu()
 
     @classmethod
     def _delete_files(cls):

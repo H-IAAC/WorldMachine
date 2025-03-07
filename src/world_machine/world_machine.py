@@ -15,6 +15,8 @@ class WorldMachine(torch.nn.Module):
                  ):
         super().__init__()
 
+        self._state_size = state_size
+
         self._blocks = blocks
 
         if sensorial_encoders is None:
