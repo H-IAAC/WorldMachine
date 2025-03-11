@@ -20,6 +20,8 @@ class WorldMachineBuilder:
 
         self._detach_decoder: set[str] = set()
 
+        self.remove_positional_encoding = False
+
     @property
     def state_encoder(self) -> torch.nn.Module:
         return self._state_encoder
@@ -86,6 +88,7 @@ class WorldMachineBuilder:
                           torch.nn.ModuleDict(self._sensorial_decoders),
                           self._state_encoder,
                           self._state_decoder,
-                          self._detach_decoder)
+                          self._detach_decoder,
+                          self.remove_positional_encoding)
 
         return wm

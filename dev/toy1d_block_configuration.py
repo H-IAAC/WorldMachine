@@ -33,15 +33,15 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        # "S": {"block_configuration": [Dimensions.STATE]},
-        # "SS": {"block_configuration": [Dimensions.STATE, Dimensions.STATE]},
-        "M_ReLU": {"block_configuration": [Dimensions.NEXT_MEASUREMENT]},
-        # "MM": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT]},
-        # "SM": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT]},
-        # "MS": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE]},
-        "C_ReLU": {"block_configuration": [Dimensions.STATE_CONTROL]},
-        # "CC": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE_CONTROL]},
-        # "CS": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE]},
+        "S": {"block_configuration": [Dimensions.STATE]},
+        "M": {"block_configuration": [Dimensions.NEXT_MEASUREMENT]},
+        "C": {"block_configuration": [Dimensions.STATE_CONTROL]},
+        "SS": {"block_configuration": [Dimensions.STATE, Dimensions.STATE]},
+        "MM": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT]},
+        "SM": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT]},
+        "MS": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE]},
+        "CC": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE_CONTROL]},
+        "CS": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE]},
     }
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
@@ -55,9 +55,9 @@ if __name__ == "__main__":
                                                    "custom_plots": {"CvsM": ["C", "CC", "M", "MM"],
                                                                     "Invert": ["SM", "MS"],
                                                                     "WithState": ["CC", "MM", "MS", "CS", "SS"],
-                                                                    "BlocksSingle": ["S", "M", "C", "M_ReLU", "C_ReLU"],
+                                                                    "BlocksSingle": ["S", "M", "C"],
                                                                     "OnlyState": ["S", "SS"]},
                                                    },
-                                           overrides={
-                                               "base_dir": "toy1d_block_configuration"}
+                                           # overrides={
+                                           #    "base_dir": "toy1d_block_configuration"}
                                            )

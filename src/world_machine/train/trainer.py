@@ -10,15 +10,18 @@ from tensordict import TensorDict
 from torch.nn import Module
 from torch.utils.data import DataLoader
 
+from world_machine.world_machine import WorldMachine
+
+from .scheduler import ParameterScheduler
+
 try:
     import wandb
 except ImportError:
     wanbd = None
 
-from world_machine.world_machine import WorldMachine
-
-
 # Pure Torch is more slow, cannot make work without iteration per batch
+
+
 @numba.njit(cache=True)
 def mask_mask(masks: np.ndarray, mask_percentage: float, batch_size: int):
     for batch_idx in range(batch_size):
@@ -43,12 +46,15 @@ def mask_mask(masks: np.ndarray, mask_percentage: float, batch_size: int):
     return masks
 
 
-def generate_masks(sensorial_masks: TensorDict, mask_percentage: float, batch_size: int, device):
+def generate_masks(sensorial_masks: TensorDict, mask_percentage: dict[str, float], batch_size: int, device):
 
     for sensorial_dim in sensorial_masks.keys():
-        masks = sensorial_masks[sensorial_dim].cpu().numpy()
-        sensorial_masks[sensorial_dim] = torch.tensor(
-            mask_mask(masks, mask_percentage, batch_size), device=device)
+        if sensorial_dim in mask_percentage:
+            dim_percentage = mask_percentage[sensorial_dim]
+
+            masks = sensorial_masks[sensorial_dim].cpu().numpy()
+            sensorial_masks[sensorial_dim] = torch.tensor(
+                mask_mask(masks, dim_percentage, batch_size), device=device)
 
     return sensorial_masks
 
@@ -58,11 +64,12 @@ MODE_EVALUATE = 1
 
 
 class Trainer:
-    def __init__(self, discover_state: bool, mask_sensorial_data: float | None = None,
+    def __init__(self, discover_state: bool, mask_sensorial_data: float | None | dict[str, float | ParameterScheduler] | ParameterScheduler = None,
                  generator_numpy: np.random.Generator | None = None,
                  stable_state_epochs: int = 1):
 
         self._discover_state = discover_state
+
         self._mask_sensorial_data = mask_sensorial_data
         self._stable_state_epochs = stable_state_epochs
 
@@ -90,7 +97,7 @@ class Trainer:
         if sensorial_dimension not in self._criterions:
             self._criterions[sensorial_dimension] = {}
         if sensorial_dimension not in self._train_criterions:
-            self._train_criterions[sensorial_dimension] = set()
+            self._train_criterions[sensorial_dimension] = {}
 
         self._criterions[sensorial_dimension][name] = criterion
 
@@ -186,8 +193,11 @@ class Trainer:
                     else:
                         sensorial_masks = inputs["sensorial_masks"]
 
+                    mask_percentage = self._generate_mask_percentage(
+                        sensorial_masks.keys())
+
                     sensorial_masks = generate_masks(sensorial_masks,
-                                                     self._mask_sensorial_data, batch_size, device)
+                                                     mask_percentage, batch_size, device)
 
             elif "sensorial_masks" in inputs:
                 sensorial_masks = inputs["sensorial_masks"]
@@ -392,6 +402,31 @@ class Trainer:
                 result[f"{dimension}_{criterion_name}_val"] = hist[dimension][criterion_name]["val"]
 
         return result
+
+    def _generate_mask_percentage(self, sensorial_dimensions: list[str]) -> dict[str, float]:
+        if self._mask_sensorial_data is None:
+            return {}
+
+        mask_sensorial_data = self._mask_sensorial_data
+
+        if isinstance(mask_sensorial_data, ParameterScheduler):
+            mask_sensorial_data = mask_sensorial_data(self._epoch_index)
+
+        if isinstance(mask_sensorial_data, float):
+            mask_percentage = {
+                dim: mask_sensorial_data for dim in sensorial_dimensions}
+        else:
+            mask_percentage = mask_sensorial_data.copy()
+
+            for dim in mask_percentage:
+                if isinstance(mask_percentage[dim], ParameterScheduler):
+                    mask_percentage[dim] = mask_percentage[dim](
+                        self._epoch_index)
+
+        mask_percentage = {dim: float(
+            mask_percentage[dim]) for dim in mask_percentage}
+
+        return mask_percentage
 
 
 def print_info(loss_value: torch.Tensor, epoch: int, total_epochs: int,

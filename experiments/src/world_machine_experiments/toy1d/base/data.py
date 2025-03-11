@@ -32,8 +32,8 @@ def _state_control(state: np.ndarray, generator: np.random.Generator) -> np.ndar
     return state_control
 
 
-def _observation_matrix(generator: np.random.Generator) -> np.ndarray:
-    H = generator.random((2, 3))  # NOSONAR
+def _observation_matrix(generator: np.random.Generator, measurement_size: int = 2) -> np.ndarray:
+    H = generator.random((measurement_size, 3))  # NOSONAR
     H = 2*(H-0.5)
 
     return H
@@ -41,13 +41,14 @@ def _observation_matrix(generator: np.random.Generator) -> np.ndarray:
 
 def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
                generator_numpy: np.random.Generator | None = None,
-               use_state_control: bool = True) -> dict[str, np.ndarray]:
+               use_state_control: bool = True,
+               measurement_size: int = 2) -> dict[str, np.ndarray]:
 
     if generator_numpy is None:
         generator_numpy = np.random.default_rng(0)
     generator = generator_numpy
 
-    H = _observation_matrix(generator)  # NOSONAR
+    H = _observation_matrix(generator, measurement_size)  # NOSONAR
     F = _state_transition_matrix()
 
     # Sequence generation
@@ -88,9 +89,9 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     state_controls = 2*(state_controls-0.5)
 
     # Measurements
-    next_states = np.roll(states, shift=-1, axis=0)
+    next_states = np.roll(states, shift=-1, axis=1)
     measurements = np.dot(
-        H, next_states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, 2))
+        H, next_states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, measurement_size))
 
     data = {"state_decoded": states, "state_control": state_controls,
             "next_measurement": measurements}

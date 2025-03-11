@@ -5,6 +5,8 @@ from torch.optim import AdamW
 from world_machine_experiments import shared
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 
+from world_machine.train.scheduler import LinearScheduler
+
 if __name__ == "__main__":
     tracker = adapters.HamiltonTracker(
         project_id=1,
@@ -17,12 +19,20 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+    long = True
+
+    n_epoch = 5
+    output_dir = "toy1d_discover_state"
+    if long:
+        n_epoch = 20
+        output_dir = "toy1d_discover_state_long"
+
     toy1d_base_args = {"sequence_lenght": 1000,
                        "n_sequence": 10000,
                        "context_size": 200,
                        "state_dimensions": None,
                        "batch_size": 32,
-                       "n_epoch": 5,
+                       "n_epoch": n_epoch,
                        "learning_rate": 5e-3,
                        "weight_decay": 5e-4,
                        "accumulation_steps": 1,
@@ -33,27 +43,34 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        # "Base": {"discover_state": False},
-        # "Discover1": {"discover_state": True, "stable_state_epochs": 1},
-        # "Discover1_SS": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_AS_SENSORIAL, Dimensions.STATE_AS_SENSORIAL]},
-        "Discover1_SS_MASK05": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_AS_SENSORIAL, Dimensions.STATE_AS_SENSORIAL], "mask_sensorial_data": 0.5},
-        # "Discover2": {"discover_state": True, "stable_state_epochs": 2},
-        # "Discover5": {"discover_state": True, "stable_state_epochs": 5},
-        # "Discover1_MMMM": {"discover_state": True, "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT]},
-        # "Discover1_05LR": {"discover_state": True, "stable_state_epochs": 1, "learning_rate": 0.5*5e-3, "weight_decay": 0.5*5e-4},
+        "Base_MM": {"discover_state": False},
+        "Discover1_MM": {"discover_state": True, "stable_state_epochs": 1},
+        "Discover1_MM_TRAIN_M": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT], "sensorial_train_losses": {Dimensions.NEXT_MEASUREMENT}},
+        "Discover1_MM_TRAIN_M_3M": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT], "sensorial_train_losses": {Dimensions.NEXT_MEASUREMENT}, "measurement_size": 3},
+        "Discover1_DD": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED]},
+        "Discover1_DM": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.NEXT_MEASUREMENT]},
+        "Discover1_DM_TRAIN_M": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.NEXT_MEASUREMENT], "sensorial_train_losses": {Dimensions.NEXT_MEASUREMENT}},
+        "Discover1_DD_MASK05": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED], "mask_sensorial_data": 0.5},
+        "Discover1_DD_MASKLINEARD": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED], "mask_sensorial_data": LinearScheduler(0.0, 1.0, n_epoch)},
+        "Discover1_DM_MASKLINEARD": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.NEXT_MEASUREMENT], "mask_sensorial_data": {"state_decoded": LinearScheduler(0.0, 1.0, n_epoch)}},
+        "Discover1_DD_RP": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED], "remove_positional_encoding": True},
+        "Discover2_MM": {"discover_state": True, "stable_state_epochs": 2},
+        "Discover2_DD": {"discover_state": True, "stable_state_epochs": 2,  "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED]},
     }
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
 
                                            inputs={"base_seed": 42,
-                                                   "output_dir": "toy1d_discover_state3",
+                                                   "output_dir": output_dir,
                                                    "n_run": 1,
                                                    "toy1d_base_args": toy1d_base_args,
-                                                   "n_worker": 9,
+                                                   "n_worker": 7,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   # "custom_plots": {"DiscoverOnly": ["Discover1", "Discover2", "Discover5", "Discover1_MMMM", "Discover1_05LR"],
-                                                   #                 "StableState": ["Discover1", "Discover2", "Discover5"]}
+                                                   "custom_plots": {"MaskLinear": ["Discover1_DD_MASKLINEARD", "Discover1_DM_MASKLINEARD", "Base_MM", "Discover1_DD", "Discover1_DM"],
+                                                                    "StableState": ["Discover1_DD", "Discover1_MM", "Discover2_MM", "Discover2_DD"],
+                                                                    "TrainM": ["Base_MM", "Discover1_MM", "Discover1_MM_TRAIN_M", "Discover1_DM", "Discover1_DM_TRAIN_M", "Discover1_MM_TRAIN_M_3M"],
+                                                                    "DxM": ["Base_MM", "Discover1_MM", "Discover1_DD"]}
                                                    },
-                                           # overrides={
-                                           #    "base_dir": "toy1d_discover_state"}
+                                           overrides={
+                                               "base_dir": output_dir}
                                            )

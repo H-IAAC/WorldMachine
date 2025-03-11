@@ -9,10 +9,11 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
-from world_machine.train import Trainer
+from world_machine.train import ParameterScheduler, Trainer
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_train_history import (
     save_train_history)
+from world_machine_experiments.toy1d.dimensions import Dimensions
 
 
 class MSELossOnlyFirst(torch.nn.Module):
@@ -33,9 +34,11 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               weight_decay: float,
                               device: str = "cpu",
                               accumulation_steps: int = 1,
-                              mask_sensorial_data: float | None = None,
+                              mask_sensorial_data:  float | None | dict[str, float |
+                                                                        ParameterScheduler] | ParameterScheduler = None,
                               discover_state: bool = False,
                               stable_state_epochs: int = 1,
+                              sensorial_train_losses: set[Dimensions] = {},
                               generator_numpy: np.random.Generator | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray]]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
@@ -51,9 +54,10 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
     trainer.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
 
-    trainer.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss())
+    trainer.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
+    ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
     trainer.add_sensorial_criterion(
-        "mse", "next_measurement", torch.nn.MSELoss())
+        "mse", "next_measurement", torch.nn.MSELoss(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
 
     history = trainer(toy1d_model_untrained, toy1d_dataloaders,
                       optimizer, n_epoch, accumulation_steps)

@@ -33,13 +33,11 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "none_NEW": {"mask_sensorial_data": None},
-        # "0": {"mask_sensorial_data": 0.0},
-        # "025": {"mask_sensorial_data": 0.25},
-        # "05": {"mask_sensorial_data": 0.5},
-        # "075": {"mask_sensorial_data": 0.75},
-        "1_NEW": {"mask_sensorial_data": 1.0},
-        # "05_NEW": {"mask_sensorial_data": 0.5}
+        "000": {"mask_sensorial_data": 0.0},
+        "025": {"mask_sensorial_data": 0.25},
+        "05": {"mask_sensorial_data": 0.5},
+        "075": {"mask_sensorial_data": 0.75},
+        "100": {"mask_sensorial_data": 1.0},
     }
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],

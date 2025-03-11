@@ -11,7 +11,8 @@ class WorldMachine(torch.nn.Module):
                  sensorial_decoders: torch.nn.ModuleDict | None = None,
                  state_encoder: torch.nn.Module | None = None,
                  state_decoder: torch.nn.Module | None = None,
-                 detach_decoders: set[str] = None
+                 detach_decoders: set[str] = None,
+                 remove_positional_encoding: bool = False
                  ):
         super().__init__()
 
@@ -38,6 +39,8 @@ class WorldMachine(torch.nn.Module):
         if detach_decoders is None:
             detach_decoders = set()
         self._detach_decoders = detach_decoders
+
+        self._remove_positional_encoding = remove_positional_encoding
 
         self._positional_encoder = SinePositionalEncoding(
             state_size, max_context_size)
@@ -87,8 +90,8 @@ class WorldMachine(torch.nn.Module):
         for block in self._blocks:
             y = block(y, sensorial_masks)
 
-        # ???
-        # y["state"] -= self.positional_encoder()
+        if self._remove_positional_encoding:
+            y["state"] -= self._positional_encoder()
 
         state: torch.Tensor = y["state"]
         state_detached = state.detach()
