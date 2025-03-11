@@ -52,7 +52,7 @@ def train_plots(train_history: dict[str, np.ndarray],
         plt.title(name_format)
         plt.xlabel("Epochs")
         plt.ylabel("Metric")
-        plt.legend()
+        plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
         if log_y_axis:
             plt.yscale("log")

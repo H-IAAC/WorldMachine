@@ -60,7 +60,7 @@ def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
                 plt.title(split)
                 plt.xlabel("Epochs")
                 plt.ylabel("Metric")
-                plt.legend()
+                plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
                 if log_y_axis:
                     plt.yscale("log")

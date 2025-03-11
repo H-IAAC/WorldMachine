@@ -5,7 +5,7 @@ from matplotlib.figure import Figure
 
 
 @datasaver()
-def save_plots(plots:dict[str, Figure], output_dir:str) -> dict:
+def save_plots(plots: dict[str, Figure], output_dir: str) -> dict:
 
     plots_info = {}
 
@@ -13,8 +13,9 @@ def save_plots(plots:dict[str, Figure], output_dir:str) -> dict:
         fig = plots[name]
 
         path = os.path.join(output_dir, name+".png")
-        fig.savefig(path, facecolor="white", transparent=False)
+        fig.savefig(path, facecolor="white",
+                    transparent=False,  bbox_inches="tight")
 
-        plots_info[name] = {"path":path}
+        plots_info[name] = {"path": path}
 
     return plots_info
