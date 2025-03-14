@@ -19,12 +19,12 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    long = True
+    long = False
 
     n_epoch = 5
     output_dir = "toy1d_discover_state"
     if long:
-        n_epoch = 20
+        n_epoch = 100
         output_dir = "toy1d_discover_state_long"
 
     toy1d_base_args = {"sequence_lenght": 1000,
@@ -71,6 +71,6 @@ if __name__ == "__main__":
                                                                     "TrainM": ["Base_MM", "Discover1_MM", "Discover1_MM_TRAIN_M", "Discover1_DM", "Discover1_DM_TRAIN_M", "Discover1_MM_TRAIN_M_3M"],
                                                                     "DxM": ["Base_MM", "Discover1_MM", "Discover1_DD"]}
                                                    },
-                                           overrides={
-                                               "base_dir": output_dir}
+                                           # overrides={
+                                           #    "base_dir": output_dir}
                                            )

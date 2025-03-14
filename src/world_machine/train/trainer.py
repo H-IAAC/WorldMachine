@@ -203,12 +203,15 @@ class Trainer:
                 sensorial_masks = inputs["sensorial_masks"]
 
             if self._discover_state:
-                if "state" not in inputs:
+                if self._epoch_index == 0:
                     # TODO: use generator
-                    # state = torch.rand((batch_size, seq_len, state_size), device=device)
-                    state = torch.normal(
-                        0, 1, (batch_size, seq_len, state_size), device=device)
-                    state = (2*state)+1
+                    state = torch.rand(
+                        (batch_size, seq_len, state_size), device=device)
+                    state = (2*state)-1
+
+                    # state = torch.normal(
+                    #    0.0, 0.4, (batch_size, seq_len, state_size), device=device)
+                    # state = torch.clamp(state, -1, 1)
 
                 else:
                     state = inputs["state"]
@@ -217,8 +220,10 @@ class Trainer:
                     state=state, sensorial_data=inputs, sensorial_masks=sensorial_masks)
 
                 state_next = logits["state"]
-                state_current = torch.roll(state_next, 1, 0)
-                state_current[0] = state[0]
+                state_current = torch.roll(state_next, 1, 1)
+
+                # First sequence element don't change
+                state_current[:, 0] = state[:, 0]
 
                 indexes = item["index"]
 

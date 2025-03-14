@@ -21,6 +21,7 @@ class WorldMachineBuilder:
         self._detach_decoder: set[str] = set()
 
         self.remove_positional_encoding = False
+        self.use_positional_encoding = True
 
     @property
     def state_encoder(self) -> torch.nn.Module:
@@ -82,13 +83,15 @@ class WorldMachineBuilder:
                 block, sensorial_dimension=sensorial_dimension))
 
     def build(self) -> WorldMachine:
-        wm = WorldMachine(self._state_size, self._max_context_size,
+        wm = WorldMachine(self._state_size,
+                          self._max_context_size,
                           torch.nn.ModuleList(self._blocks),
                           torch.nn.ModuleDict(self._sensorial_encoders),
                           torch.nn.ModuleDict(self._sensorial_decoders),
                           self._state_encoder,
                           self._state_decoder,
                           self._detach_decoder,
+                          self.use_positional_encoding,
                           self.remove_positional_encoding)
 
         return wm

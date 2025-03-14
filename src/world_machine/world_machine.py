@@ -12,7 +12,9 @@ class WorldMachine(torch.nn.Module):
                  state_encoder: torch.nn.Module | None = None,
                  state_decoder: torch.nn.Module | None = None,
                  detach_decoders: set[str] = None,
-                 remove_positional_encoding: bool = False
+                 use_positional_encoding: bool = True,
+                 remove_positional_encoding: bool = False,
+                 state_activation: str | None = "tanh"
                  ):
         super().__init__()
 
@@ -40,10 +42,16 @@ class WorldMachine(torch.nn.Module):
             detach_decoders = set()
         self._detach_decoders = detach_decoders
 
+        self._use_positional_encoding = use_positional_encoding
         self._remove_positional_encoding = remove_positional_encoding
 
         self._positional_encoder = SinePositionalEncoding(
             state_size, max_context_size)
+
+        if state_activation is None:
+            self._state_activation = torch.nn.Identity
+
+        self._state_activation = torch.nn.Tanh()
 
     def forward(self, state: torch.Tensor | None = None,
                 state_decoded: torch.Tensor | None = None,
@@ -71,14 +79,17 @@ class WorldMachine(torch.nn.Module):
                 sensorial_masks[name] = torch.ones(
                     (batch_size, seq_len), dtype=bool, device=device)
 
-        x: TensorDict = sensorial_data.copy()
+        x: TensorDict = sensorial_data.clone()
 
         # State encoding
         if state_decoded is not None:
             x["state"] = self._state_encoder(
-                state_decoded) + self._positional_encoder()
+                state_decoded)
         else:
-            x["state"] = state
+            x["state"] = state.clone()
+
+        if self._use_positional_encoding:
+            x["state"] += self._positional_encoder()
 
         # Sensorial encoding
 
@@ -90,8 +101,10 @@ class WorldMachine(torch.nn.Module):
         for block in self._blocks:
             y = block(y, sensorial_masks)
 
-        if self._remove_positional_encoding:
+        if self._remove_positional_encoding and self._use_positional_encoding:
             y["state"] -= self._positional_encoder()
+
+        y["state"] = self._state_activation(y["state"])
 
         state: torch.Tensor = y["state"]
         state_detached = state.detach()
