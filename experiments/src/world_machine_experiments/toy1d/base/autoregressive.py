@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
 from world_machine_experiments.shared import function_variation
+from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.shared.save_plots import save_plots
 
 
@@ -34,7 +35,7 @@ def toy1d_autoregressive_info(toy1d_model_trained: WorldMachine,
             states[dataset_name] = torch.empty_like(
                 loader.dataset._states, device="cpu")
             state_decoded[dataset_name] = torch.empty(
-                (len(loader.dataset), 200, 3))
+                (len(loader.dataset), toy1d_model_trained._max_context_size, 3))
 
             total_loss = torch.tensor(0, dtype=torch.float32, device=device)
             n = 0
@@ -53,20 +54,15 @@ def toy1d_autoregressive_info(toy1d_model_trained: WorldMachine,
                     (batch_size, seq_len, state_size), device=device)
                 state = (2*state)-1
 
-                state = torch.normal(
-                    0.0, 0.4, (batch_size, seq_len, state_size), device=device)
-                state = torch.clamp(state, -1, 1)
-
                 sensorial_masks = None
 
                 for i in range(seq_len):
                     logits = toy1d_model_trained(
-                        state=state, sensorial_data=inputs, sensorial_masks=sensorial_masks)
+                        state=state,  # state.clone(),
+                        sensorial_data=inputs, sensorial_masks=sensorial_masks)
 
                     if i != seq_len-1:
                         state[:, i+1] = logits["state"][:, i]
-
-                        state = torch.clamp(state, -1, 1)
 
                 loss = mse(targets[:, :, 0], logits["state_decoded"][:, :, 0])
                 total_loss += loss * targets.size(0)
@@ -95,6 +91,7 @@ def toy1d_autoregressive_state_plots(toy1d_autoregressive_states: dict[str, torc
 
     for dataset_name in toy1d_autoregressive_states:
         fig, axs = plt.subplots(4, 6, dpi=600, figsize=(12, 4.8))
+        fig.subplots_adjust(wspace=.5)
 
         parallel_states: torch.Tensor = toy1d_dataloaders[dataset_name].dataset._states
 
@@ -107,7 +104,7 @@ def toy1d_autoregressive_state_plots(toy1d_autoregressive_states: dict[str, torc
             axs[row, column].plot(toy1d_autoregressive_states[dataset_name][row, :, column].cpu(),
                                   color="blue", label="Autoregressive")
             axs[row, column].set_xticks([])
-            axs[row, column].set_yticks([])
+            # axs[row, column].set_yticks([])
 
         for i in range(6):
             axs[0][i].set_title(f"Dim {i}")
@@ -219,9 +216,8 @@ save_toy1d_autoregressive_state_decoded_plots = function_variation(
     {"plots": source("toy1d_autoregressive_state_decoded_plots")}, "save_toy1d_autoregressive_state_decoded_plots")(save_plots)
 
 
-@datasaver()
-def save_toy1d_autoregressive_metrics(toy1d_autoregressive_losses: dict[str, float],
-                                      toy1d_train_history: dict[str, np.ndarray], output_dir: str) -> dict:
+def toy1d_autoregressive_metrics(toy1d_autoregressive_losses: dict[str, float],
+                                 toy1d_train_history: dict[str, np.ndarray]) -> dict:
 
     parallel_metrics = {}
 
@@ -237,12 +233,11 @@ def save_toy1d_autoregressive_metrics(toy1d_autoregressive_losses: dict[str, flo
 
     total_metrics = {}
     total_metrics["autoregressive"] = toy1d_autoregressive_losses
-    total_metrics["parallel"] = toy1d_autoregressive_losses
+    total_metrics["parallel"] = parallel_metrics
     total_metrics["proportion"] = relation
 
-    file_path = os.path.join(output_dir, "autoregressive_metrics.json")
+    return total_metrics
 
-    with open(file_path, "w") as file:
-        json.dump(total_metrics, file)
 
-    return {"path": file_path}
+save_toy1d_autoregressive_metrics = function_variation({"metrics": source(
+    "toy1d_autoregressive_metrics")}, "save_toy1d_autoregressive_metrics")(save_metrics)

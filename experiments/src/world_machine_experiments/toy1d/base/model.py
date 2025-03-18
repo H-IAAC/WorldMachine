@@ -6,7 +6,8 @@ from world_machine_experiments.toy1d.dimensions import Dimensions
 
 def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimensions: list[int] | None = None,
                           h_ensure_random_seed: None = None, remove_positional_encoding: bool = False, measurement_size: int = 2,
-                          use_positional_encoding: bool = True) -> WorldMachine:
+                          use_positional_encoding: bool = True,
+                          state_activation: str | None = None) -> WorldMachine:
 
     decoded_state_size = len(
         state_dimensions) if state_dimensions is not None else 3
@@ -45,5 +46,7 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
 
     builder.remove_positional_encoding = remove_positional_encoding
     builder.use_positional_encoding = use_positional_encoding
+
+    builder.state_activation = state_activation
 
     return builder.build()

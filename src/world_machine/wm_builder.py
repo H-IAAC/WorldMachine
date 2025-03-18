@@ -22,6 +22,7 @@ class WorldMachineBuilder:
 
         self.remove_positional_encoding = False
         self.use_positional_encoding = True
+        self._state_activation: str | None = "tanh"
 
     @property
     def state_encoder(self) -> torch.nn.Module:
@@ -46,6 +47,17 @@ class WorldMachineBuilder:
     @detach_state_decoder.setter
     def detach_state_decoder(self, value: bool) -> None:
         self._detach_decoder.add("state")
+
+    @property
+    def state_activation(self) -> str | None:
+        return self._state_activation
+
+    @state_activation.setter
+    def state_activation(self, value) -> None:
+        if value not in [None, "tanh", "clamp"]:
+            raise ValueError(f"Invalid state activation function {value}.")
+
+        self._state_activation = value
 
     def add_sensorial_dimension(self, dimension_name: str, dimension_size: int,
                                 encoder: torch.nn.Module | None = None,
@@ -92,6 +104,7 @@ class WorldMachineBuilder:
                           self._state_decoder,
                           self._detach_decoder,
                           self.use_positional_encoding,
-                          self.remove_positional_encoding)
+                          self.remove_positional_encoding,
+                          self._state_activation)
 
         return wm

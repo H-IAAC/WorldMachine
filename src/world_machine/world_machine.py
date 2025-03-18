@@ -1,7 +1,7 @@
 import torch
 from tensordict import TensorDict
 
-from .layers import SinePositionalEncoding
+from .layers import Clamp, SinePositionalEncoding
 
 
 class WorldMachine(torch.nn.Module):
@@ -18,6 +18,7 @@ class WorldMachine(torch.nn.Module):
                  ):
         super().__init__()
 
+        self._max_context_size = max_context_size
         self._state_size = state_size
 
         self._blocks = blocks
@@ -49,14 +50,20 @@ class WorldMachine(torch.nn.Module):
             state_size, max_context_size)
 
         if state_activation is None:
-            self._state_activation = torch.nn.Identity
-
-        self._state_activation = torch.nn.Tanh()
+            self._state_activation = torch.nn.Identity()
+        elif state_activation == "tanh":
+            self._state_activation = torch.nn.Tanh()
+        elif state_activation == "clamp":
+            self._state_activation = Clamp()
+        else:
+            raise ValueError(
+                f"Invalid state activation function {state_activation}")
 
     def forward(self, state: torch.Tensor | None = None,
                 state_decoded: torch.Tensor | None = None,
                 sensorial_data: TensorDict | None = None,
-                sensorial_masks: TensorDict | None = None) -> TensorDict:
+                sensorial_masks: TensorDict | None = None,
+                input_sequence_size: int | None = None) -> TensorDict:
 
         if state_decoded is not None:
             device = state_decoded.device
@@ -70,6 +77,9 @@ class WorldMachine(torch.nn.Module):
             raise ValueError(
                 "'state_decoded' or 'state' must but not None, but both is None.")
 
+        if input_sequence_size is not None:
+            seq_len = input_sequence_size
+
         if sensorial_data is None:
             sensorial_data = TensorDict(device=device)
 
@@ -81,15 +91,18 @@ class WorldMachine(torch.nn.Module):
 
         x: TensorDict = sensorial_data.clone()
 
+        for dim in x.keys():
+            x[dim] = x[dim][:, :seq_len]
+
         # State encoding
         if state_decoded is not None:
             x["state"] = self._state_encoder(
-                state_decoded)
+                state_decoded[:, :seq_len])
         else:
-            x["state"] = state.clone()
+            x["state"] = state[:, :seq_len].clone()
 
         if self._use_positional_encoding:
-            x["state"] += self._positional_encoder()
+            x["state"] += self._positional_encoder()[:, :seq_len]
 
         # Sensorial encoding
 
@@ -102,7 +115,7 @@ class WorldMachine(torch.nn.Module):
             y = block(y, sensorial_masks)
 
         if self._remove_positional_encoding and self._use_positional_encoding:
-            y["state"] -= self._positional_encoder()
+            y["state"] -= self._positional_encoder()[:, :seq_len]
 
         y["state"] = self._state_activation(y["state"])
 
@@ -128,5 +141,6 @@ class WorldMachine(torch.nn.Module):
     def __call__(self, state: torch.Tensor | None = None,
                  state_decoded: torch.Tensor | None = None,
                  sensorial_data: TensorDict | None = None,
-                 sensorial_masks: TensorDict | None = None):
-        return super().__call__(state, state_decoded, sensorial_data, sensorial_masks)
+                 sensorial_masks: TensorDict | None = None,
+                 input_sequence_size: int | None = None):
+        return super().__call__(state, state_decoded, sensorial_data, sensorial_masks, input_sequence_size)

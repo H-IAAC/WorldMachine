@@ -49,7 +49,8 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                                         output_dir: str,
                                         n_run: int,
                                         base_seed: int,
-                                        n_worker: int = 5) -> dict:
+                                        n_worker: int = 5,
+                                        aditional_outputs: list[str] | None = None) -> dict:
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -70,7 +71,8 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
         inputs = {"base_seed": base_seed,
                   "output_dir": run_dir,
                   "n_run": n_run,
-                  "toy1d_args": toy1d_args}
+                  "toy1d_args": toy1d_args,
+                  "aditional_outputs": aditional_outputs}
 
         future = executor.submit(toy1d_parameter_variation_worker_func, inputs)
         futures.append(future)

@@ -16,12 +16,16 @@ from world_machine_experiments.toy1d import base
 def multiple_toy1d_trainings_info(n_run: int,
                                   base_seed: int,
                                   output_dir: str,
-                                  toy1d_args: dict[str, Any]) -> list[dict[str, np.ndarray]]:
+                                  toy1d_args: dict[str, Any],
+                                  aditional_outputs: list[str] | None = None) -> list[dict[str, np.ndarray]]:
     tracker = adapters.HamiltonTracker(
         project_id=1,
         username="EltonCN",
         dag_name="toy1d_train"
     )
+
+    if aditional_outputs is None:
+        aditional_outputs = []
 
     # .with_adapter(tracker).build()
     d = driver.Builder().with_modules(base, shared).build()
@@ -37,11 +41,15 @@ def multiple_toy1d_trainings_info(n_run: int,
         if not os.path.exists(run_dir):
             os.makedirs(run_dir, exist_ok=True)
 
-        outputs = d.execute(["toy1d_train_history",
-                             "save_toy1d_model",
-                             "save_toy1d_train_history",
-                             "save_toy1d_train_plots",
-                             "save_toy1d_prediction_plots"], inputs=toy1d_args)
+        final_vars = ["toy1d_train_history",
+                      "save_toy1d_model",
+                      "save_toy1d_train_history",
+                      "save_toy1d_train_plots",
+                      "save_toy1d_prediction_plots"]
+
+        final_vars += aditional_outputs
+
+        outputs = d.execute(final_vars, inputs=toy1d_args)
 
         results.append(outputs["toy1d_train_history"])
 

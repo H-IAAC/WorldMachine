@@ -37,7 +37,8 @@ class AdaLNZeroBlock(ConditioningBlock):
             conditioning_mask = torch.ones(context_size, dtype=bool)
 
         # Conditioning MLP
-        conditioning_data = self.conditioning_mlp(conditioning)
+        conditioning_data = self.conditioning_mlp(conditioning)[
+            :, :context_size]
 
         conditioning_data *= conditioning_mask.unsqueeze(-1)
 

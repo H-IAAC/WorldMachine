@@ -95,7 +95,7 @@ class WorldMachineDataset(Dataset, abc.ABC):
         for filename in cls._states_filenames:
             try:
                 os.remove(filename)
-            finally:
+            except FileNotFoundError:
                 pass
 
 
