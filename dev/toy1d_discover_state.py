@@ -39,7 +39,9 @@ if __name__ == "__main__":
                        "optimizer_class": AdamW,
                        "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
                        "device": device,
-                       "use_state_control": False
+                       "use_state_control": False,
+                       "positional_encoder_type": "learnable_alibi",
+                       "state_activation": "tanh"
                        }
 
     toy1d_parameter_variation = {
@@ -53,7 +55,6 @@ if __name__ == "__main__":
         "Discover1_DD_MASK05": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED], "mask_sensorial_data": 0.5},
         "Discover1_DD_MASKLINEARD": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED], "mask_sensorial_data": LinearScheduler(0.0, 1.0, n_epoch)},
         "Discover1_DM_MASKLINEARD": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.NEXT_MEASUREMENT], "mask_sensorial_data": {"state_decoded": LinearScheduler(0.0, 1.0, n_epoch)}},
-        "Discover1_DD_RP": {"discover_state": True, "stable_state_epochs": 1, "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED], "remove_positional_encoding": True},
         "Discover2_MM": {"discover_state": True, "stable_state_epochs": 2},
         "Discover2_DD": {"discover_state": True, "stable_state_epochs": 2,  "block_configuration": [Dimensions.STATE_DECODED, Dimensions.STATE_DECODED]},
     }
@@ -64,7 +65,7 @@ if __name__ == "__main__":
                                                    "output_dir": output_dir,
                                                    "n_run": 1,
                                                    "toy1d_base_args": toy1d_base_args,
-                                                   "n_worker": 7,
+                                                   "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
                                                    "custom_plots": {"MaskLinear": ["Discover1_DD_MASKLINEARD", "Discover1_DM_MASKLINEARD", "Base_MM", "Discover1_DD", "Discover1_DM"],
                                                                     "StableState": ["Discover1_DD", "Discover1_MM", "Discover2_MM", "Discover2_DD"],

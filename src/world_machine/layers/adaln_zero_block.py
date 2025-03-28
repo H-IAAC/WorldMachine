@@ -7,7 +7,7 @@ from .modulate import Modulate
 
 class AdaLNZeroBlock(ConditioningBlock):
     def __init__(self, embed_dim: int, conditioning_dim: int, hidden_size: int,
-                 n_head: int, dropout_rate: float = 0.0):
+                 n_head: int, dropout_rate: float = 0.0, positional_encoder_type: str | None = None):
         super().__init__(embed_dim, conditioning_dim)
 
         self.conditioning_mlp = torch.nn.Sequential(torch.nn.SiLU(),
@@ -15,7 +15,8 @@ class AdaLNZeroBlock(ConditioningBlock):
 
         self.layer_norm1 = torch.nn.LayerNorm(embed_dim)
         self.modulate1 = Modulate()
-        self.attention = MultiHeadSelfAttention(embed_dim, n_head, True)
+        self.attention = MultiHeadSelfAttention(
+            embed_dim, n_head, True, positional_encoder_type)
         self.dropout_attention = torch.nn.Dropout(dropout_rate)
         self.modulate2 = Modulate()
 

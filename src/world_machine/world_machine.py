@@ -1,7 +1,9 @@
 import torch
 from tensordict import TensorDict
 
-from .layers import Clamp, SinePositionalEncoding
+from world_machine.layers.positional_encoder import create_positional_encoder
+
+from .layers import Clamp
 
 
 class WorldMachine(torch.nn.Module):
@@ -12,7 +14,7 @@ class WorldMachine(torch.nn.Module):
                  state_encoder: torch.nn.Module | None = None,
                  state_decoder: torch.nn.Module | None = None,
                  detach_decoders: set[str] = None,
-                 use_positional_encoding: bool = True,
+                 positional_encoder_type: str | None = "sine",
                  remove_positional_encoding: bool = False,
                  state_activation: str | None = "tanh"
                  ):
@@ -43,11 +45,11 @@ class WorldMachine(torch.nn.Module):
             detach_decoders = set()
         self._detach_decoders = detach_decoders
 
-        self._use_positional_encoding = use_positional_encoding
-        self._remove_positional_encoding = remove_positional_encoding
+        self._positional_encoder = create_positional_encoder(
+            positional_encoder_type, state_size, max_context_size)
 
-        self._positional_encoder = SinePositionalEncoding(
-            state_size, max_context_size)
+        self._positional_encoder_type = positional_encoder_type
+        self._remove_positional_encoding = remove_positional_encoding
 
         if state_activation is None:
             self._state_activation = torch.nn.Identity()
@@ -101,21 +103,23 @@ class WorldMachine(torch.nn.Module):
         else:
             x["state"] = state[:, :seq_len].clone()
 
-        if self._use_positional_encoding:
-            x["state"] += self._positional_encoder()[:, :seq_len]
+        x["state"] = self._positional_encoder.apply_input_pe(x["state"])
+
+        if input_sequence_size is not None:
+            x = x.contiguous()
 
         # Sensorial encoding
 
         for name in self._sensorial_encoders:
-            x[name] = self._sensorial_encoders[name](sensorial_data[name])
+            x[name] = self._sensorial_encoders[name](x[name])
 
         y = x
         # Main prediction+update
         for block in self._blocks:
             y = block(y, sensorial_masks)
 
-        if self._remove_positional_encoding and self._use_positional_encoding:
-            y["state"] -= self._positional_encoder()[:, :seq_len]
+        if self._remove_positional_encoding:
+            y["state"] = self._positional_encoder.remove_input_pe(y["state"])
 
         y["state"] = self._state_activation(y["state"])
 

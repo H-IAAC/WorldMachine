@@ -42,18 +42,21 @@ if __name__ == "__main__":
                        "discover_state": True,
                        "stable_state_epochs": 1,
                        "remove_positional_encoding": False,
-                       "use_positional_encoding": True,
+                       "positional_encoder_type": "sine",
                        "state_activation": None
                        }
 
     toy1d_parameter_variation = {
         "Base": {},
+        "Clamp": {"state_activation": "clamp"},
         "RemovePE": {"remove_positional_encoding": True},
-        "NoPE": {"use_positional_encoding": False},
-        "NoPE_Clamp": {"use_positional_encoding": False, "state_activation": "clamp"},
-        "NoPE_Tanh": {"use_positional_encoding": False, "state_activation": "tanh"},
+        "NoPE": {"positional_encoder_type": None},
+        "NoPE_Clamp": {"positional_encoder_type": None, "state_activation": "clamp"},
+        "NoPE_Tanh": {"positional_encoder_type": None, "state_activation": "tanh"},
         "RemovePE_Tanh": {"remove_positional_encoding": True, "state_activation": "tanh"},
-        "Tanh": {"state_activation": "tanh"}
+        "Tanh": {"state_activation": "tanh"},
+        "Albi_Tanh": {"positional_encoder_type": "alibi", "state_activation": "tanh"},
+        "LAlbi_Tanh": {"positional_encoder_type": "learnable_alibi", "state_activation": "tanh"}
     }
 
     experiments_paths = {}
@@ -74,10 +77,10 @@ if __name__ == "__main__":
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 7,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   "aditional_outputs": aditional_outputs,
-                                                   # "custom_plots": {"Tanh": ["Tanh", "Tanh2"], },
+                                                   "aditional_outputs": aditional_outputs
                                                    },
                                            overrides={
-                                               "base_dir": output_dir,
-                                               "experiment_paths": experiments_paths}
-                                           )
+        "base_dir": output_dir,
+        "experiment_paths": experiments_paths
+    }
+    )

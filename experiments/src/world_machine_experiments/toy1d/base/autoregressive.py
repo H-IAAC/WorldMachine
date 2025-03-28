@@ -1,15 +1,13 @@
-import json
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import tqdm
-from hamilton.function_modifiers import datasaver, extract_fields, source
+from hamilton.function_modifiers import extract_fields, source
 from matplotlib.figure import Figure
 from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
+from world_machine.layers.positional_encoder import SinePositionalEncoder
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.shared.save_plots import save_plots
@@ -124,7 +122,10 @@ def toy1d_autoregressive_state_plots(toy1d_autoregressive_states: dict[str, torc
 def toy1d_autoregressive_positional_encoder_plots(toy1d_model_trained: WorldMachine,
                                                   toy1d_autoregressive_states: dict[str, torch.Tensor],
                                                   toy1d_dataloaders: dict[str, DataLoader]) -> dict[str, Figure]:
-    pe = toy1d_model_trained._positional_encoder().cpu()[:, 0]
+    if not isinstance(toy1d_model_trained._positional_encoder, SinePositionalEncoder):
+        return {}
+
+    pe = toy1d_model_trained._positional_encoder.pe.cpu()[:, 0]
 
     seq_len = pe.shape[0]
 

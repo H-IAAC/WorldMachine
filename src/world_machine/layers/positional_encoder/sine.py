@@ -1,10 +1,14 @@
 import torch
 
-class SinePositionalEncoding(torch.nn.Module):
+from .positional_encoder import PositionalEncoder
+
+
+class SinePositionalEncoder(PositionalEncoder):
     """
     Positional enconding using sine/cossine function.
     """
-    def __init__(self, embed_dim:int, sequence_size:int) -> None:
+
+    def __init__(self, embed_dim: int, sequence_size: int, n_head: int) -> None:
         """
         Creates the layer.
 
@@ -13,9 +17,9 @@ class SinePositionalEncoding(torch.nn.Module):
             sequence_size (int): size of the sequence in the input and output.
         """
 
-        super().__init__()
+        super().__init__(embed_dim, sequence_size, n_head)
 
-        #Caches the positions encodings:
+        # Caches the positions encodings:
         position = torch.arange(sequence_size, dtype=torch.float32)
         expoent = 2.0*torch.arange(embed_dim, dtype=torch.float32)/embed_dim
 
@@ -28,15 +32,14 @@ class SinePositionalEncoding(torch.nn.Module):
         pe[:, 1::2] = torch.cos(pe[:, 1::2])
 
         self.register_buffer("pe", pe)
+        self.pe: torch.Tensor
 
-    def forward(self) -> torch.Tensor:
-        """
-        Adds the positions encodings to the input.
+    def apply_input_pe(self, x: torch.Tensor) -> torch.Tensor:
+        sequence_size = x.shape[1]
 
-        Args:
-            input_tensor (torch.Tensor): input tensor to receive the positions encodings
+        return x+self.pe[:, :sequence_size]
 
-        Returns:
-            torch.Tensor: input + positional encoding.
-        """
-        return self.pe
+    def remove_input_pe(self, x: torch.Tensor) -> torch.Tensor:
+        sequence_size = x.shape[1]
+
+        return x-self.pe[:, :sequence_size]

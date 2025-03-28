@@ -5,9 +5,10 @@ from .world_machine import WorldMachine
 
 
 class WorldMachineBuilder:
-    def __init__(self, state_size: int, max_context_size: int):
+    def __init__(self, state_size: int, max_context_size: int, positional_encoder_type: str | None = "sine"):
         self._state_size = state_size
         self._max_context_size = max_context_size
+        self._positional_encoder_type = positional_encoder_type
 
         self._sensorial_dimensions: dict[str, int] = {}
         self._sensorial_encoders: dict[str, torch.nn.Module] = {}
@@ -21,7 +22,6 @@ class WorldMachineBuilder:
         self._detach_decoder: set[str] = set()
 
         self.remove_positional_encoding = False
-        self.use_positional_encoding = True
         self._state_activation: str | None = "tanh"
 
     @property
@@ -84,12 +84,14 @@ class WorldMachineBuilder:
                                               hidden_size_multiplier*self._state_size,
                                               n_attention_head,
                                               dropout_rate,
-                                              is_causal=True)
+                                              is_causal=True,
+                                              positional_encoder_type=self._positional_encoder_type)
             else:
                 block = AdaLNZeroBlock(self._state_size,
                                        self._sensorial_dimensions[sensorial_dimension],
                                        hidden_size_multiplier*self._state_size,
-                                       n_attention_head)
+                                       n_attention_head,
+                                       positional_encoder_type=self._positional_encoder_type)
 
             self._blocks.append(BlockContainer(
                 block, sensorial_dimension=sensorial_dimension))
@@ -103,8 +105,8 @@ class WorldMachineBuilder:
                           self._state_encoder,
                           self._state_decoder,
                           self._detach_decoder,
-                          self.use_positional_encoding,
+                          self._positional_encoder_type,
                           self.remove_positional_encoding,
-                          self._state_activation)
+                          self._state_activation,)
 
         return wm

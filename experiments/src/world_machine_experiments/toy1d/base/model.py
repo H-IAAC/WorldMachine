@@ -6,7 +6,7 @@ from world_machine_experiments.toy1d.dimensions import Dimensions
 
 def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimensions: list[int] | None = None,
                           h_ensure_random_seed: None = None, remove_positional_encoding: bool = False, measurement_size: int = 2,
-                          use_positional_encoding: bool = True,
+                          positional_encoder_type: str | None = "sine",
                           state_activation: str | None = None) -> WorldMachine:
 
     decoded_state_size = len(
@@ -16,7 +16,7 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
     max_context_size = 200
 
     builder = WorldMachineBuilder(state_size,
-                                  max_context_size)
+                                  max_context_size, positional_encoder_type)
 
     builder.add_sensorial_dimension("state_control", state_size,
                                     torch.nn.Linear(3, state_size),
@@ -45,8 +45,6 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
             builder.add_block(sensorial_dimension="state_decoded")
 
     builder.remove_positional_encoding = remove_positional_encoding
-    builder.use_positional_encoding = use_positional_encoding
-
     builder.state_activation = state_activation
 
     return builder.build()

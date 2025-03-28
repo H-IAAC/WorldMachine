@@ -10,13 +10,13 @@ class TransformDecoderBlock(torch.nn.Module):
     """
 
     def __init__(self, embed_dim: int, hidden_size: int, n_head: int,
-                 dropout_rate: float = 0.0, is_causal: bool = True):
+                 dropout_rate: float = 0.0, is_causal: bool = True, positional_encoder_type: str | None = None):
         super().__init__()
 
         self.is_causal = is_causal
 
         self.attention = MultiHeadSelfAttention(
-            embed_dim, n_head, self.is_causal)
+            embed_dim, n_head, self.is_causal, positional_encoder_type)
         self.dropout_attention = torch.nn.Dropout(dropout_rate)
         self.layer_norm1 = torch.nn.LayerNorm(embed_dim)
         self.feedforward = PointwiseFeedforward(
