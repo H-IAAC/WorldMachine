@@ -39,7 +39,7 @@ if __name__ == "__main__":
                        "optimizer_class": AdamW,
                        "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
                        "device": device,
-                       "use_state_control": False,
+                       "state_control": False,
                        "positional_encoder_type": "learnable_alibi",
                        "state_activation": "tanh"
                        }

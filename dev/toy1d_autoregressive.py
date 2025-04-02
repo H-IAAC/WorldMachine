@@ -38,7 +38,7 @@ if __name__ == "__main__":
                        "optimizer_class": AdamW,
                        "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
                        "device": device,
-                       "use_state_control": False,
+                       "state_control": False,
                        "discover_state": True,
                        "stable_state_epochs": 1,
                        "remove_positional_encoding": False,

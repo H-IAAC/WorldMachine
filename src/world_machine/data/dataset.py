@@ -55,8 +55,12 @@ class WorldMachineDataset(Dataset, abc.ABC):
 
         if self._has_masks:
             for dimension in self._sensorial_dimensions:
-                (item["inputs"]["sensorial_masks"][dimension],
-                 item["targets"]["sensorial_masks"][dimension]) = self.get_dimension_mask(dimension, index)
+                (item["inputs"]["masks"][dimension],
+                 item["targets"]["masks"][dimension]) = self.get_dimension_mask(dimension, index)
+
+            if self._has_state_decoded:
+                (item["inputs"]["masks"]["state_decoded"],
+                 item["targets"]["masks"]["state_decoded"]) = self.get_dimension_mask("state_decoded", index)
 
         if self._states != None:
             item["inputs"]["state"] = self._states[index]

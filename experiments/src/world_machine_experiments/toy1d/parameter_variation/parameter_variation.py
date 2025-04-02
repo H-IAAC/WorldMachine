@@ -36,10 +36,10 @@ def toy1d_parameter_variation_worker_func(inputs):
     # .with_adapter(tracker).build()
     d = driver.Builder().with_modules(multiple, shared).build()
 
-    outputs = [  # "save_multiple_toy1d_train_plots",
-        # "save_multiple_toy1d_consolidated_train_statistics",
-        # "save_multiple_toy1d_parameters",
-    ]
+    outputs = ["save_multiple_toy1d_train_plots",
+               "save_multiple_toy1d_consolidated_train_statistics",
+               "save_multiple_toy1d_parameters",
+               ]
 
     if inputs["aditional_outputs"] is not None and "save_toy1d_mask_sensorial_metrics" in inputs["aditional_outputs"]:
         outputs += ["save_multiple_toy1d_consolidated_mask_sensorial_metrics",

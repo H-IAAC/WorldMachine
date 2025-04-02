@@ -180,28 +180,8 @@ class Trainer:
                 seq_len = inputs["state"].shape[1]
             state_size = model._state_size
 
-            sensorial_masks = None
-            if self._mask_sensorial_data is not None and (mode == MODE_TRAIN or force_sensorial_mask):
-                with torch.no_grad():
-                    if "sensorial_masks" not in inputs:
-                        sensorial_masks = TensorDict(
-                            device=device, batch_size=batch_size)
-
-                        sensorial_data = inputs
-                        for name in sensorial_data.keys():
-                            sensorial_masks[name] = torch.ones(
-                                (batch_size, seq_len), dtype=bool, device=device)
-                    else:
-                        sensorial_masks = inputs["sensorial_masks"]
-
-                    mask_percentage = self._generate_mask_percentage(
-                        sensorial_masks.keys())
-
-                    sensorial_masks = generate_masks(sensorial_masks,
-                                                     mask_percentage, batch_size, device)
-
-            elif "sensorial_masks" in inputs:
-                sensorial_masks = inputs["sensorial_masks"]
+            sensorial_masks = self._generate_sensorial_masks(
+                inputs, mode, force_sensorial_mask, device, batch_size, seq_len)
 
             if self._discover_state:
                 if self._epoch_index == 0:
@@ -235,9 +215,9 @@ class Trainer:
                 logits: TensorDict = model(
                     state_decoded=inputs["state_decoded"], sensorial_data=inputs, sensorial_masks=sensorial_masks)
 
-            targets_sensorial_masks = None
-            if "sensorial_masks" in targets:
-                targets_sensorial_masks = targets["sensorial_masks"]
+            targets_masks = None
+            if "masks" in targets:
+                targets_masks = targets["masks"]
 
             losses: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
             for dimension in self._criterions:
@@ -247,12 +227,11 @@ class Trainer:
                 logits_dim = logits[dimension]
                 targets_dim = targets[dimension]
 
-                if (dimension != "state_decoded" and
-                        targets_sensorial_masks is not None and
-                        dimension in targets_sensorial_masks):
+                if (targets_masks is not None and
+                        dimension in targets_masks):
 
-                    logits_dim = logits_dim[targets_sensorial_masks[dimension]]
-                    targets_dim = targets_dim[targets_sensorial_masks[dimension]]
+                    logits_dim = logits_dim[targets_masks[dimension]]
+                    targets_dim = targets_dim[targets_masks[dimension]]
 
                 losses[dimension] = {}
                 for criterion_name in self._criterions[dimension]:
@@ -433,6 +412,32 @@ class Trainer:
             mask_percentage[dim]) for dim in mask_percentage}
 
         return mask_percentage
+
+    def _generate_sensorial_masks(self, inputs, mode, force_sensorial_mask, device, batch_size, seq_len) -> TensorDict:
+        sensorial_masks = None
+        if self._mask_sensorial_data is not None and (mode == MODE_TRAIN or force_sensorial_mask):
+            with torch.no_grad():
+                if "masks" not in inputs:
+                    sensorial_masks = TensorDict(
+                        device=device, batch_size=batch_size)
+
+                    sensorial_data: TensorDict = inputs
+                    for name in sensorial_data.keys():
+                        sensorial_masks[name] = torch.ones(
+                            (batch_size, seq_len), dtype=bool, device=device)
+                else:
+                    sensorial_masks = inputs["masks"]
+
+                mask_percentage = self._generate_mask_percentage(
+                    sensorial_masks.keys())
+
+                sensorial_masks = generate_masks(sensorial_masks,
+                                                 mask_percentage, batch_size, device)
+
+        elif "masks" in inputs:
+            sensorial_masks = inputs["masks"]
+
+        return sensorial_masks
 
 
 def print_info(loss_value: torch.Tensor, epoch: int, total_epochs: int,
