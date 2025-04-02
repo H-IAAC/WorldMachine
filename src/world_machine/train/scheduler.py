@@ -2,6 +2,7 @@ import abc
 import json
 from typing import Protocol, TypeVar
 
+import numpy as np
 import pydantic_core
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import CoreSchema, core_schema
@@ -25,7 +26,7 @@ class ParameterScheduler(abc.ABC):
         self._n_epoch = n_epoch
 
     @abc.abstractmethod
-    def __call__(self, epoch_index) -> T:
+    def __call__(self, epoch_index: int) -> T:
         ...
 
 
@@ -36,7 +37,7 @@ class LinearScheduler(ParameterScheduler):
         self._initial_value = initial_value
         self._final_value = final_value
 
-    def __call__(self, epoch_index) -> T:
+    def __call__(self, epoch_index: int) -> T:
         t = epoch_index/(self._n_epoch-1)
 
         result = (t-1)*self._initial_value
@@ -50,6 +51,45 @@ class LinearScheduler(ParameterScheduler):
             return json.dumps({"type": value.__class__.__name__, "initial_value": value._initial_value, "final_value": value._final_value, "n_epoch": value._n_epoch})
 
         def validate(value: str) -> "LinearScheduler":
+            return value
+
+        schema = core_schema.union_schema([
+            core_schema.is_instance_schema(cls),
+        ])
+
+        return pydantic_core.core_schema.no_info_after_validator_function(
+            validate,
+            schema,
+            serialization=pydantic_core.core_schema.plain_serializer_function_ser_schema(
+                serialize, when_used="json"
+            ),
+        )
+
+
+class UniformScheduler(ParameterScheduler):
+
+    def __init__(self, low_value: T, high_value: T, n_epoch: int):
+        super().__init__(n_epoch)
+
+        self._low_value = low_value
+        self._high_value = high_value
+
+    def __call__(self, epoch_index: int) -> T:
+
+        # TODO use generator
+        result = np.random.uniform()
+
+        result *= (self._high_value-self._low_value)
+        result += self._low_value
+
+        return result
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler) -> CoreSchema:
+        def serialize(value: "UniformScheduler") -> str:
+            return json.dumps({"type": value.__class__.__name__, "low_value": value._low_value, "high_value": value._high_value, "n_epoch": value._n_epoch})
+
+        def validate(value: str) -> "UniformScheduler":
             return value
 
         schema = core_schema.union_schema([

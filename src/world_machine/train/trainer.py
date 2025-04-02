@@ -117,7 +117,8 @@ class Trainer:
                                    loader: DataLoader,
                                    mode: int = MODE_EVALUATE,
                                    optimizer: torch.optim.Optimizer | None = None,
-                                   accumulation_steps: int | None = None) -> dict[str, torch.Tensor]:
+                                   accumulation_steps: int | None = None,
+                                   force_sensorial_mask: bool = False) -> dict[str, torch.Tensor]:
         """
         Computes the loss from a model across a dataset.
 
@@ -180,7 +181,7 @@ class Trainer:
             state_size = model._state_size
 
             sensorial_masks = None
-            if self._mask_sensorial_data is not None and mode == MODE_TRAIN:
+            if self._mask_sensorial_data is not None and (mode == MODE_TRAIN or force_sensorial_mask):
                 with torch.no_grad():
                     if "sensorial_masks" not in inputs:
                         sensorial_masks = TensorDict(

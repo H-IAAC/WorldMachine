@@ -7,7 +7,7 @@ from .modulate import Modulate
 
 class AdaLNZeroBlock(ConditioningBlock):
     def __init__(self, embed_dim: int, conditioning_dim: int, hidden_size: int,
-                 n_head: int, dropout_rate: float = 0.0, positional_encoder_type: str | None = None):
+                 n_head: int, dropout_rate: float = 0.0, positional_encoder_type: str | None = None, learn_sensorial_mask: bool = False):
         super().__init__(embed_dim, conditioning_dim)
 
         self.conditioning_mlp = torch.nn.Sequential(torch.nn.SiLU(),
@@ -29,6 +29,11 @@ class AdaLNZeroBlock(ConditioningBlock):
         self.dropout_linear2 = torch.nn.Dropout(dropout_rate)
         self.modulate4 = Modulate()
 
+        if learn_sensorial_mask:
+            self.sensorial_replace = torch.nn.Parameter(torch.Tensor(36))
+        else:
+            self.sensorial_replace = None
+
     def forward(self, x: torch.Tensor, conditioning: torch.Tensor,
                 conditioning_mask: torch.Tensor | None = None) -> torch.Tensor:
 
@@ -41,7 +46,11 @@ class AdaLNZeroBlock(ConditioningBlock):
         conditioning_data = self.conditioning_mlp(conditioning)[
             :, :context_size]
 
-        conditioning_data *= conditioning_mask.unsqueeze(-1)
+        if self.sensorial_replace is None:
+            conditioning_data *= conditioning_mask.unsqueeze(-1)
+        else:
+            conditioning_data[torch.bitwise_not(
+                conditioning_mask)] = self.sensorial_replace
 
         # scale -> gamma, alpha
         # shift -> beta

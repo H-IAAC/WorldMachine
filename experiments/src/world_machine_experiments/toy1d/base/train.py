@@ -25,7 +25,7 @@ class MSELossOnlyFirst(torch.nn.Module):
         return self.mse(x[:, :, 0], y[:, :, 0])
 
 
-@extract_fields(fields={"toy1d_model_trained": WorldMachine, "toy1d_train_history": dict[str, np.ndarray]})
+@extract_fields(fields={"toy1d_model_trained": WorldMachine, "toy1d_train_history": dict[str, np.ndarray], "toy1d_trainer": Trainer})
 def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               toy1d_dataloaders: dict[str, DataLoader],
                               n_epoch: int,
@@ -39,7 +39,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               discover_state: bool = False,
                               stable_state_epochs: int = 1,
                               sensorial_train_losses: set[Dimensions] = {},
-                              generator_numpy: np.random.Generator | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray]]:
+                              generator_numpy: np.random.Generator | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
@@ -63,7 +63,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                       optimizer, n_epoch, accumulation_steps)
 
     info = {"toy1d_model_trained": toy1d_model_untrained,
-            "toy1d_train_history": history}
+            "toy1d_train_history": history,
+            "toy1d_trainer": trainer}
 
     return info
 

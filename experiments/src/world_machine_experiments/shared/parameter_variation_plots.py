@@ -7,19 +7,27 @@ acronyms = ["MSE"]
 
 def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
                               custom_plots: dict[str, list[str]] = None,
-                              log_y_axis: bool = True) -> dict[str, Figure]:
+                              log_y_axis: bool = True,
+                              x_axis: str | None = None) -> dict[str, Figure]:
 
     variation_names = list(train_history.keys())
 
     names: set[str] = set()
     for name in train_history[variation_names[0]]:
         names.add(name.removesuffix("_std").removesuffix(
-            "_train").removesuffix("_val"))
+            "_train").removesuffix("_val").removesuffix("_test"))
 
-    names.remove("duration")
+    for name in ["duration", "mask_sensorial_percentage"]:
+        if name in names:
+            names.remove(name)
 
-    n_epoch = len(train_history[variation_names[0]]["duration"])
-    epochs = range(1, n_epoch+1)
+    if x_axis is None:
+        n_epoch = len(train_history[variation_names[0]]["duration"])
+        x_axis_values = range(1, n_epoch+1)
+        x_label = "Epochs"
+    else:
+        x_axis_values = train_history[variation_names[0]][x_axis]
+        x_label = x_axis.replace("_", " ").title()
 
     colormap = plt.cm.nipy_spectral
     colors = colormap(np.linspace(0, 1, len(train_history)))
@@ -44,7 +52,7 @@ def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
 
                 for variation_name in combination:
 
-                    plt.errorbar(epochs,
+                    plt.errorbar(x_axis_values,
                                  train_history[variation_name][key],
                                  train_history[variation_name][key+"_std"],
                                  label=variation_name,
@@ -58,7 +66,7 @@ def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
 
                 plt.suptitle(name_format)
                 plt.title(split)
-                plt.xlabel("Epochs")
+                plt.xlabel(x_label)
                 plt.ylabel("Metric")
                 plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 

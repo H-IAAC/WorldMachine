@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import tqdm
-from hamilton.function_modifiers import extract_fields, source
+from hamilton.function_modifiers import extract_fields, source, value
 from matplotlib.figure import Figure
 from torch.utils.data import DataLoader
 
@@ -241,4 +241,4 @@ def toy1d_autoregressive_metrics(toy1d_autoregressive_losses: dict[str, float],
 
 
 save_toy1d_autoregressive_metrics = function_variation({"metrics": source(
-    "toy1d_autoregressive_metrics")}, "save_toy1d_autoregressive_metrics")(save_metrics)
+    "toy1d_autoregressive_metrics"), "metrics_name": value("autoregressive_metrics")}, "save_toy1d_autoregressive_metrics")(save_metrics)

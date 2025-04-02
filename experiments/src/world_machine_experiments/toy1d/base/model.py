@@ -7,7 +7,8 @@ from world_machine_experiments.toy1d.dimensions import Dimensions
 def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimensions: list[int] | None = None,
                           h_ensure_random_seed: None = None, remove_positional_encoding: bool = False, measurement_size: int = 2,
                           positional_encoder_type: str | None = "sine",
-                          state_activation: str | None = None) -> WorldMachine:
+                          state_activation: str | None = None,
+                          learn_sensorial_mask: bool = False) -> WorldMachine:
 
     decoded_state_size = len(
         state_dimensions) if state_dimensions is not None else 3
@@ -16,7 +17,8 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
     max_context_size = 200
 
     builder = WorldMachineBuilder(state_size,
-                                  max_context_size, positional_encoder_type)
+                                  max_context_size, positional_encoder_type,
+                                  learn_sensorial_mask)
 
     builder.add_sensorial_dimension("state_control", state_size,
                                     torch.nn.Linear(3, state_size),

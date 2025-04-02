@@ -5,7 +5,8 @@ from .world_machine import WorldMachine
 
 
 class WorldMachineBuilder:
-    def __init__(self, state_size: int, max_context_size: int, positional_encoder_type: str | None = "sine"):
+    def __init__(self, state_size: int, max_context_size: int, positional_encoder_type: str | None = "sine",
+                 learn_sensorial_mask: bool = False):
         self._state_size = state_size
         self._max_context_size = max_context_size
         self._positional_encoder_type = positional_encoder_type
@@ -23,6 +24,8 @@ class WorldMachineBuilder:
 
         self.remove_positional_encoding = False
         self._state_activation: str | None = "tanh"
+
+        self._learn_sensorial_mask = learn_sensorial_mask
 
     @property
     def state_encoder(self) -> torch.nn.Module:
@@ -59,6 +62,10 @@ class WorldMachineBuilder:
 
         self._state_activation = value
 
+    @property
+    def learn_sensorial_mask(self) -> bool:
+        return self._learn_sensorial_mask
+
     def add_sensorial_dimension(self, dimension_name: str, dimension_size: int,
                                 encoder: torch.nn.Module | None = None,
                                 decoder: torch.nn.Module | None = None, detach_decoder: bool = False):
@@ -91,7 +98,8 @@ class WorldMachineBuilder:
                                        self._sensorial_dimensions[sensorial_dimension],
                                        hidden_size_multiplier*self._state_size,
                                        n_attention_head,
-                                       positional_encoder_type=self._positional_encoder_type)
+                                       positional_encoder_type=self._positional_encoder_type,
+                                       learn_sensorial_mask=self._learn_sensorial_mask)
 
             self._blocks.append(BlockContainer(
                 block, sensorial_dimension=sensorial_dimension))
