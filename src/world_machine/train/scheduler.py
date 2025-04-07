@@ -103,3 +103,34 @@ class UniformScheduler(ParameterScheduler):
                 serialize, when_used="json"
             ),
         )
+
+
+class ConstantScheduler(ParameterScheduler):
+
+    def __init__(self, value: T, n_epoch: int):
+        super().__init__(n_epoch)
+
+        self._value = value
+
+    def __call__(self, epoch_index: int) -> T:
+        return self._value
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler) -> CoreSchema:
+        def serialize(value: "ConstantScheduler") -> str:
+            return json.dumps({"type": value.__class__.__name__, "value": value._value, "n_epoch": value._n_epoch})
+
+        def validate(value: str) -> "ConstantScheduler":
+            return value
+
+        schema = core_schema.union_schema([
+            core_schema.is_instance_schema(cls),
+        ])
+
+        return pydantic_core.core_schema.no_info_after_validator_function(
+            validate,
+            schema,
+            serialization=pydantic_core.core_schema.plain_serializer_function_ser_schema(
+                serialize, when_used="json"
+            ),
+        )

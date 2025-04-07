@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
 from world_machine.train import Trainer
-from world_machine.train.trainer import MODE_EVALUATE
+from world_machine.train.trainer import DatasetPassMode
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_plots import save_plots
 from world_machine_experiments.shared.save_train_history import (
@@ -57,7 +57,7 @@ def toy1d_mask_sensorial_metrics(toy1d_model_trained: WorldMachine,
                         state = (2*state)-1
 
                         sensorial_masks = toy1d_trainer._generate_sensorial_masks(
-                            inputs, MODE_EVALUATE, True, device, batch_size, seq_len)
+                            inputs, DatasetPassMode.MODE_EVALUATE, True, device, batch_size, seq_len)
 
                         for i in range(seq_len):
                             logits = toy1d_model_trained(
@@ -81,7 +81,7 @@ def toy1d_mask_sensorial_metrics(toy1d_model_trained: WorldMachine,
 
             else:
                 losses = toy1d_trainer._compute_loss_and_optimize(
-                    toy1d_model_trained, loader, MODE_EVALUATE, None, 0, True)
+                    toy1d_model_trained, loader, DatasetPassMode.MODE_EVALUATE, None, 0, True)
 
                 metrics["mask_sensorial_" +
                         split][i] = losses["optimizer_loss"].cpu().item()

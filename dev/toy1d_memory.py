@@ -5,7 +5,7 @@ from torch.optim import AdamW
 from world_machine_experiments import shared
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 
-from world_machine.train.scheduler import LinearScheduler
+from world_machine.train.scheduler import UniformScheduler
 
 if __name__ == "__main__":
     tracker = adapters.HamiltonTracker(
@@ -42,7 +42,9 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "Base": {"discover_state": True},
+        "2Base": {"discover_state": True},
+        "2M0-90": {"discover_state": True, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)},
+        "2NoDiscover_M0-90": {"discover_state": False, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)}
     }
 
     aditional_outputs = ["save_toy1d_autoregressive_state_plots",
@@ -58,7 +60,7 @@ if __name__ == "__main__":
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   "aditional_outputs": aditional_outputs
+                                                   # "aditional_outputs": aditional_outputs
                                                    },
                                            # overrides={
                                            #    "base_dir": output_dir}

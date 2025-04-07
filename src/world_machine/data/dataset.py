@@ -53,17 +53,28 @@ class WorldMachineDataset(Dataset, abc.ABC):
             item["inputs"]["state_decoded"], item["targets"]["state_decoded"] = self.get_dimension_item(
                 "state_decoded", index)
 
-        if self._has_masks:
-            for dimension in self._sensorial_dimensions:
-                (item["inputs"]["masks"][dimension],
-                 item["targets"]["masks"][dimension]) = self.get_dimension_mask(dimension, index)
-
-            if self._has_state_decoded:
-                (item["inputs"]["masks"]["state_decoded"],
-                 item["targets"]["masks"]["state_decoded"]) = self.get_dimension_mask("state_decoded", index)
-
         if self._states != None:
             item["inputs"]["state"] = self._states[index]
+
+        seq_len = item["inputs"][next(iter(item["inputs"].keys()))].shape[0]
+
+        item["inputs"].batch_size = [seq_len]
+        item["targets"].batch_size = [seq_len]
+
+        if self._has_masks:
+            item["input_masks"] = TensorDict()
+            item["target_masks"] = TensorDict()
+
+            for dimension in self._sensorial_dimensions:
+                (item["input_masks"][dimension],
+                 item["target_masks"][dimension]) = self.get_dimension_mask(dimension, index)
+
+            if self._has_state_decoded:
+                (item["input_masks"]["state_decoded"],
+                 item["target_masks"]["state_decoded"]) = self.get_dimension_mask("state_decoded", index)
+
+            item["input_masks"].batch_size = [seq_len]
+            item["target_masks"].batch_size = [seq_len]
 
         self.dispose_data(index)
         return item

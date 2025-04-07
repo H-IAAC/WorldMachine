@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
 from world_machine.train import ParameterScheduler, Trainer
+from world_machine.train.stages import (
+    GradientAccumulator, SensorialMasker, SequenceBreaker, StateManager)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_train_history import (
     save_train_history)
@@ -39,18 +41,23 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               discover_state: bool = False,
                               stable_state_epochs: int = 1,
                               sensorial_train_losses: set[Dimensions] = {},
-                              generator_numpy: np.random.Generator | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              seed: int | list[int] = 0) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
 
     toy1d_model_untrained.to(device)
 
-    if generator_numpy is None:
-        generator_numpy = np.random.default_rng(0)
+    stages = []
 
-    trainer = Trainer(discover_state, mask_sensorial_data,
-                      generator_numpy, stable_state_epochs)
+    if accumulation_steps != 1:
+        stages.append(GradientAccumulator(accumulation_steps))
+    if mask_sensorial_data != None:
+        stages.append(SensorialMasker(mask_sensorial_data))
+    if discover_state:
+        stages.append(StateManager(stable_state_epochs))
+
+    trainer = Trainer(stages, seed)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
     trainer.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
 
@@ -60,7 +67,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         "mse", "next_measurement", torch.nn.MSELoss(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
 
     history = trainer(toy1d_model_untrained, toy1d_dataloaders,
-                      optimizer, n_epoch, accumulation_steps)
+                      optimizer, n_epoch)
 
     info = {"toy1d_model_trained": toy1d_model_untrained,
             "toy1d_train_history": history,
