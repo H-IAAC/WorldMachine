@@ -24,26 +24,29 @@ class SequenceBreaker(TrainStage):
         if mode == DatasetPassMode.MODE_TRAIN:
             break_index = int(self.np_generator.uniform(0, seq_len))
 
+            if break_index == 0:
+                return
+
             item = itens[0]
 
             index = item["index"]
             del item["index"]
             item.batch_size = [batch_size, seq_len]
 
-            item_parts: list[TensorDict] = []
+            segments: list[TensorDict] = []
 
             for slice in ["start", "end"]:
-                part = {}
+                segment = {}
 
                 if slice == "start":
-                    part = item[:, :break_index]
+                    segment = item[:, :break_index]
                 else:
-                    part = item[:, break_index:]
+                    segment = item[:, break_index:]
 
-                part.batch_size = [batch_size]
+                segment.batch_size = [batch_size]
 
-                part["index"] = index
-                item_parts.append(part)
+                segment["index"] = index
+                segments.append(segment)
 
             item.batch_size = [batch_size]
             item["index"] = index
@@ -51,7 +54,7 @@ class SequenceBreaker(TrainStage):
             self.break_index = break_index
 
             itens.clear()
-        itens.extend(item_parts)
+            itens.extend(segments)
 
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset, epoch_index: int,
                      criterions: dict[str, dict[str, Module]], mode: DatasetPassMode,

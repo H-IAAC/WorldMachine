@@ -41,7 +41,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               discover_state: bool = False,
                               stable_state_epochs: int = 1,
                               sensorial_train_losses: set[Dimensions] = {},
-                              seed: int | list[int] = 0) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              seed: int | list[int] = 0,
+                              n_segment: int = 1) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
@@ -56,6 +57,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         stages.append(SensorialMasker(mask_sensorial_data))
     if discover_state:
         stages.append(StateManager(stable_state_epochs))
+    if n_segment != 1:
+        stages.append(SequenceBreaker())
 
     trainer = Trainer(stages, seed)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())

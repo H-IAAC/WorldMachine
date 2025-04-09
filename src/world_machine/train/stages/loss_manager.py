@@ -36,6 +36,16 @@ class LossManager(TrainStage):
     def post_batch(self, model: WorldMachine, losses: dict) -> None:
         total_loss = losses["epoch"]
 
+        for dimension in total_loss:
+            if dimension == "optimizer_loss":
+                total_loss[dimension] /= self.n
+                total_loss[dimension] = total_loss[dimension].detach()
+            else:
+                for criterion_name in total_loss[dimension]:
+                    total_loss[dimension][criterion_name] /= self.n
+                    total_loss[dimension][criterion_name] = total_loss[dimension][criterion_name].detach(
+                    )
+
         result = {}
         for dimension in total_loss:
             if dimension == "optimizer_loss":

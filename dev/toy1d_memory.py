@@ -42,9 +42,11 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "2Base": {"discover_state": True},
-        "2M0-90": {"discover_state": True, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)},
-        "2NoDiscover_M0-90": {"discover_state": False, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)}
+        # "Base": {"discover_state": True},
+        # "M0-90": {"discover_state": True, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)},
+        # "NoDiscover_M0-90": {"discover_state": False, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)}
+        # "Break1": {"discover_state": True, "n_segment": 2},
+        "Break1_M0-100": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch)},
     }
 
     aditional_outputs = ["save_toy1d_autoregressive_state_plots",
