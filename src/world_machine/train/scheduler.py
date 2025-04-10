@@ -134,3 +134,37 @@ class ConstantScheduler(ParameterScheduler):
                 serialize, when_used="json"
             ),
         )
+
+
+class ChoiceScheduler(ParameterScheduler):
+    def __init__(self, values: list[T], n_epoch: int):
+        super().__init__(n_epoch)
+
+        self._values = values
+
+    def __call__(self, epoch_index: int) -> T:
+
+        # TODO Use generator
+        result = np.random.choice(self._values)
+
+        return result
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler: GetCoreSchemaHandler) -> CoreSchema:
+        def serialize(value: "ChoiceScheduler") -> str:
+            return json.dumps({"type": value.__class__.__name__, "values": value._values, "n_epoch": value._n_epoch})
+
+        def validate(value: str) -> "ChoiceScheduler":
+            return value
+
+        schema = core_schema.union_schema([
+            core_schema.is_instance_schema(cls),
+        ])
+
+        return pydantic_core.core_schema.no_info_after_validator_function(
+            validate,
+            schema,
+            serialization=pydantic_core.core_schema.plain_serializer_function_ser_schema(
+                serialize, when_used="json"
+            ),
+        )

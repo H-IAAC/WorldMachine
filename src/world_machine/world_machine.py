@@ -3,7 +3,7 @@ from tensordict import TensorDict
 
 from world_machine.layers.positional_encoder import create_positional_encoder
 
-from .layers import Clamp
+from .layers import Clamp, LTanh
 
 
 class WorldMachine(torch.nn.Module):
@@ -57,6 +57,8 @@ class WorldMachine(torch.nn.Module):
             self._state_activation = torch.nn.Tanh()
         elif state_activation == "clamp":
             self._state_activation = Clamp()
+        elif state_activation == "ltanh":
+            self._state_activation = LTanh(state_size)
         else:
             raise ValueError(
                 f"Invalid state activation function {state_activation}")

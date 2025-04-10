@@ -57,7 +57,7 @@ class WorldMachineBuilder:
 
     @state_activation.setter
     def state_activation(self, value) -> None:
-        if value not in [None, "tanh", "clamp"]:
+        if value not in [None, "tanh", "clamp", "ltanh"]:
             raise ValueError(f"Invalid state activation function {value}.")
 
         self._state_activation = value

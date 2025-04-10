@@ -5,7 +5,7 @@ from torch.optim import AdamW
 from world_machine_experiments import shared
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 
-from world_machine.train.scheduler import UniformScheduler
+from world_machine.train.scheduler import ChoiceScheduler, UniformScheduler
 
 if __name__ == "__main__":
     tracker = adapters.HamiltonTracker(
@@ -21,8 +21,12 @@ if __name__ == "__main__":
 
     long = False
 
-    n_epoch = 5
-    output_dir = "toy1d_memory"
+    if long:
+        n_epoch = 100
+        output_dir = "toy1d_memory_long"
+    else:
+        n_epoch = 5
+        output_dir = "toy1d_memory"
 
     toy1d_base_args = {"sequence_lenght": 1000,
                        "n_sequence": 10000,
@@ -44,9 +48,16 @@ if __name__ == "__main__":
     toy1d_parameter_variation = {
         # "Base": {"discover_state": True},
         # "M0-90": {"discover_state": True, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)},
-        # "NoDiscover_M0-90": {"discover_state": False, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)}
+        # "NoDiscover_M0-90": {"discover_state": False, "mask_sensorial_data": UniformScheduler(0, 0.9, n_epoch)},
         # "Break1": {"discover_state": True, "n_segment": 2},
-        "Break1_M0-100": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch)},
+        # "Break1_M0-100": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch)},
+        # "2Break1_M0-100_FF": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True},
+        # "Break4_M0-100_FF": {"discover_state": True, "n_segment": 5, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True},
+        # "MLP_Break1_M0-100_FF_TRAINM": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "MLP_Break1_M0-100_FF_TRAINM_SS12": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12},
+        # "MLP_Break1_M0-100_FF_LTANH": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "state_activation": "ltanh"},
+        # "MLP_Break1_M0or100_FF": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": ChoiceScheduler([0, 1], n_epoch), "fast_forward": True},
+        "Break1_M0-100_FF_Alibi": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "positional_encoder_type": "alibi"},
     }
 
     aditional_outputs = ["save_toy1d_autoregressive_state_plots",

@@ -3,5 +3,7 @@ from .attention import MultiHeadAttention, MultiHeadSelfAttention
 from .block_container import BlockContainer
 from .clamp import Clamp
 from .conditioning_block import ConditioningBlock
+from .ltanh import LTanh
 from .modulate import Modulate
+from .pointwise_feedforward import PointwiseFeedforward
 from .transform_decoder_block import TransformDecoderBlock

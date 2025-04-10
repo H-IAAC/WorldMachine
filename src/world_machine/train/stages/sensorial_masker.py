@@ -48,9 +48,11 @@ class SensorialMasker(TrainStage):
 
         return mask_percentage
 
-    def pre_forward(self, item: TensorDict, mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
+    def pre_forward(self, item_index: int,  itens: list[TensorDict], mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
 
         if mode == DatasetPassMode.MODE_TRAIN or self._force_sensorial_mask:
+            item = itens[item_index]
+
             inputs: TensorDict = item["inputs"]
             seq_len = item["inputs"][next(
                 iter(item["inputs"].keys()))].shape[1]

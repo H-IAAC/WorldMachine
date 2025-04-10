@@ -34,10 +34,10 @@ class TrainStage(abc.ABC):
                     state_size: int, mode: DatasetPassMode) -> None:
         ...
 
-    def pre_forward(self, item: TensorDict, mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
+    def pre_forward(self, item_index: int,  itens: list[TensorDict], mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
         ...
 
-    def post_forward(self, item: TensorDict, dataset: WorldMachineDataset, losses: dict) -> None:
+    def post_forward(self, item_index: int,  itens: list[TensorDict], dataset: WorldMachineDataset, losses: dict, mode: DatasetPassMode) -> None:
         ...
 
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset,

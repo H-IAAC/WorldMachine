@@ -1,3 +1,4 @@
+import numpy as np
 import tensordict
 import torch
 from tensordict import TensorDict
@@ -12,20 +13,25 @@ from .train_stage import TrainStage
 
 
 class SequenceBreaker(TrainStage):
-    def __init__(self):
+    def __init__(self, n_segment: int = 1, fast_forward: bool = False):
         super().__init__(3)
 
-        self.break_index: int
+        self._n_point = n_segment-1
+        self._fast_forward = fast_forward
 
     def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
                     seq_len: int, epoch_index: int, device: torch.device,
                     state_size: int, mode: DatasetPassMode) -> None:
 
         if mode == DatasetPassMode.MODE_TRAIN:
-            break_index = int(self.np_generator.uniform(0, seq_len))
+            indexes = self.np_generator.choice(np.linspace(
+                0, seq_len-1, seq_len, dtype=int), size=self._n_point, replace=False)
 
-            if break_index == 0:
-                return
+            indexes = np.append(indexes, [seq_len])
+            indexes = np.delete(indexes, np.argwhere(indexes == 0))
+            indexes.sort()
+
+            sizes = np.append(indexes[0], indexes[1:] - indexes[:-1])
 
             item = itens[0]
 
@@ -33,25 +39,14 @@ class SequenceBreaker(TrainStage):
             del item["index"]
             item.batch_size = [batch_size, seq_len]
 
-            segments: list[TensorDict] = []
+            segments: list[TensorDict] = item.split(list(sizes), dim=1)
 
-            for slice in ["start", "end"]:
-                segment = {}
-
-                if slice == "start":
-                    segment = item[:, :break_index]
-                else:
-                    segment = item[:, break_index:]
-
+            for segment in segments:
                 segment.batch_size = [batch_size]
-
                 segment["index"] = index
-                segments.append(segment)
 
             item.batch_size = [batch_size]
             item["index"] = index
-
-            self.break_index = break_index
 
             itens.clear()
             itens.extend(segments)
@@ -75,3 +70,11 @@ class SequenceBreaker(TrainStage):
 
             itens.clear()
             itens.append(reconstructed_item)
+
+    def post_forward(self, item_index: int,  itens: list[TensorDict], dataset: WorldMachineDataset, losses: dict, mode: DatasetPassMode) -> None:
+        if mode == DatasetPassMode.MODE_TRAIN and self._fast_forward and item_index+1 < len(itens) and "state" in itens[0]["inputs"]:
+            current_item = itens[item_index]
+            next_item = itens[item_index+1]
+
+            statenext_current = current_item["logits"]["state"]
+            next_item["inputs"]["state"][:, 0] = statenext_current[:, -1]

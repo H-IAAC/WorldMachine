@@ -1,6 +1,7 @@
 import torch
 
 from world_machine import WorldMachine, WorldMachineBuilder
+from world_machine.layers import PointwiseFeedforward
 from world_machine_experiments.toy1d.dimensions import Dimensions
 
 
@@ -8,12 +9,12 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                           h_ensure_random_seed: None = None, remove_positional_encoding: bool = False, measurement_size: int = 2,
                           positional_encoder_type: str | None = "sine",
                           state_activation: str | None = None,
-                          learn_sensorial_mask: bool = False) -> WorldMachine:
+                          learn_sensorial_mask: bool = False,
+                          state_size: int = 6) -> WorldMachine:
 
     decoded_state_size = len(
         state_dimensions) if state_dimensions is not None else 3
 
-    state_size = 6
     max_context_size = 200
 
     builder = WorldMachineBuilder(state_size,
@@ -33,8 +34,12 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                                     torch.nn.Linear(3, state_size),
                                     torch.nn.Linear(state_size, 3))
 
-    builder.state_encoder = torch.nn.Linear(decoded_state_size, state_size)
-    builder.state_decoder = torch.nn.Linear(state_size, decoded_state_size)
+    # torch.nn.Linear(decoded_state_size, state_size)
+    builder.state_encoder = PointwiseFeedforward(
+        input_dim=decoded_state_size, hidden_size=2*state_size, output_dim=state_size)
+    # torch.nn.Linear(state_size, decoded_state_size)
+    builder.state_decoder = PointwiseFeedforward(
+        input_dim=state_size, hidden_size=2*state_size, output_dim=decoded_state_size)
 
     for config in block_configuration:
         if config == Dimensions.STATE:

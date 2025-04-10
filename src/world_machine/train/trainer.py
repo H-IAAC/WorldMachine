@@ -151,11 +151,11 @@ class Trainer:
                 stage.pre_segment(itens, losses, batch_size,
                                   seq_len, epoch_index, device, state_size, mode)
 
-            for segment in itens:
+            for segment_index, segment in enumerate(itens):
 
                 for stage in self._stages:
                     stage.pre_forward(
-                        segment, mode, batch_size, device, epoch_index)
+                        segment_index, itens, mode, batch_size, device, epoch_index)
 
                 # Forward
                 sensorial_data = segment["inputs"]
@@ -178,7 +178,8 @@ class Trainer:
                 segment["logits"] = logits
 
                 for stage in reversed(self._stages):
-                    stage.post_forward(segment, dataset, losses)
+                    stage.post_forward(segment_index, itens,
+                                       dataset, losses, mode)
 
             for stage in reversed(self._stages):
                 stage.post_segment(itens, losses, dataset,
