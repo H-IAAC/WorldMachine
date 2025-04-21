@@ -10,7 +10,8 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                           positional_encoder_type: str | None = "sine",
                           state_activation: str | None = None,
                           learn_sensorial_mask: bool = False,
-                          state_size: int = 6) -> WorldMachine:
+                          state_size: int = 6,
+                          n_attention_head: int = 1) -> WorldMachine:
 
     decoded_state_size = len(
         state_dimensions) if state_dimensions is not None else 3
@@ -26,9 +27,11 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                                     torch.nn.Linear(state_size, 3))
 
     builder.add_sensorial_dimension("next_measurement", state_size,
-                                    torch.nn.Linear(
-                                        measurement_size, state_size),
-                                    torch.nn.Linear(state_size, measurement_size))
+                                    PointwiseFeedforward(
+                                        input_dim=measurement_size, hidden_size=2*state_size, output_dim=state_size),
+                                    PointwiseFeedforward(
+                                        input_dim=state_size, hidden_size=2*state_size, output_dim=measurement_size)
+                                    )
 
     builder.add_sensorial_dimension("state_decoded", state_size,
                                     torch.nn.Linear(3, state_size),
@@ -43,13 +46,16 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
 
     for config in block_configuration:
         if config == Dimensions.STATE:
-            builder.add_block()
+            builder.add_block(n_attention_head=n_attention_head)
         elif config == Dimensions.STATE_CONTROL:
-            builder.add_block(sensorial_dimension="state_control")
+            builder.add_block(sensorial_dimension="state_control",
+                              n_attention_head=n_attention_head)
         elif config == Dimensions.NEXT_MEASUREMENT:
-            builder.add_block(sensorial_dimension="next_measurement")
+            builder.add_block(sensorial_dimension="next_measurement",
+                              n_attention_head=n_attention_head)
         elif config == Dimensions.STATE_DECODED:
-            builder.add_block(sensorial_dimension="state_decoded")
+            builder.add_block(sensorial_dimension="state_decoded",
+                              n_attention_head=n_attention_head)
 
     builder.remove_positional_encoding = remove_positional_encoding
     builder.state_activation = state_activation

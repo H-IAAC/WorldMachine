@@ -73,7 +73,12 @@ def _periodic_state_control(state: np.ndarray, generator: np.random.Generator, i
 
 
 def _observation_matrix(generator: np.random.Generator, measurement_size: int = 2) -> np.ndarray:
-    H = generator.random((measurement_size, 3))  # NOSONAR
+    if measurement_size <= 2:
+        H = generator.random((2, 3))
+        H = H[:measurement_size, :]
+    else:
+        H = generator.random((measurement_size, 3))
+
     H = 2*(H-0.5)
 
     return H
@@ -82,7 +87,8 @@ def _observation_matrix(generator: np.random.Generator, measurement_size: int = 
 def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
                generator_numpy: np.random.Generator | None = None,
                state_control: str | None = None,
-               measurement_size: int = 2) -> dict[str, np.ndarray]:
+               measurement_size: int = 2,
+               measurement_shift: int = -1) -> dict[str, np.ndarray]:
 
     if generator_numpy is None:
         generator_numpy = np.random.default_rng(0)
@@ -135,7 +141,7 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     state_controls = 2*(state_controls-0.5)
 
     # Measurements
-    next_states = np.roll(states, shift=-1, axis=1)
+    next_states = np.roll(states, shift=measurement_shift, axis=1)
     measurements = np.dot(
         H, next_states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, measurement_size))
 

@@ -28,6 +28,8 @@ class StateManager(TrainStage):
                     (batch_size, seq_len, state_size), device=device, generator=self.torch_generator)
                 state = (2*state)-1
 
+                state[:, 0, :] = 0
+
                 item["inputs"]["state"] = state
 
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset, epoch_index: int,

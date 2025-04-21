@@ -132,7 +132,7 @@ class Trainer:
 
         for stage in self._stages:
             stage.pre_batch(model, mode, self._criterions,
-                            optimizer, device, losses)
+                            optimizer, device, losses, self._train_criterions)
 
         n_batch = len(loader)
 
@@ -190,7 +190,8 @@ class Trainer:
                                n_batch, losses, mode)
 
         for stage in reversed(self._stages):
-            stage.post_batch(model, losses)
+            stage.post_batch(model, losses, self._criterions,
+                             self._train_criterions)
 
         return losses
 
@@ -201,7 +202,13 @@ class Trainer:
                use_wandb: bool = False,
                early_stop: Callable[[float], bool] | None = None) -> dict[str, np.ndarray]:
 
+        device = next(iter(wm.parameters())).device
+
         self._stages.sort(key=lambda s: s.execution_order)
+
+        for stage in self._stages:
+            stage.pre_train(wm, self._criterions,
+                            self._train_criterions, device)
 
         self._epoch_index = 0
 
@@ -283,6 +290,9 @@ class Trainer:
             for criterion_name in self._criterions[dimension]:
                 result[f"{dimension}_{criterion_name}_train"] = hist[dimension][criterion_name]["train"]
                 result[f"{dimension}_{criterion_name}_val"] = hist[dimension][criterion_name]["val"]
+
+        for stage in reversed(self._stages):
+            stage.post_train(wm, self._criterions, self._train_criterions)
 
         return result
 

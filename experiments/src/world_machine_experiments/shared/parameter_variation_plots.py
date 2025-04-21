@@ -52,6 +52,9 @@ def parameter_variation_plots(train_history: dict[str, dict[str, np.ndarray]],
 
                 for variation_name in combination:
 
+                    if key not in train_history[variation_name]:
+                        continue
+
                     plt.errorbar(x_axis_values,
                                  train_history[variation_name][key],
                                  train_history[variation_name][key+"_std"],

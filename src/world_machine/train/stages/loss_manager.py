@@ -11,13 +11,21 @@ from .train_stage import TrainStage
 
 
 class LossManager(TrainStage):
-    def __init__(self):
+    def __init__(self, state_regularizer: str | None = None):
         super().__init__(2)
         self.n: int
 
+        if state_regularizer is None:
+            self._state_regularizer = state_regularizer
+        elif state_regularizer == "mse":
+            self._state_regularizer = torch.nn.MSELoss()
+        else:
+            raise ValueError(
+                f"state_regularizer mode {state_regularizer} not valid.")
+
     def pre_batch(self, model: WorldMachine, mode: DatasetPassMode,
                   criterions: dict[str, dict[str, Module]], optimizer: Optimizer,
-                  device: torch.device, losses: dict) -> None:
+                  device: torch.device, losses: dict, train_criterions: dict[str, dict[str, float]]) -> None:
         total_loss: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
         for dimension in criterions:
             total_loss[dimension] = {}
@@ -33,7 +41,7 @@ class LossManager(TrainStage):
 
         self.n = 0
 
-    def post_batch(self, model: WorldMachine, losses: dict) -> None:
+    def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
         total_loss = losses["epoch"]
 
         for dimension in total_loss:
@@ -81,8 +89,8 @@ class LossManager(TrainStage):
             if (targets_masks is not None and
                     dimension in targets_masks):
 
-                logits_dim = logits_dim[targets_masks[dimension]]
-                targets_dim = targets_dim[targets_masks[dimension]]
+                logits_dim = logits_dim[:, targets_masks[dimension][0]]
+                targets_dim = targets_dim[:, targets_masks[dimension][0]]
 
             item_losses[dimension] = {}
             for criterion_name in criterions[dimension]:
@@ -100,10 +108,20 @@ class LossManager(TrainStage):
 
         optimizer_loss = torch.tensor(
             0, dtype=torch.float32, device=device)
+        total_weight = 0
+
         for dimension in train_criterions:
             for criterion_name in train_criterions[dimension]:
                 optimizer_loss += item_losses[dimension][criterion_name] * \
                     train_criterions[dimension][criterion_name]
+
+                total_weight += train_criterions[dimension][criterion_name]
+
+        optimizer_loss /= total_weight
+
+        if self._state_regularizer is not None:
+            optimizer_loss += 0.5*self._state_regularizer(
+                logits["state"], torch.zeros_like(logits["state"]))
 
         item_losses["optimizer_loss"] = optimizer_loss
 

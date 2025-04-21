@@ -34,6 +34,9 @@ class AlibiPositionalEncoder(PositionalEncoder):
             self.register_buffer("_m", alibi_slopes(n_head))
             self._m: torch.Tensor
 
+    def _m_activation(self, m: torch.Tensor) -> torch.Tensor:
+        return m
+
     def apply_attention_scores_pe(self, scores: torch.Tensor) -> torch.Tensor:
         if self._m is None:
             warnings.warn(
@@ -52,7 +55,7 @@ class AlibiPositionalEncoder(PositionalEncoder):
 
         alibi_bias = alibi_bias.unsqueeze(-1)
 
-        alibi_bias = alibi_bias*self._m
+        alibi_bias = alibi_bias*self._m_activation(self._m)
         alibi_bias *= -1
 
         alibi_bias = alibi_bias.repeat(1, 1, batch_size).permute(2, 0, 1)
@@ -61,6 +64,14 @@ class AlibiPositionalEncoder(PositionalEncoder):
 
 
 class LearnableAlibiPositionalEncoder(AlibiPositionalEncoder):
+
+    def __init__(self, embed_dim, sequence_size, n_head):
+        super().__init__(embed_dim, sequence_size, n_head)
+
+        self._sigmoid = torch.nn.Sigmoid()
+
+    def _m_activation(self, m: torch.Tensor) -> torch.Tensor:
+        return self._sigmoid(m)
 
     def _create_m(self, n_head: int) -> torch.Tensor:
         self._m = torch.nn.Parameter(torch.Tensor(n_head))

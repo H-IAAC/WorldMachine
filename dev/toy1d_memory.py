@@ -22,8 +22,8 @@ if __name__ == "__main__":
     long = False
 
     if long:
-        n_epoch = 100
-        output_dir = "toy1d_memory_long"
+        n_epoch = 20
+        output_dir = "toy1d_memory_long2"
     else:
         n_epoch = 5
         output_dir = "toy1d_memory"
@@ -57,7 +57,24 @@ if __name__ == "__main__":
         # "MLP_Break1_M0-100_FF_TRAINM_SS12": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12},
         # "MLP_Break1_M0-100_FF_LTANH": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "state_activation": "ltanh"},
         # "MLP_Break1_M0or100_FF": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": ChoiceScheduler([0, 1], n_epoch), "fast_forward": True},
-        "Break1_M0-100_FF_Alibi": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "positional_encoder_type": "alibi"},
+        # "Break1_M0-100_FF_Alibi": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "positional_encoder_type": "alibi"},
+        # "Break1_M0-100_FF_H01": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_size": 1, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break1_M0-100_FF_Hx1": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_size": 1, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break1_M0-100_FF_H0x": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break1_M0-100_FF_TRAINMC_H0x": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_CONTROL]},
+        # "SMSM_Break1_M0-100_FF_TRAINMC_SS12_H0x": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT, Dimensions.STATE, Dimensions.NEXT_MEASUREMENT], "state_size": 12, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_CONTROL]},
+        # "SMSM_Break1_M0-100_FF_TRAINM_SS12_H0x": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT, Dimensions.STATE, Dimensions.NEXT_MEASUREMENT], "state_size": 12, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "SMSM_Break1_M0-100_FF_Alibi_TRAINM_SS12_H0x": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT, Dimensions.STATE, Dimensions.NEXT_MEASUREMENT], "state_size": 12, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "positional_encoder_type": "alibi"},
+        # "Break1_M0-100_FF_3H_SS12": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "n_attention_head": 3, "state_size": 12},
+        # "SM_Break1_M0-100_FF_3H_SS12_TrainM_H0x": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT], "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "n_attention_head": 3, "state_size": 12},
+        # "Break1_M0-100_FF_H0x_SS12_TrainM_STR-MD": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED])},
+        # "Break1_M0-100_FF_H0x_SS12_TrainM_STR5-MD": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5},
+        # "Break1_M0-100_FF_H0x_SS12_TrainM_STR10-MD": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 10},
+        # "M0-100_FF_H0x_SS12_TrainM_STR5-MD": {"discover_state": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5},
+        # "Break1_M0-100_FF_H0x_SS12_TrainM_STR-MD_StateReg": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "state_regularizer": "mse", "state_activation": None},
+        # "Break1_M0-100_StateReg": {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "state_regularizer": "mse", "state_activation": None},
+        # "Break1_M0-100_FF_H0x_SS12_TrainM_STR5-MD_StateReg":  {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 12, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "state_regularizer": "mse", "state_activation": None,  "recall_n_past": 5},
+        "Break1_M0-100_FF_H0x_SS4_TrainM_STR5-MD_StateReg":  {"discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT], "state_size": 4, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "state_regularizer": "mse", "state_activation": None,  "recall_n_past": 5},
     }
 
     aditional_outputs = ["save_toy1d_autoregressive_state_plots",
@@ -73,6 +90,7 @@ if __name__ == "__main__":
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
+                                                   "custom_plots": {"StateReg": ["Break1_M0-100", "Break1_M0-100_FF_H0x_SS12_TrainM_STR-MD_StateReg", "Break1_M0-100_StateReg", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5-MD_StateReg", "Break1_M0-100_FF_H0x_SS4_TrainM_STR5-MD_StateReg"], },
                                                    # "aditional_outputs": aditional_outputs
                                                    },
                                            # overrides={

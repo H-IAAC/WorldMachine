@@ -11,7 +11,8 @@ from torch.utils.data import DataLoader
 from world_machine import WorldMachine
 from world_machine.train import ParameterScheduler, Trainer
 from world_machine.train.stages import (
-    GradientAccumulator, SensorialMasker, SequenceBreaker, StateManager)
+    GradientAccumulator, LossManager, SensorialMasker, SequenceBreaker,
+    ShortTimeRecaller, StateManager)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_train_history import (
     save_train_history)
@@ -40,10 +41,14 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                                                                         ParameterScheduler] | ParameterScheduler = None,
                               discover_state: bool = False,
                               stable_state_epochs: int = 1,
-                              sensorial_train_losses: set[Dimensions] = {},
+                              sensorial_train_losses: set[Dimensions] = set(),
                               seed: int | list[int] = 0,
                               n_segment: int = 1,
-                              fast_forward: bool = False) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              fast_forward: bool = False,
+                              short_time_recall: set[Dimensions] = set(),
+                              recall_n_past: int = 2,
+                              measurement_size: int = 2,
+                              state_regularizer: str | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
@@ -60,6 +65,23 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         stages.append(StateManager(stable_state_epochs))
     if n_segment != 1:
         stages.append(SequenceBreaker(n_segment, fast_forward))
+    if len(short_time_recall) != 0:
+        dimension_sizes = {}
+        criterions = {}
+
+        for dim in short_time_recall:
+            if dim == Dimensions.STATE_DECODED:
+                dimension_sizes["state_decoded"] = 3
+                criterions["state_decoded"] = MSELossOnlyFirst()
+            elif dim == Dimensions.NEXT_MEASUREMENT:
+                dimension_sizes["next_measurement"] = measurement_size
+                criterions["next_measurement"] = MSELossOnlyFirst()
+
+        stages.append(ShortTimeRecaller(recall_n_past, dimension_sizes,
+                                        criterions=criterions))
+
+    if state_regularizer is not None:
+        stages.append(LossManager(state_regularizer))
 
     trainer = Trainer(stages, seed)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
