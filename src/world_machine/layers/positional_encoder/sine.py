@@ -37,7 +37,7 @@ class SinePositionalEncoder(PositionalEncoder):
     def apply_input_pe(self, x: torch.Tensor) -> torch.Tensor:
         sequence_size = x.shape[1]
 
-        return x+self.pe[:, :sequence_size]
+        return x+self.pe[:sequence_size, :]
 
     def remove_input_pe(self, x: torch.Tensor) -> torch.Tensor:
         sequence_size = x.shape[1]

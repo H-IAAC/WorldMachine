@@ -11,7 +11,7 @@ from .train_stage import TrainStage
 
 
 class LossManager(TrainStage):
-    def __init__(self, state_regularizer: str | None = None):
+    def __init__(self, state_regularizer: str | None = None, state_cov_regularizer: float | None = None):
         super().__init__(2)
         self.n: int
 
@@ -22,6 +22,8 @@ class LossManager(TrainStage):
         else:
             raise ValueError(
                 f"state_regularizer mode {state_regularizer} not valid.")
+
+        self._state_cov_regularizer = state_cov_regularizer
 
     def pre_batch(self, model: WorldMachine, mode: DatasetPassMode,
                   criterions: dict[str, dict[str, Module]], optimizer: Optimizer,
@@ -122,6 +124,18 @@ class LossManager(TrainStage):
         if self._state_regularizer is not None:
             optimizer_loss += 0.5*self._state_regularizer(
                 logits["state"], torch.zeros_like(logits["state"]))
+
+        if self._state_cov_regularizer is not None:
+            batch_size = itens[0].batch_size[0]
+            cov_sum = torch.empty(batch_size)
+
+            for i in range(batch_size):
+                cov_sum[i] = torch.pow(torch.tril(
+                    torch.cov(logits["state"][i].T), diagonal=-1), 2).sum()
+
+            mean_state_cov = cov_sum.mean()
+
+            optimizer_loss += self._state_cov_regularizer*(1/mean_state_cov)
 
         item_losses["optimizer_loss"] = optimizer_loss
 

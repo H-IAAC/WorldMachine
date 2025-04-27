@@ -48,7 +48,9 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               short_time_recall: set[Dimensions] = set(),
                               recall_n_past: int = 2,
                               measurement_size: int = 2,
-                              state_regularizer: str | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              state_regularizer: str | None = None,
+                              check_input_masks: bool = False,
+                              state_cov_regularizer: float | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
@@ -62,7 +64,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     if mask_sensorial_data != None:
         stages.append(SensorialMasker(mask_sensorial_data))
     if discover_state:
-        stages.append(StateManager(stable_state_epochs))
+        stages.append(StateManager(stable_state_epochs, check_input_masks))
     if n_segment != 1:
         stages.append(SequenceBreaker(n_segment, fast_forward))
     if len(short_time_recall) != 0:
@@ -80,8 +82,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         stages.append(ShortTimeRecaller(recall_n_past, dimension_sizes,
                                         criterions=criterions))
 
-    if state_regularizer is not None:
-        stages.append(LossManager(state_regularizer))
+    stages.append(LossManager(state_regularizer, state_cov_regularizer))
 
     trainer = Trainer(stages, seed)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
