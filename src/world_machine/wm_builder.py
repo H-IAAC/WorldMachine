@@ -27,6 +27,8 @@ class WorldMachineBuilder:
 
         self._learn_sensorial_mask = learn_sensorial_mask
 
+        self._state_dropout: float | None = None
+
     @property
     def state_encoder(self) -> torch.nn.Module:
         return self._state_encoder
@@ -57,10 +59,19 @@ class WorldMachineBuilder:
 
     @state_activation.setter
     def state_activation(self, value) -> None:
-        if value not in [None, "tanh", "clamp", "ltanh"]:
+        if value not in [None, "tanh", "clamp", "ltanh", "sintanh", "sin"]:
             raise ValueError(f"Invalid state activation function {value}.")
 
         self._state_activation = value
+
+    @property
+    def state_dropout(self) -> float | None:
+        return self._state_dropout
+
+    @state_dropout.setter
+    def state_dropout(self, value: float | None) -> None:
+        if value is None or isinstance(value, float):
+            self._state_dropout = value
 
     @property
     def learn_sensorial_mask(self) -> bool:
@@ -115,6 +126,7 @@ class WorldMachineBuilder:
                           self._detach_decoder,
                           self._positional_encoder_type,
                           self.remove_positional_encoding,
-                          self._state_activation,)
+                          self._state_activation,
+                          self._state_dropout)
 
         return wm

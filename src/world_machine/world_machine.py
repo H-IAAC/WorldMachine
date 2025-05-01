@@ -3,7 +3,7 @@ from tensordict import TensorDict
 
 from world_machine.layers.positional_encoder import create_positional_encoder
 
-from .layers import Clamp, LTanh
+from .layers import Clamp, LTanh, Sine, SinTanh
 
 
 class WorldMachine(torch.nn.Module):
@@ -16,7 +16,8 @@ class WorldMachine(torch.nn.Module):
                  detach_decoders: set[str] = None,
                  positional_encoder_type: str | None = "sine",
                  remove_positional_encoding: bool = False,
-                 state_activation: str | None = "tanh"
+                 state_activation: str | None = "tanh",
+                 state_dropout: float | None = None,
                  ):
         super().__init__()
 
@@ -59,9 +60,17 @@ class WorldMachine(torch.nn.Module):
             self._state_activation = Clamp()
         elif state_activation == "ltanh":
             self._state_activation = LTanh(state_size)
+        elif state_activation == "sintanh":
+            self._state_activation = SinTanh()
+        elif state_activation == "sin":
+            self._state_activation = Sine()
         else:
             raise ValueError(
                 f"Invalid state activation function {state_activation}")
+
+        if state_dropout is not None:
+            state_dropout = torch.nn.Dropout(state_dropout)
+        self._state_dropout = state_dropout
 
     def forward(self, state: torch.Tensor | None = None,
                 state_decoded: torch.Tensor | None = None,
@@ -106,6 +115,9 @@ class WorldMachine(torch.nn.Module):
             x["state"] = state[:, :seq_len].clone()
 
         x["state"] = self._positional_encoder.apply_input_pe(x["state"])
+
+        if self._state_dropout is not None:
+            x["state"] = self._state_dropout(x["state"])
 
         if input_sequence_size is not None:
             x = x.contiguous()

@@ -89,16 +89,20 @@ class WorldMachineDataset(Dataset, abc.ABC):
             states_shape[0] = self._size
 
             i = 0
-            while True:
-                filename = f"TempStates_{self.__class__.__name__}_{i}.bin"
+            while self._states is None:
+                while True:
+                    filename = f"TempStates_{self.__class__.__name__}_{i}.bin"
 
-                if not os.path.exists(filename):
-                    break
+                    if not os.path.exists(filename):
+                        break
 
-                i += 1
+                    i += 1
 
-            self._states = MemoryMappedTensor.empty(
-                states_shape, dtype=dtype, filename=filename)
+                try:
+                    self._states = MemoryMappedTensor.empty(
+                        states_shape, dtype=dtype, filename=filename)
+                except RuntimeError:
+                    pass
 
             self._states_filename = filename
             WorldMachineDataset._states_filenames.append(filename)

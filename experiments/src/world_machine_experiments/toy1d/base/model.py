@@ -11,7 +11,8 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                           state_activation: str | None = None,
                           learn_sensorial_mask: bool = False,
                           state_size: int = 6,
-                          n_attention_head: int = 1) -> WorldMachine:
+                          n_attention_head: int = 1,
+                          state_drouput: float | None = None) -> WorldMachine:
 
     decoded_state_size = len(
         state_dimensions) if state_dimensions is not None else 3
@@ -59,5 +60,6 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
 
     builder.remove_positional_encoding = remove_positional_encoding
     builder.state_activation = state_activation
+    builder.state_dropout = state_drouput
 
     return builder.build()

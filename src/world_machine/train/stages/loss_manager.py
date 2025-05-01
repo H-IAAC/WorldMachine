@@ -131,11 +131,11 @@ class LossManager(TrainStage):
 
             for i in range(batch_size):
                 cov_sum[i] = torch.pow(torch.tril(
-                    torch.cov(logits["state"][i].T), diagonal=-1), 2).sum()
+                    torch.cov(logits["state"][i].T), diagonal=0), 2).mean()
 
             mean_state_cov = cov_sum.mean()
 
-            optimizer_loss += self._state_cov_regularizer*(1/mean_state_cov)
+            optimizer_loss += self._state_cov_regularizer*(-mean_state_cov)
 
         item_losses["optimizer_loss"] = optimizer_loss
 
