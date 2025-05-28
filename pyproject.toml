@@ -18,6 +18,7 @@ dynamic = ["version"]
 dependencies = [
     "torch",
     "tensordict",
+    "numba",
 
 ]
 

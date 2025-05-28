@@ -20,7 +20,8 @@ dependencies = [
     "tensordict",
     "numpy",
     "docstring_parser",
-    "sf-hamilton"
+    "sf-hamilton",
+    "scipy"
 
 ]
 
