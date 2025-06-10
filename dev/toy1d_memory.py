@@ -21,8 +21,12 @@ if __name__ == "__main__":
 
     long = False
     long2 = False
+    long3 = True
 
-    if long2:
+    if long3:
+        n_epoch = 100
+        output_dir = "toy1d_memory_long4"
+    elif long2:
         n_epoch = 15
         output_dir = "toy1d_memory_long3"
     elif long:
@@ -38,8 +42,8 @@ if __name__ == "__main__":
                        "state_dimensions": None,
                        "batch_size": 32,
                        "n_epoch": n_epoch,
-                       "learning_rate": 5e-3,
-                       "weight_decay": 5e-4,
+                       "learning_rate": 5e-4,
+                       "weight_decay": 5e-5,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
                        "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
@@ -114,19 +118,27 @@ if __name__ == "__main__":
         # "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_Sin": {"state_activation": "sin", "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SCR1e-2": {"state_cov_regularizer": 1e-2, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "H0x_SS128_Alibi_Head4": {"n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        #
+        # "Break20_M0-100_FF_H0x_SS128_Alibi_Head4": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "n_segment": 21, "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break40_M0-100_FF_H0x_SS128_Alibi_Head4": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "n_segment": 41, "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break20_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4": {"check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "n_segment": 21, "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+
+
         # "M0-100_H0x_SS128_Alibi_Head4": {"n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "M0-100_H0x_SS128_Alibi_SCheckSensorial_Head4": {"n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "Break1_M0-100_H0x_SS128_Alibi_SCheckSensorial_Head4": {"n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4": {"n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD": {"short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
-
         # "Break1_M0-100_H0x_SS128_Alibi_Head4": {"n_attention_head": 4, "check_input_masks": False, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "Break1_M0-100_FF_H0x_SS128_Alibi_Head4": {"n_attention_head": 4, "check_input_masks": False, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "Break1_M0-100_FF_H0x_SS128_Alibi_Head4_STR5-MD": {"short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5, "n_attention_head": 4, "check_input_masks": False, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "M0-100_H0x_SS128_Alibi_Head4_MMMM": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT], "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "M0-100_H0x_SS256_Alibi_Head4_MMMM": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT], "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 256, "discover_state": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
         # "M0-100_H0x_SS128_Alibi_Head4_SMSM": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT, Dimensions.STATE, Dimensions.NEXT_MEASUREMENT], "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
-        "Break20_M0-100_FF_H0x_SS128_Alibi_Head4": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "n_segment": 21, "n_attention_head": 4, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break1_M0-100_FF_H0x_SS128_Alibi_Head4_STR5F-MD": {"short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": False, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        # "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5F-MD": {"short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        "Break1_M0-100_FF_H0x_SS128_Alibi_Head4_STR5F5P-MD": {"short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5, "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": False, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
+        "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5F5P-MD": {"short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5, "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "alibi", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT]},
 
     }
 
@@ -143,23 +155,24 @@ if __name__ == "__main__":
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   "custom_plots": {"BigState": ["Break1_M0-100_FF_H0x_SS128_Alibi", "Break1_M0-100_FF_H0x_SS512_Alibi", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial", "Break1_M0-100_FF_H0x_SS512v_SCheckSensorial", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head2", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head8", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD_StateReg", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_StateReg", "Break2_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4", "Break2_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD",
-                                                                                 "Break2_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_SCheckSensorial_Head4_STR5-MD",
-                                                                                 "Break1_M0-100_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD",
-                                                                                 "M0-100_H0x_SS128_Alibi_SCheckSensorial_Head4",
-                                                                                 "Break1_M0-100_FF_H0x_SS256_Alibi_SCheckSensorial_Head4",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SDroput01",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4001",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head402",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SinTanh",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_Sin",
-                                                                                 "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SCR1e-2"
-                                                                                 ],
-                                                                    "StateReg": ["Break1_M0-100", "Break1_M0-100_FF_H0x_SS12_TrainM_STR-MD_StateReg", "Break1_M0-100_StateReg", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5-MD_StateReg", "Break1_M0-100_FF_H0x_SS4_TrainM_STR5-MD_StateReg"],
-                                                                    "SGD": ["Break1_M0-100_FF_H0x_SS12_TrainM_STR5W-MD_SGD", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5W-MD_SGD2", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5W-MD_SGD3"],
-                                                                    "CheckSensorial": ["Break1_M0-100_FF_H0x", "Break1_M0-100_FF_H0x_SCheckSensorial",  "Break1_M0-100_FF_H0x_Alibi", "Break1_M0-100_FF_H0x_Sine"],
-                                                                    "StateCovReg": ["Break1_M0-100_FF_H0x_Alibi", "Break1_M0-100_FF_H0x_Alibi_SCR01", "Break1_M0-100_FF_H0x_Alibi_SCR001", "Break1_M0-100_FF_H0x_Alibi_SCR1e-3", "Break1_M0-100_FF_H0x_Alibi_SCR1e-4", "Break1_M0-100_FF_H0x_Alibi_SCR1e-5"], },
+                                                   "custom_plots": {  # "BigState": ["Break1_M0-100_FF_H0x_SS128_Alibi", "Break1_M0-100_FF_H0x_SS512_Alibi", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial", "Break1_M0-100_FF_H0x_SS512v_SCheckSensorial", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head2", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head8", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD_StateReg", "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_StateReg", "Break2_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4", "Break2_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD",
+                                                       #             "Break2_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_SCheckSensorial_Head4_STR5-MD",
+                                                       #             "Break1_M0-100_H0x_SS128_Alibi_SCheckSensorial_Head4_STR5-MD",
+                                                       #             "M0-100_H0x_SS128_Alibi_SCheckSensorial_Head4",
+                                                       #             "Break1_M0-100_FF_H0x_SS256_Alibi_SCheckSensorial_Head4",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SDroput01",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4001",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head402",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SinTanh",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_Sin",
+                                                       #             "Break1_M0-100_FF_H0x_SS128_Alibi_SCheckSensorial_Head4_SCR1e-2"
+                                                       #             ],
+                                                       # "StateReg": ["Break1_M0-100", "Break1_M0-100_FF_H0x_SS12_TrainM_STR-MD_StateReg", "Break1_M0-100_StateReg", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5-MD_StateReg", "Break1_M0-100_FF_H0x_SS4_TrainM_STR5-MD_StateReg"],
+                                                       # "SGD": ["Break1_M0-100_FF_H0x_SS12_TrainM_STR5W-MD_SGD", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5W-MD_SGD2", "Break1_M0-100_FF_H0x_SS12_TrainM_STR5W-MD_SGD3"],
+                                                       # "CheckSensorial": ["Break1_M0-100_FF_H0x", "Break1_M0-100_FF_H0x_SCheckSensorial",  "Break1_M0-100_FF_H0x_Alibi", "Break1_M0-100_FF_H0x_Sine"],
+                                                       # "StateCovReg": ["Break1_M0-100_FF_H0x_Alibi", "Break1_M0-100_FF_H0x_Alibi_SCR01", "Break1_M0-100_FF_H0x_Alibi_SCR001", "Break1_M0-100_FF_H0x_Alibi_SCR1e-3", "Break1_M0-100_FF_H0x_Alibi_SCR1e-4", "Break1_M0-100_FF_H0x_Alibi_SCR1e-5"],
+                                                   },
                                                    # "aditional_outputs": aditional_outputs
                                                    },
                                            # overrides={

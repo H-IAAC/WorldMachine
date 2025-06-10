@@ -12,23 +12,29 @@ from .train_stage import TrainStage
 
 
 class ShortTimeRecaller(TrainStage):
-    def __init__(self, n_past: int, dimension_sizes: dict[str, int], criterions: dict[str, Module]):
+    def __init__(self, dimension_sizes: dict[str, int], criterions: dict[str, Module], n_past: int = 0, n_future: int = 0):
         super().__init__(-1)
 
-        self._n_past = n_past
         self._dimensions = dimension_sizes
         self._criterions = criterions
 
         self._projectors: ModuleDict = ModuleDict()
+
+        self._n_past = n_past
+        self._n_future = n_future
 
     def pre_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]],  train_criterions: dict[str, dict[str, float]], device: torch.device) -> None:
 
         state_size = model._state_size
 
         # weights = np.exp(-np.linspace(0, self._n_past-1, self._n_past))
-        weights = np.linspace(self._n_past, 1, self._n_past)
+        weights_past = np.linspace(self._n_past, 1, self._n_past)
+        weights_future = np.linspace(self._n_future, 1, self._n_future)
 
-        weights /= weights.sum()
+        total = weights_past.sum()+weights_future.sum()
+
+        weights_past /= total
+        weights_future /= total
 
         for dimension in self._dimensions:
             dimension_size = self._dimensions[dimension]
@@ -37,16 +43,17 @@ class ShortTimeRecaller(TrainStage):
                 dimension_size, dimension_size).to(device)
             self._projectors[dimension].eval()
 
-            for i in range(self._n_past):
-                past_dim_name = f"past{i}_{dimension}"
+            for name, n, weights in zip(["past", "future"], [self._n_past, self._n_future], [weights_past, weights_future]):
+                for i in range(n):
+                    dim_name = f"{name}{i}_{dimension}"
 
-                model._sensorial_decoders[past_dim_name] = PointwiseFeedforward(
-                    state_size, state_size*2, output_dim=dimension_size).to(device)
+                    model._sensorial_decoders[dim_name] = PointwiseFeedforward(
+                        state_size, state_size*2, output_dim=dimension_size).to(device)
 
-                criterions[past_dim_name] = {
-                    "loss": self._criterions[dimension]}
+                    criterions[dim_name] = {
+                        "loss": self._criterions[dimension]}
 
-                train_criterions[past_dim_name] = {"loss": weights[i]}
+                    train_criterions[dim_name] = {"loss": weights[i]}
 
     def pre_segment(self, itens, losses, batch_size, seq_len, epoch_index, device, state_size, mode):
 
@@ -65,6 +72,21 @@ class ShortTimeRecaller(TrainStage):
                 else:
                     mask = torch.ones(seq_len, dtype=bool, device=device)
 
+                for i in range(self._n_future):
+                    future_dim_name = f"future{i}_{dimension}"
+                    future_index = i+2  # i=0 is itself, i=1 is the same as normal train
+
+                    future_data = torch.roll(data, -future_index, 1)
+                    future_mask = torch.roll(mask, -future_index)
+
+                    future_data: torch.Tensor = self._projectors[dimension](
+                        future_data).detach()
+                    future_mask[future_mask.shape[0]-i:] = False
+
+                    item["targets"][future_dim_name] = future_data
+                    item["target_masks"][future_dim_name] = future_mask.unsqueeze(
+                        0).repeat(batch_size, 1)
+
                 for i in range(self._n_past):
                     past_dim_name = f"past{i}_{dimension}"
                     past_index = -i-1
@@ -82,10 +104,11 @@ class ShortTimeRecaller(TrainStage):
 
     def post_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
         for dimension in self._dimensions:
-            for i in range(self._n_past):
-                past_dim_name = f"past{i}_{dimension}"
+            for name, n in zip(["past", "future"], [self._n_past, self._n_future]):
+                for i in range(n):
+                    dim_name = f"{name}{i}_{dimension}"
 
-                del model._sensorial_decoders[past_dim_name]
+                    del model._sensorial_decoders[dim_name]
 
-                del criterions[past_dim_name]
-                del train_criterions[past_dim_name]
+                    del criterions[dim_name]
+                    del train_criterions[dim_name]
