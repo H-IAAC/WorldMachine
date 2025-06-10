@@ -27,11 +27,11 @@ def worker_initializer(lock):
 
 
 def toy1d_parameter_variation_worker_func(inputs):
-    tracker = adapters.HamiltonTracker(
-        project_id=1,
-        username="EltonCN",
-        dag_name="toy1d_multiple_train"
-    )
+    # tracker = adapters.HamiltonTracker(
+    #    project_id=1,
+    #    username="EltonCN",
+    #    dag_name="toy1d_multiple_train"
+    # )
 
     # .with_adapter(tracker).build()
     d = driver.Builder().with_modules(multiple, shared).build()

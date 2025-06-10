@@ -18,11 +18,11 @@ def multiple_toy1d_trainings_info(n_run: int,
                                   output_dir: str,
                                   toy1d_args: dict[str, Any],
                                   aditional_outputs: list[str] | None = None) -> list[dict[str, np.ndarray]]:
-    tracker = adapters.HamiltonTracker(
-        project_id=1,
-        username="EltonCN",
-        dag_name="toy1d_train"
-    )
+    # tracker = adapters.HamiltonTracker(
+    #    project_id=1,
+    #    username="EltonCN",
+    #    dag_name="toy1d_train"
+    # )
 
     if aditional_outputs is None:
         aditional_outputs = []
