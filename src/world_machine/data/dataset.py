@@ -101,7 +101,8 @@ class WorldMachineDataset(Dataset, abc.ABC):
                 try:
                     self._states = MemoryMappedTensor.empty(
                         states_shape, dtype=dtype, filename=filename)
-                except RuntimeError:
+                except RuntimeError as e:
+                    print(e)
                     pass
 
             self._states_filename = filename
