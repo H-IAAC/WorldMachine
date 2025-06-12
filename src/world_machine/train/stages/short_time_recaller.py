@@ -12,7 +12,8 @@ from .train_stage import TrainStage
 
 
 class ShortTimeRecaller(TrainStage):
-    def __init__(self, dimension_sizes: dict[str, int], criterions: dict[str, Module], n_past: int = 0, n_future: int = 0):
+    def __init__(self, dimension_sizes: dict[str, int], criterions: dict[str, Module], n_past: int = 0, n_future: int = 0,
+                 stride_past: int = 1, stride_future: int = 1):
         super().__init__(-1)
 
         self._dimensions = dimension_sizes
@@ -22,6 +23,9 @@ class ShortTimeRecaller(TrainStage):
 
         self._n_past = n_past
         self._n_future = n_future
+
+        self._stride_past = stride_past
+        self._stride_future = stride_future
 
     def pre_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]],  train_criterions: dict[str, dict[str, float]], device: torch.device) -> None:
 
@@ -74,7 +78,8 @@ class ShortTimeRecaller(TrainStage):
 
                 for i in range(self._n_future):
                     future_dim_name = f"future{i}_{dimension}"
-                    future_index = i+2  # i=0 is itself, i=1 is the same as normal train
+                    # i=0 is itself, i=1 is the same as normal train
+                    future_index = (i*self._stride_future)+2
 
                     future_data = torch.roll(data, -future_index, 1)
                     future_mask = torch.roll(mask, -future_index)
@@ -89,7 +94,7 @@ class ShortTimeRecaller(TrainStage):
 
                 for i in range(self._n_past):
                     past_dim_name = f"past{i}_{dimension}"
-                    past_index = -i-1
+                    past_index = -(i*self._stride_past)-1
 
                     past_data = torch.roll(data, -past_index, 1)
                     past_mask = torch.roll(mask, -past_index)

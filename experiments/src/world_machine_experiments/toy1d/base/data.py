@@ -97,6 +97,8 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     H = _observation_matrix(generator, measurement_size)  # NOSONAR
     F = _state_transition_matrix()
 
+    print(H)
+
     # Sequence generation
     state = (2*generator.random((n_sequence, 3)))-1
 

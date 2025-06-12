@@ -48,6 +48,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               short_time_recall: set[Dimensions] = set(),
                               recall_n_past: int = 2,
                               recall_n_future: int = 2,
+                              recall_stride_past: int = 1,
+                              recall_stride_future: int = 1,
                               measurement_size: int = 2,
                               state_regularizer: str | None = None,
                               check_input_masks: bool = False,
@@ -83,7 +85,9 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         stages.append(ShortTimeRecaller(dimension_sizes=dimension_sizes,
                                         criterions=criterions,
                                         n_past=recall_n_past,
-                                        n_future=recall_n_future))
+                                        n_future=recall_n_future,
+                                        stride_past=recall_stride_past,
+                                        stride_future=recall_stride_future))
 
     stages.append(LossManager(state_regularizer, state_cov_regularizer))
 
