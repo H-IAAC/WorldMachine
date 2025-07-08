@@ -18,7 +18,8 @@ def train_plots(train_history: dict[str, np.ndarray],
         names.add(name.removesuffix("_std").removesuffix(
             "_train").removesuffix("_val"))
 
-    names.remove("duration")
+    if "duration" in names:
+        names.remove("duration")
 
     n_epoch = len(train_history["duration"])
     epochs = range(1, n_epoch+1)
