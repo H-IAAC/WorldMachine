@@ -10,6 +10,7 @@ from tensordict import TensorDict
 from torch.nn import Module
 from torch.utils.data import DataLoader
 
+from world_machine.train.criterion_set import CriterionSet
 from world_machine.train.stages import (
     LossManager, PrepareModel, SimpleOptimizer, TrainStage)
 from world_machine.world_machine import WorldMachine
@@ -26,7 +27,7 @@ except ImportError:
 
 
 class Trainer:
-    def __init__(self, stages: list[TrainStage] | None = None, seed: list[int] | int = 0):
+    def __init__(self, criterion_set: CriterionSet, stages: list[TrainStage] | None = None, seed: list[int] | int = 0):
 
         self._generator_numpy = np.random.default_rng(seed=seed)
         self._generator_torch = torch.Generator()
@@ -36,11 +37,7 @@ class Trainer:
         self.torch_seed = seed
         self._generator_torch.manual_seed(seed)
 
-        self._criterions: dict[str, dict[str, Module]] = {}
-        self._criterions["state_decoded"] = {}
-
-        self._train_criterions: dict[str, dict[str, float]] = {}
-        self._train_criterions["state_decoded"] = {}
+        self._criterion_set = criterion_set
 
         if stages is None:
             stages = []
@@ -73,22 +70,22 @@ class Trainer:
                                     criterion: Module,
                                     train: bool = False,
                                     weight: float = 1.0) -> None:
-        self._criterions["state_decoded"][name] = criterion
+        self._criterion_set.criterions["state_decoded"][name] = criterion
 
         if train:
-            self._train_criterions["state_decoded"][name] = weight
+            self._criterion_set.train_criterions["state_decoded"][name] = weight
 
     def add_sensorial_criterion(self, name: str, sensorial_dimension: str, criterion: Module, train: bool = False,
                                 weight: float = 1.0) -> None:
-        if sensorial_dimension not in self._criterions:
-            self._criterions[sensorial_dimension] = {}
-        if sensorial_dimension not in self._train_criterions:
-            self._train_criterions[sensorial_dimension] = {}
+        if sensorial_dimension not in self._criterion_set.criterions:
+            self._criterion_set.criterions[sensorial_dimension] = {}
+        if sensorial_dimension not in self._criterion_set.train_criterions:
+            self._criterion_set.train_criterions[sensorial_dimension] = {}
 
-        self._criterions[sensorial_dimension][name] = criterion
+        self._criterion_set.criterions[sensorial_dimension][name] = criterion
 
         if train:
-            self._train_criterions[sensorial_dimension][name] = weight
+            self._criterion_set.train_criterions[sensorial_dimension][name] = weight
 
     def __call__(self, wm: WorldMachine,
                  dataloaders: dict[str, DataLoader],
@@ -131,8 +128,8 @@ class Trainer:
         batch_index = 0
 
         for stage in self._stages:
-            stage.pre_batch(model, mode, self._criterions,
-                            optimizer, device, losses, self._train_criterions)
+            stage.pre_batch(model, mode, self._criterion_set.criterions,
+                            optimizer, device, losses, self._criterion_set.train_criterions)
 
         n_batch = len(loader)
 
@@ -183,15 +180,15 @@ class Trainer:
 
             for stage in reversed(self._stages):
                 stage.post_segment(itens, losses, dataset,
-                                   epoch_index, self._criterions, mode, device, self._train_criterions)
+                                   epoch_index, self._criterion_set.criterions, mode, device, self._criterion_set.train_criterions)
 
             for stage in reversed(self._stages):
                 stage.optimize(model, optimizer, batch_index,
                                n_batch, losses, mode)
 
         for stage in reversed(self._stages):
-            stage.post_batch(model, losses, self._criterions,
-                             self._train_criterions)
+            stage.post_batch(model, losses, self._criterion_set.criterions,
+                             self._criterion_set.train_criterions)
 
         return losses
 
@@ -207,16 +204,16 @@ class Trainer:
         self._stages.sort(key=lambda s: s.execution_order)
 
         for stage in self._stages:
-            stage.pre_train(wm, self._criterions,
-                            self._train_criterions, device)
+            stage.pre_train(wm, self._criterion_set.criterions,
+                            self._criterion_set.train_criterions, device)
 
         self._epoch_index = 0
 
         hist: dict[str, np.ndarray | dict[str, np.ndarray]
                    | dict[str, dict[str, np.ndarray]]] = {}
-        for dimension in self._criterions:
+        for dimension in self._criterion_set.criterions:
             hist[dimension] = {}
-            for criterion_name in self._criterions[dimension]:
+            for criterion_name in self._criterion_set.criterions[dimension]:
                 hist[dimension][criterion_name] = {"train": np.empty(n_epoch),
                                                    "val": np.empty(n_epoch)}
 
@@ -253,8 +250,8 @@ class Trainer:
             # Save history and log
             log: dict[str, float] = {}
 
-            for dimension in self._criterions:
-                for criterion_name in self._criterions[dimension]:
+            for dimension in self._criterion_set.criterions:
+                for criterion_name in self._criterion_set.criterions[dimension]:
                     hist[dimension][criterion_name]["train"][epoch] = loss_train[f"{dimension}_{criterion_name}"].item(
                     )
                     hist[dimension][criterion_name]["val"][epoch] = loss_val[f"{dimension}_{criterion_name}"].item(
@@ -286,13 +283,14 @@ class Trainer:
         result["optimizer_loss_train"] = hist["optimizer_loss"]["train"]
         result["optimizer_loss_val"] = hist["optimizer_loss"]["val"]
         result["duration"] = hist["duration"]
-        for dimension in self._criterions:
-            for criterion_name in self._criterions[dimension]:
+        for dimension in self._criterion_set.criterions:
+            for criterion_name in self._criterion_set.criterions[dimension]:
                 result[f"{dimension}_{criterion_name}_train"] = hist[dimension][criterion_name]["train"]
                 result[f"{dimension}_{criterion_name}_val"] = hist[dimension][criterion_name]["val"]
 
         for stage in reversed(self._stages):
-            stage.post_train(wm, self._criterions, self._train_criterions)
+            stage.post_train(wm, self._criterion_set.criterions,
+                             self._criterion_set.train_criterions)
 
         return result
 
