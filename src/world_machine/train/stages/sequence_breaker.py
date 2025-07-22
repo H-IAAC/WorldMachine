@@ -14,7 +14,7 @@ from .train_stage import TrainStage
 
 class SequenceBreaker(TrainStage):
     def __init__(self, n_segment: int = 1, fast_forward: bool = False):
-        super().__init__(3)
+        super().__init__(4)
 
         self._n_point = n_segment-1
         self._fast_forward = fast_forward

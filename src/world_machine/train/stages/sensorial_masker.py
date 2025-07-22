@@ -15,7 +15,7 @@ from .train_stage import TrainStage
 class SensorialMasker(TrainStage):
     def __init__(self, mask_percentage: float | dict[str, float | ParameterScheduler] | ParameterScheduler,
                  force_sensorial_mask: bool = False):
-        super().__init__(4)
+        super().__init__(3)
 
         self._force_sensorial_mask = force_sensorial_mask
 
@@ -48,14 +48,14 @@ class SensorialMasker(TrainStage):
 
         return mask_percentage
 
-    def pre_forward(self, item_index: int,  itens: list[TensorDict], mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
+    def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
+                    seq_len: int, epoch_index: int, device: torch.device,
+                    state_size: int, mode: DatasetPassMode) -> None:
 
         if mode == DatasetPassMode.MODE_TRAIN or self._force_sensorial_mask:
-            item = itens[item_index]
+            item = itens[0]
 
             inputs: TensorDict = item["inputs"]
-            seq_len = item["inputs"][next(
-                iter(item["inputs"].keys()))].shape[1]
 
             with torch.no_grad():
                 if "input_masks" not in item:
