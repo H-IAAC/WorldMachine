@@ -13,14 +13,12 @@ class WorldMachineDataset(Dataset, abc.ABC):
     _states_filenames = deque()
 
     def __init__(self, sensorial_dimensions: list[str], size: int,
-                 state_size: int,
                  has_state_decoded: bool = False,
                  has_masks: bool = False):
         super().__init__()
 
         self._sensorial_dimensions = sensorial_dimensions
         self._size = size
-        self._state_size = state_size
         self._has_state_decoded = has_state_decoded
         self._has_masks = has_masks
 

@@ -22,7 +22,6 @@ class Toy1dDataset(WorldMachineDataset):
         super().__init__(
             ["state_control", "next_measurement"],
             size=size,
-            state_size=6,
             has_state_decoded=True,
             has_masks=False)
 
