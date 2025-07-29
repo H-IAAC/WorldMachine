@@ -1,5 +1,8 @@
-*
-
-!*.ipynb
-!*.py
-!*.gitignore
+*.bin
+*.parquet
+*.csv
+*.png
+*.json
+*.zip
+*.pt
+*.npz
