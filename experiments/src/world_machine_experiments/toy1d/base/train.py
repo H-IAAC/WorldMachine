@@ -89,7 +89,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                                         stride_past=recall_stride_past,
                                         stride_future=recall_stride_future))
 
-    stages.append(LossManager(state_regularizer, state_cov_regularizer))
+    stages.append(LossManager(state_regularizer,
+                  state_cov_regularizer, multiply_target_masks=False))
 
     trainer = Trainer(stages, seed)
     trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())

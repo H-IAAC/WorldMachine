@@ -11,7 +11,10 @@ from .train_stage import TrainStage
 
 
 class LossManager(TrainStage):
-    def __init__(self, state_regularizer: str | None = None, state_cov_regularizer: float | None = None):
+    def __init__(self,
+                 state_regularizer: str | None = None,
+                 state_cov_regularizer: float | None = None,
+                 multiply_target_masks: bool = True):
         super().__init__(2)
         self.n: int
 
@@ -24,6 +27,7 @@ class LossManager(TrainStage):
                 f"state_regularizer mode {state_regularizer} not valid.")
 
         self._state_cov_regularizer = state_cov_regularizer
+        self._multiply_target_masks = multiply_target_masks
 
     def pre_batch(self, model: WorldMachine, mode: DatasetPassMode,
                   criterions: dict[str, dict[str, Module]], optimizer: Optimizer,
@@ -42,30 +46,6 @@ class LossManager(TrainStage):
         losses["epoch"] = total_loss
 
         self.n = 0
-
-    def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
-        total_loss = losses["epoch"]
-
-        for dimension in total_loss:
-            if dimension == "optimizer_loss":
-                total_loss[dimension] /= self.n
-                total_loss[dimension] = total_loss[dimension].detach()
-            else:
-                for criterion_name in total_loss[dimension]:
-                    total_loss[dimension][criterion_name] /= self.n
-                    total_loss[dimension][criterion_name] = total_loss[dimension][criterion_name].detach(
-                    )
-
-        result = {}
-        for dimension in total_loss:
-            if dimension == "optimizer_loss":
-                result[dimension] = total_loss[dimension]
-            else:
-                for criterion_name in total_loss[dimension]:
-                    result[f"{dimension}_{criterion_name}"] = total_loss[dimension][criterion_name]
-
-        losses.clear()
-        losses.update(result)
 
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset, epoch_index: int,
                      criterions: dict[str, dict[str, Module]], mode: DatasetPassMode, device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
@@ -88,11 +68,20 @@ class LossManager(TrainStage):
             logits_dim = logits[dimension]
             targets_dim = targets[dimension]
 
+            mask_factor = 1.0
+
             if (targets_masks is not None and
                     dimension in targets_masks):
 
-                logits_dim = logits_dim[:, targets_masks[dimension][0]]
-                targets_dim = targets_dim[:, targets_masks[dimension][0]]
+                if self._multiply_target_masks:
+                    logits_dim *= targets_masks[dimension].unsqueeze(2)
+                    targets_dim *= targets_masks[dimension].unsqueeze(2)
+
+                    mask_factor = (
+                        targets_masks[dimension].numel()/targets_masks[dimension].sum())
+                else:
+                    logits_dim = logits_dim[:, targets_masks[dimension][0]]
+                    targets_dim = targets_dim[:, targets_masks[dimension][0]]
 
             item_losses[dimension] = {}
             for criterion_name in criterions[dimension]:
@@ -100,7 +89,7 @@ class LossManager(TrainStage):
                     torch.set_grad_enabled(False)
 
                 item_losses[dimension][criterion_name] = criterions[dimension][criterion_name](
-                    logits_dim, targets_dim)
+                    logits_dim, targets_dim) * mask_factor
 
                 total_loss[dimension][criterion_name] += item_losses[dimension][criterion_name] * \
                     targets.size(0)
@@ -144,3 +133,27 @@ class LossManager(TrainStage):
         self.n += targets.size(0)
 
         losses["optimizer_loss"] = optimizer_loss
+
+    def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
+        total_loss = losses["epoch"]
+
+        for dimension in total_loss:
+            if dimension == "optimizer_loss":
+                total_loss[dimension] /= self.n
+                total_loss[dimension] = total_loss[dimension].detach()
+            else:
+                for criterion_name in total_loss[dimension]:
+                    total_loss[dimension][criterion_name] /= self.n
+                    total_loss[dimension][criterion_name] = total_loss[dimension][criterion_name].detach(
+                    )
+
+        result = {}
+        for dimension in total_loss:
+            if dimension == "optimizer_loss":
+                result[dimension] = total_loss[dimension]
+            else:
+                for criterion_name in total_loss[dimension]:
+                    result[f"{dimension}_{criterion_name}"] = total_loss[dimension][criterion_name]
+
+        losses.clear()
+        losses.update(result)
