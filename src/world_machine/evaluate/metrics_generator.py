@@ -1,10 +1,10 @@
-import tensordict
 import torch
+import tqdm
 from tensordict import TensorDict
 
 from world_machine.data import WorldMachineDataLoader, WorldMachineDataset
 from world_machine.train import CriterionSet, DatasetPassMode
-from world_machine.train.stages import LossManager
+from world_machine.train.stages import LossManager, PrepareModel
 from world_machine.world_machine import WorldMachine
 
 
@@ -15,7 +15,7 @@ class MetricsGenerator:
 
     def _inference(self,
                    model: WorldMachine,
-                   data_loader: WorldMachineDataLoader,
+                   item: TensorDict,
                    batch_size: int,
                    seq_len: int) -> tuple[TensorDict, torch.Tensor]:
 
@@ -23,32 +23,22 @@ class MetricsGenerator:
 
         device = next(iter(model.parameters())).device
 
-        logits: list[TensorDict] = []
-        states: list[torch.Tensor] = []
-        for item in data_loader:
-            item: TensorDict
-            inputs: torch.Tensor = item["inputs"].to(device)
+        inputs: torch.Tensor = item["inputs"].to(device)
 
-            states_batch = torch.empty(
-                [batch_size, seq_len, state_size], device=device)
-            states_batch[:, 0, :] = 0
+        state = torch.empty(
+            [batch_size, seq_len, state_size], device=device)
+        state[:, 0, :] = 0
 
-            logits_batch = model.inference(
-                states_batch, inputs, total_size=inputs.shape[1])
-            states_batch[:, 1:] = logits_batch["state"][:, :-1]
+        logits = model.inference(
+            state, inputs, total_size=inputs.shape[1])
+        state[:, 1:] = logits["state"][:, :-1]
 
-            logits.append(logits_batch)
-            states.append(states_batch)
-
-        logits = tensordict.lazy_stack(logits)
-        states = torch.stack(states)
-
-        return logits, states
+        return logits, state
 
     def _inference_previous_coded(self,
                                   model: WorldMachine,
-                                  data_loader: WorldMachineDataLoader,
-                                  states: torch.Tensor,
+                                  item: TensorDict,
+                                  state: torch.Tensor,
                                   sensorial_masks: TensorDict | None = None,
                                   inference_start: int = 0,
                                   data_start: int = 0,
@@ -56,22 +46,13 @@ class MetricsGenerator:
 
         device = next(iter(model.parameters())).device
 
-        logits: list[TensorDict] = []
-        index = 0
-        for item in data_loader:
-            item: TensorDict
-            inputs: torch.Tensor = item["inputs"].to(device)
-            states_batch = states[index].to(device)
+        inputs: torch.Tensor = item["inputs"].to(device)
 
-            logits_batch = model.inference(states_batch[:, data_start:],
-                                           inputs[:, data_start:],
-                                           sensorial_masks[:, data_start:],
-                                           start=inference_start,
-                                           replace_sensorial_data=replace_sensorial_data)
-
-            logits.append(logits_batch)
-
-        logits = tensordict.lazy_stack(logits)
+        logits = model.inference(state[:, data_start:],
+                                 inputs[:, data_start:],
+                                 sensorial_masks[:, data_start:],
+                                 start=inference_start,
+                                 replace_sensorial_data=replace_sensorial_data)
 
         return logits
 
@@ -91,17 +72,11 @@ class MetricsGenerator:
 
         return sensorial_masks_masked
 
-    def __call__(self, model: WorldMachine, dataset: WorldMachineDataset, batch_size: int):
-        original_grad_state = torch.is_grad_enabled()
-        original_model_state = model.training
-        torch.set_grad_enabled(False)
-
-        # Must not shuffle (sync logits and targets)
-        data_loader = WorldMachineDataLoader(
-            dataset, batch_size, shuffle=False)
+    def __call__(self, model: WorldMachine, dataloader: WorldMachineDataLoader):
+        dataset = dataloader.dataset
 
         # Prepare Data
-        item = next(iter(data_loader))
+        item = next(iter(dataloader))
         batch_size = item["inputs"].batch_size[0]
         seq_len = item["inputs"][next(
             iter(item["inputs"].keys()))].shape[1]
@@ -112,42 +87,63 @@ class MetricsGenerator:
 
         half_seq_len = seq_len//2
 
-        # Compute logits
-        logits, states = self._inference(
-            model, data_loader, batch_size, seq_len)
-        logits_use_pred = self._inference_previous_coded(
-            model, data_loader, states, sensorial_masks_masked, inference_start=half_seq_len)
-        logits_pred_shallow = self._inference_previous_coded(
-            model, data_loader, states, sensorial_masks_masked, data_start=half_seq_len)
-
-        logits_use_state = logits_use_pred[:, :half_seq_len]
-        logits_prediction = logits[:, half_seq_len:]
-
         loss_manager = LossManager()
-
-        all_logits = {"normal": logits,
-                      "use_state": logits_use_state,
-                      "prediction": logits_prediction,
-                      "prediction_shallow": logits_pred_shallow}
+        prepare_model = PrepareModel()
 
         all_losses = {}
-
-        for name in all_logits:
-            losses = {}
+        for name in ["normal", "use_state", "prediction", "prediction_shallow"]:
+            all_losses[name] = {}
             loss_manager.pre_batch(model,
                                    DatasetPassMode.MODE_EVALUATE,
                                    self._criterion_set.criterions,
                                    None,
                                    device,
-                                   losses,
+                                   all_losses[name],
                                    self._criterion_set.train_criterions)
 
-            for batch_index, item in enumerate(data_loader):
-                item["logits"] = all_logits[name][batch_index]
-                itens = [item]
+        prepare_model.pre_batch(model,
+                                DatasetPassMode.MODE_EVALUATE,
+                                self._criterion_set.criterions,
+                                None,
+                                device,
+                                all_losses[name],
+                                self._criterion_set.train_criterions)
 
-                loss_manager.post_segment(itens,
-                                          losses,
+        for item in tqdm.tqdm(dataloader):
+            item = item.to(device)
+
+            del item["index"]
+            item.batch_size = [batch_size, seq_len]
+
+            logits, state = self._inference(model,
+                                            item,
+                                            batch_size,
+                                            seq_len)
+
+            item["logits"] = logits
+
+            loss_manager.post_segment([item],
+                                      all_losses["normal"],
+                                      dataset,
+                                      0,
+                                      self._criterion_set.criterions,
+                                      DatasetPassMode.MODE_EVALUATE,
+                                      device,
+                                      self._criterion_set.train_criterions)
+
+            item["logits"] = self._inference_previous_coded(model,
+                                                            item,
+                                                            state,
+                                                            sensorial_masks_masked,
+                                                            inference_start=half_seq_len)
+
+            itens = {}
+            itens["use_state"] = [item[:, :half_seq_len]]
+            itens["prediction"] = [item[:, half_seq_len:]]
+
+            for name in itens:
+                loss_manager.post_segment(itens[name],
+                                          all_losses[name],
                                           dataset,
                                           0,
                                           self._criterion_set.criterions,
@@ -155,15 +151,31 @@ class MetricsGenerator:
                                           device,
                                           self._criterion_set.train_criterions)
 
+            del item["logits"]
+
+            logits_pred_shallow = self._inference_previous_coded(model,
+                                                                 item,
+                                                                 state,
+                                                                 sensorial_masks_masked,
+                                                                 data_start=half_seq_len)
+
+            item = item[:, half_seq_len:]
+            item["logits"] = logits_pred_shallow
+
+            loss_manager.post_segment([item],
+                                      all_losses["prediction_shallow"],
+                                      dataset,
+                                      0,
+                                      self._criterion_set.criterions,
+                                      DatasetPassMode.MODE_EVALUATE,
+                                      device,
+                                      self._criterion_set.train_criterions)
+
+        for name in all_losses:
             loss_manager.post_batch(
-                model, losses, self._criterion_set.criterions, self._criterion_set.train_criterions)
+                model, all_losses[name], self._criterion_set.criterions, self._criterion_set.train_criterions)
 
-            all_losses[name] = losses
-
-        torch.set_grad_enabled(original_grad_state)
-        if original_model_state:
-            model.train()
-        else:
-            model.eval()
+        prepare_model.post_batch(
+            model, all_losses[name], self._criterion_set.criterions, self._criterion_set.train_criterions)
 
         return all_losses
