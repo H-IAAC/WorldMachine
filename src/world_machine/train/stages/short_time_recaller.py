@@ -74,7 +74,8 @@ class ShortTimeRecaller(TrainStage):
                 if dimension in item["target_masks"]:
                     mask = item["target_masks"][dimension]
                 else:
-                    mask = torch.ones(seq_len, dtype=bool, device=device)
+                    mask = torch.ones([batch_size, seq_len],
+                                      dtype=bool, device=device)
 
                 for i in range(self._n_future):
                     future_dim_name = f"future{i}_{dimension}"
@@ -82,30 +83,29 @@ class ShortTimeRecaller(TrainStage):
                     future_index = (i*self._stride_future)+2
 
                     future_data = torch.roll(data, -future_index, 1)
-                    future_mask = torch.roll(mask, -future_index)
+                    future_mask = torch.roll(mask, -future_index, 1)
 
                     future_data: torch.Tensor = self._projectors[dimension](
                         future_data).detach()
-                    future_mask[future_mask.shape[0]-i:] = False
+                    future_mask[:, future_mask.shape[0]-i:] = False
 
                     item["targets"][future_dim_name] = future_data
-                    item["target_masks"][future_dim_name] = future_mask.unsqueeze(
-                        0).repeat(batch_size, 1)
+
+                    item["target_masks"][future_dim_name] = future_mask
 
                 for i in range(self._n_past):
                     past_dim_name = f"past{i}_{dimension}"
                     past_index = -(i*self._stride_past)-1
 
                     past_data = torch.roll(data, -past_index, 1)
-                    past_mask = torch.roll(mask, -past_index)
+                    past_mask = torch.roll(mask, -past_index, 1)
 
                     past_data: torch.Tensor = self._projectors[dimension](
                         past_data).detach()
-                    past_mask[:i+1] = False
+                    past_mask[:, :i+1] = False
 
                     item["targets"][past_dim_name] = past_data
-                    item["target_masks"][past_dim_name] = past_mask.unsqueeze(
-                        0).repeat(batch_size, 1)
+                    item["target_masks"][past_dim_name] = past_mask
 
     def post_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
         for dimension in self._dimensions:
