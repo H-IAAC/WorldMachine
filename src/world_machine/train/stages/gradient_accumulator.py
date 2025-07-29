@@ -16,7 +16,7 @@ from .simple_optimizer import SimpleOptimizer
 
 class GradientAccumulator(SimpleOptimizer):
     def __init__(self, accumulation_steps: int):
-        super().__init__(5)
+        super().__init__()
 
         self.accumulation_steps = accumulation_steps
 
