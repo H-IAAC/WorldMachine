@@ -1,6 +1,6 @@
-import math
-
 import torch
+
+from world_machine.profile import profile_range
 
 from .positional_encoder import create_positional_encoder
 
@@ -13,6 +13,7 @@ class MultiHeadSelfAttention(torch.nn.Module):
         self.attention = MultiHeadAttention(
             embed_dim, n_head, is_causal, positional_encoder_type)
 
+    @profile_range("multi_head_self_attention_forward", domain="world_machine")
     def forward(self, x: torch.Tensor):
         return self.attention(x, x, x)
 
@@ -63,6 +64,7 @@ class MultiHeadAttention(torch.nn.Module):
         for w in [self.wQ, self.wK, self.wV, self.w0]:
             torch.nn.init.kaiming_normal_(w)
 
+    @profile_range("multi_head_attention_forward", domain="world_machine")
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
         """
         Process the inputs using the attention process.
@@ -89,19 +91,21 @@ class MultiHeadAttention(torch.nn.Module):
 
         # Linear input transformation
         # Transpose weights because PyTorch does that
-        Q = query @ self.wQ.T
-        K = key @ self.wK.T
-        V = value @ self.wV.T
+        with profile_range("linear_input_transformation", category="multi_head_attention", domain="world_machine"):
+            Q = query @ self.wQ.T
+            K = key @ self.wK.T
+            V = value @ self.wV.T
 
         # batch_size, sentence, embed
         # to
         # batch_size,  n_head, sentence, head_dim
-        Q = Q.transpose(0, 1).reshape(context_size, batch_size *
-                                      self.n_head, self.head_dim).transpose(0, 1)
-        K = K.transpose(0, 1).reshape(context_size, batch_size *
-                                      self.n_head, self.head_dim).transpose(0, 1)
-        V = V.transpose(0, 1).reshape(context_size, batch_size *
-                                      self.n_head, self.head_dim).transpose(0, 1)
+        with profile_range("pre_reshape", category="multi_head_attention", domain="world_machine"):
+            Q = Q.transpose(0, 1).reshape(context_size, batch_size *
+                                          self.n_head, self.head_dim).transpose(0, 1)
+            K = K.transpose(0, 1).reshape(context_size, batch_size *
+                                          self.n_head, self.head_dim).transpose(0, 1)
+            V = V.transpose(0, 1).reshape(context_size, batch_size *
+                                          self.n_head, self.head_dim).transpose(0, 1)
         # Now we have [
         # [batch0word0part0, batch0word1part0],
         # [batch0word0part1, batch0word1part1],
@@ -109,31 +113,36 @@ class MultiHeadAttention(torch.nn.Module):
         # [batch1word0part1, batch1word1part1],
         # ]
 
-        scores = Q @ K.transpose(-2, -1)  # K.permute(0,1,3,2)
-        scores /= self.dk_root
+        with profile_range("scores_computation", category="multi_head_attention", domain="world_machine"):
+            scores = Q @ K.transpose(-2, -1)  # K.permute(0,1,3,2)
+            scores /= self.dk_root
 
         # Apply causal bias
-        if self.is_causal:
-            mask = torch.ones((context_size, context_size), dtype=torch.bool)
-            mask = mask.tril()  # Lower triangular is one
-            # Upper triangular without diagonal is ones
-            mask = torch.bitwise_not(mask)
+        with profile_range("causal_bias", category="multi_head_attention", domain="world_machine"):
+            if self.is_causal:
+                mask = torch.ones(
+                    (context_size, context_size), dtype=torch.bool, device=query.device)
+                mask = mask.tril()  # Lower triangular is one
+                # Upper triangular without diagonal is ones
+                mask = torch.bitwise_not(mask)
 
-            attention_bias = torch.zeros(
-                (context_size, context_size), device=query.device)
-            attention_bias[mask] = -torch.inf
+                attention_bias = torch.zeros(
+                    (context_size, context_size), device=query.device)
+                attention_bias[mask] = -torch.inf
 
-            scores += attention_bias
+                scores += attention_bias
 
-        scores = self._positional_encoder.apply_attention_scores_pe(scores)
+        with profile_range("positional_encoder", category="multi_head_attention", domain="world_machine"):
+            scores = self._positional_encoder.apply_attention_scores_pe(scores)
 
         probs = torch.softmax(scores, dim=-1)
         E = probs @ V
 
         # Return elements to correct place
-        E = E.reshape(batch_size, self.n_head, context_size, self.head_dim)
-        E = E.transpose(-3, -2)
-        E = E.reshape(batch_size, context_size, self.embed_dim)
+        with profile_range("post_reshape", category="multi_head_attention", domain="world_machine"):
+            E = E.reshape(batch_size, self.n_head, context_size, self.head_dim)
+            E = E.transpose(-3, -2)
+            E = E.reshape(batch_size, context_size, self.embed_dim)
         # Now we have [
         # [batch0word0, batch0word1],
         # [batch1word0, batch1word1]

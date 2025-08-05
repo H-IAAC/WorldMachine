@@ -1,5 +1,7 @@
 import torch
 
+from world_machine.profile import profile_range
+
 from .attention import MultiHeadSelfAttention
 from .pointwise_feedforward import PointwiseFeedforward
 
@@ -23,6 +25,7 @@ class TransformDecoderBlock(torch.nn.Module):
             embed_dim, hidden_size, dropout_rate)
         self.layer_norm2 = torch.nn.LayerNorm(embed_dim)
 
+    @profile_range("transformer_decoder_block_forward", domain="world_machine")
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
         # Masked Multi-Head Attention

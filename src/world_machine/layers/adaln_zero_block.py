@@ -1,5 +1,7 @@
 import torch
 
+from world_machine.profile import profile_range
+
 from .attention import MultiHeadSelfAttention
 from .conditioning_block import ConditioningBlock
 from .modulate import Modulate
@@ -34,6 +36,7 @@ class AdaLNZeroBlock(ConditioningBlock):
         else:
             self.sensorial_replace = None
 
+    @profile_range("adaln_zero_block_forward", domain="world_machine")
     def forward(self, x: torch.Tensor, conditioning: torch.Tensor,
                 conditioning_mask: torch.Tensor | None = None) -> torch.Tensor:
 
@@ -43,19 +46,20 @@ class AdaLNZeroBlock(ConditioningBlock):
             conditioning_mask = torch.ones(context_size, dtype=bool)
 
         # Conditioning MLP
-        conditioning_data = self.conditioning_mlp(conditioning)[
-            :, :context_size]
+        with profile_range("conditioning_mlp", category="adaln_zero", domain="world_machine"):
+            conditioning_data = self.conditioning_mlp(conditioning)[
+                :, :context_size]
 
-        if self.sensorial_replace is None:
-            conditioning_data *= conditioning_mask.unsqueeze(-1)
-        else:
-            conditioning_data[torch.bitwise_not(
-                conditioning_mask)] = self.sensorial_replace
+            if self.sensorial_replace is None:
+                conditioning_data *= conditioning_mask.unsqueeze(-1)
+            else:
+                conditioning_data[torch.bitwise_not(
+                    conditioning_mask)] = self.sensorial_replace
 
-        # scale -> gamma, alpha
-        # shift -> beta
-        gamma1, beta1, alpha1, gamma2, beta2, alpha2 = conditioning_data.chunk(
-            6, dim=2)
+            # scale -> gamma, alpha
+            # shift -> beta
+            gamma1, beta1, alpha1, gamma2, beta2, alpha2 = conditioning_data.chunk(
+                6, dim=2)
 
         gamma1: torch.Tensor
         beta1: torch.Tensor
