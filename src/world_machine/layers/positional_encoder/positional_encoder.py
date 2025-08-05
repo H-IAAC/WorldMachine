@@ -12,8 +12,8 @@ class PositionalEncoder(torch.nn.Module):
     def apply_input_pe(self, x: torch.Tensor) -> torch.Tensor:
         return x
 
-    def apply_attention_scores_pe(self, scores: torch.Tensor) -> torch.Tensor:
-        return scores
+    def apply_attention_bias_pe(self, attention_bias: torch.Tensor) -> torch.Tensor:
+        return attention_bias
 
     def remove_input_pe(self, x: torch.Tensor) -> torch.Tensor:
         return x

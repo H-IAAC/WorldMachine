@@ -37,15 +37,15 @@ class AlibiPositionalEncoder(PositionalEncoder):
     def _m_activation(self, m: torch.Tensor) -> torch.Tensor:
         return m
 
-    def apply_attention_scores_pe(self, scores: torch.Tensor) -> torch.Tensor:
+    def apply_attention_bias_pe(self, attention_bias: torch.Tensor) -> torch.Tensor:
         if self._m is None:
             warnings.warn(
                 "AlibiPositionalEncoder instantiated without attention heads. Scores positional encoding will not be aplied.")
-            return scores
+            return attention_bias
 
-        device = scores.device
-        batch_size = scores.shape[0]//self._n_head
-        context_size = scores.shape[-1]
+        device = attention_bias.device
+        batch_size = attention_bias.shape[0]//self._n_head
+        context_size = attention_bias.shape[-1]
 
         alibi_bias = torch.ones((context_size, context_size), device=device)
         alibi_bias = alibi_bias.tril()
@@ -57,10 +57,11 @@ class AlibiPositionalEncoder(PositionalEncoder):
 
         alibi_bias = alibi_bias*self._m_activation(self._m)
         alibi_bias *= -1
+        # alibi_bias: context, context, n_head
 
         alibi_bias = alibi_bias.repeat(1, 1, batch_size).permute(2, 0, 1)
 
-        return scores + alibi_bias
+        return attention_bias + alibi_bias
 
 
 class LearnableAlibiPositionalEncoder(AlibiPositionalEncoder):

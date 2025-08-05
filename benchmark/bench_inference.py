@@ -21,8 +21,8 @@ if __name__ == "__main__":
         model = get_benchmark_model()
         torch.cuda.synchronize()
 
-    # model = torch.compile(model)
-
+    model = torch.compile(model)
+    model.eval()
     model = model.to(device)
     model: WorldMachine
 
