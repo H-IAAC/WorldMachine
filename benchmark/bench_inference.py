@@ -21,7 +21,7 @@ if __name__ == "__main__":
         model = get_benchmark_model()
         torch.cuda.synchronize()
 
-    model = torch.compile(model)
+    # model = torch.compile(model)
     model.eval()
     model = model.to(device)
     model: WorldMachine
@@ -39,7 +39,7 @@ if __name__ == "__main__":
                            ProfilerActivity.CPU, ProfilerActivity.CUDA], profile_memory=True, record_shapes=True)
             prof.__enter__()
 
-        for _ in range(10):
+        for _ in range(2):
             model.inference(
                 state, sensorial_data=item["inputs"], sensorial_masks=item["input_masks"])
 

@@ -1,5 +1,5 @@
 import torch
-from torch.nn.attention.flex_attention import flex_attention
+from torch.nn.attention.flex_attention import create_block_mask, flex_attention
 
 from world_machine.layers.positional_encoder import create_positional_encoder
 from world_machine.profile import profile_range
@@ -49,14 +49,14 @@ class MultiHeadAttention(torch.nn.Module):
         # d_model = dv = dk = embed_dim
         # h = 1
 
-        wQ = torch.Tensor(embed_dim, embed_dim)  # embed, embed
-        wK = torch.Tensor(embed_dim, embed_dim)  # embed, dk
-        wV = torch.Tensor(embed_dim, embed_dim)  # embed, dv
+        # wQ = torch.Tensor(embed_dim, embed_dim)  # embed, embed
+        # wK = torch.Tensor(embed_dim, embed_dim)  # embed, dk
+        # wV = torch.Tensor(embed_dim, embed_dim)  # embed, dv
         w0 = torch.Tensor(embed_dim, embed_dim)  # embed, embed
-
-        self.wQ = torch.nn.Parameter(wQ)
-        self.wK = torch.nn.Parameter(wK)
-        self.wV = torch.nn.Parameter(wV)
+#
+        # self.wQ = torch.nn.Parameter(wQ)
+        # self.wK = torch.nn.Parameter(wK)
+        # self.wV = torch.nn.Parameter(wV)
         self.w0 = torch.nn.Parameter(w0)
 
         self.register_buffer("dk_root", torch.sqrt(
@@ -66,8 +66,17 @@ class MultiHeadAttention(torch.nn.Module):
         self._positional_encoder = create_positional_encoder(
             positional_encoder_type, embed_dim, 0, n_head)
 
-        for w in [self.wQ, self.wK, self.wV, self.w0]:
+        # for w in [self.wQ, self.wK, self.wV, self.w0]:
+        #    torch.nn.init.kaiming_normal_(w)
+
+        for w in [self.w0]:
             torch.nn.init.kaiming_normal_(w)
+
+        self.input_projection = torch.nn.Linear(
+            embed_dim, 3*embed_dim, bias=False)
+
+        self.register_buffer("attention_bias", torch.tensor([]), False)
+        self.attention_bias: torch.Tensor
 
     @profile_range("multi_head_attention_forward", domain="world_machine")
     def forward(self, query: torch.Tensor, key: torch.Tensor, value: torch.Tensor) -> torch.Tensor:
@@ -97,32 +106,43 @@ class MultiHeadAttention(torch.nn.Module):
         # Linear input transformation
         # Transpose weights because PyTorch does that
         with profile_range("linear_input_transformation", category="multi_head_attention", domain="world_machine"):
-            Q = query @ self.wQ.T
-            K = key @ self.wK.T
-            V = value @ self.wV.T
+            # Q = query @ self.wQ.T
+            # K = key @ self.wK.T
+            # V = value @ self.wV.T
+
+            Q, K, V = self.input_projection(query).split(self.embed_dim, dim=2)
 
         # Compute bias
         with profile_range("compute_attention_bias", category="multi_head_attention", domain="world_machine"):
-            attention_bias = torch.zeros(
-                (context_size, context_size), device=Q.device)
+            if self.attention_bias.dim() != 3 or self.attention_bias.shape[1] < context_size:
 
-            if self.is_causal:
-                with profile_range("causal_bias", category="multi_head_attention", domain="world_machine"):
+                attention_bias = torch.zeros(
+                    (context_size, context_size), device=Q.device)
 
-                    mask = torch.ones(
-                        (context_size, context_size), dtype=torch.bool, device=Q.device)
-                    mask = mask.tril()  # Lower triangular is one
-                    # Upper triangular without diagonal is ones
-                    mask = torch.bitwise_not(mask)
+                if self.is_causal:
+                    with profile_range("causal_bias", category="multi_head_attention", domain="world_machine"):
 
-                    attention_bias[mask] = -torch.inf
+                        mask = torch.ones(
+                            (context_size, context_size), dtype=torch.bool, device=Q.device)
+                        mask = mask.tril()  # Lower triangular is one
+                        # Upper triangular without diagonal is ones
+                        mask = torch.bitwise_not(mask)
 
-            attention_bias = attention_bias.unsqueeze(
-                0).repeat([batch_size*self.n_head, 1, 1])
+                        attention_bias[mask] = -torch.inf
 
-            with profile_range("positional_encoder", category="multi_head_attention", domain="world_machine"):
-                attention_bias = self._positional_encoder.apply_attention_bias_pe(
-                    attention_bias)
+                attention_bias = attention_bias.unsqueeze(
+                    0).repeat([self.n_head, 1, 1])
+
+                with profile_range("positional_encoder", category="multi_head_attention", domain="world_machine"):
+                    attention_bias = self._positional_encoder.apply_attention_bias_pe(
+                        attention_bias)
+
+                self.attention_bias = attention_bias
+            else:
+                attention_bias = self.attention_bias[:, :context_size,
+                                                     :context_size]
+
+            attention_bias = attention_bias.repeat([batch_size, 1, 1])
 
         # attention bias: [head*batch, context, context]
 
@@ -132,7 +152,6 @@ class MultiHeadAttention(torch.nn.Module):
             E = self._manual_attention(Q, K, V, attention_bias)
 
         result = E @ self.w0.T
-
         return result
 
     def _fast_attention(self, Q: torch.Tensor, K: torch.Tensor, V: torch.Tensor, attention_bias: torch.Tensor) -> torch.Tensor:
@@ -153,19 +172,12 @@ class MultiHeadAttention(torch.nn.Module):
             attention_bias = attention_bias.reshape(
                 [batch_size, self.n_head, context_size, context_size])
 
-        # def score_mod(score, batch_index, head_index, query_index, key_index): return apply_score_mod(
-        #    score, attention_bias, batch_index, head_index, query_index, key_index)
-        # with profile_range("flex_attention", category="multi_head_attention", domain="world_machine"):
-        #    result = flex_attention(Q, K, V, score_mod, scale=1/self.dk_root)
-        #    # result = flex_attention(Q, K, V, scale=1/self.dk_root)
-
         with profile_range("scaled_dot_product_attention", category="multi_head_attention", domain="world_machine"):
-            result = torch.nn.functional.scaled_dot_product_attention(
+            E = torch.nn.functional.scaled_dot_product_attention(
                 Q, K, V, attn_mask=attention_bias, scale=1/self.dk_root)
-            # result = flex_attention(Q, K, V, scale=1/self.dk_root)
 
         with profile_range("post_reshape", category="multi_head_attention", domain="world_machine"):
-            E = result.transpose(1, 2).view(
+            E = E.transpose(1, 2).view(
                 batch_size, context_size, embed_size)
 
         return E
