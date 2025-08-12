@@ -15,7 +15,7 @@ class MultiHeadSelfAttention(torch.nn.Module):
         super().__init__()
 
         self.attention = MultiHeadAttention(
-            embed_dim, n_head, is_causal, positional_encoder_type, fast)
+            embed_dim, n_head, is_causal, positional_encoder_type, fast, True)
 
     def pre_compute_attention_bias(self, size: int) -> None:
         self.attention.pre_compute_attention_bias(size)
@@ -26,7 +26,7 @@ class MultiHeadSelfAttention(torch.nn.Module):
 
 
 class MultiHeadAttention(torch.nn.Module):
-    def __init__(self, embed_dim: int, n_head: int, is_causal: bool, positional_encoder_type: str | None = None, fast: bool = True) -> None:
+    def __init__(self, embed_dim: int, n_head: int, is_causal: bool, positional_encoder_type: str | None = None, fast: bool = True, self_attention: bool = False) -> None:
         """
         Creates the layer.
 
@@ -51,15 +51,8 @@ class MultiHeadAttention(torch.nn.Module):
 
         # d_model = dv = dk = embed_dim
         # h = 1
-
-        # wQ = torch.Tensor(embed_dim, embed_dim)  # embed, embed
-        # wK = torch.Tensor(embed_dim, embed_dim)  # embed, dk
-        # wV = torch.Tensor(embed_dim, embed_dim)  # embed, dv
         w0 = torch.Tensor(embed_dim, embed_dim)  # embed, embed
-#
-        # self.wQ = torch.nn.Parameter(wQ)
-        # self.wK = torch.nn.Parameter(wK)
-        # self.wV = torch.nn.Parameter(wV)
+
         self.w0 = torch.nn.Parameter(w0)
 
         self.register_buffer("dk_root", torch.sqrt(
@@ -69,14 +62,17 @@ class MultiHeadAttention(torch.nn.Module):
         self._positional_encoder = create_positional_encoder(
             positional_encoder_type, embed_dim, 0, n_head)
 
-        # for w in [self.wQ, self.wK, self.wV, self.w0]:
-        #    torch.nn.init.kaiming_normal_(w)
-
         for w in [self.w0]:
             torch.nn.init.kaiming_normal_(w)
 
-        self.input_projection = torch.nn.Linear(
-            embed_dim, 3*embed_dim, bias=False)
+        self._self_attention = self_attention
+        if self_attention:
+            self.input_projection = torch.nn.Linear(
+                embed_dim, 3*embed_dim, bias=False)
+        else:
+            self.input_projection_weights = torch.nn.Parameter(
+                torch.empty((3 * embed_dim, embed_dim)))
+            torch.nn.init.kaiming_normal_(self.input_projection_weights)
 
         self.register_buffer("attention_bias", torch.tensor([]), False)
         self.attention_bias: torch.Tensor
@@ -132,6 +128,9 @@ class MultiHeadAttention(torch.nn.Module):
         if query.shape[2] != self.embed_dim:
             raise ValueError(
                 f"Inputs must have embed dimension of {self.embed_dim} ({query.shape[2]} != {self.embed_dim})")
+        if self._self_attention and not (query is key and key is value):
+            raise ValueError(
+                "query, key and value must be the same in self attention")
 
         # Get dimensions
         batch_size = query.shape[0]
@@ -144,7 +143,12 @@ class MultiHeadAttention(torch.nn.Module):
             # K = key @ self.wK.T
             # V = value @ self.wV.T
 
-            Q, K, V = self.input_projection(query).split(self.embed_dim, dim=2)
+            if self._self_attention:
+                Q, K, V = self.input_projection(
+                    query).split(self.embed_dim, dim=2)
+            else:
+                Q, K, V = torch.nn.functional._in_projection_packed(
+                    query, key, value, self.input_projection_weights, None)
 
         # Compute bias
         with profile_range("prepare_attention_bias", category="multi_head_attention", domain="world_machine"):
