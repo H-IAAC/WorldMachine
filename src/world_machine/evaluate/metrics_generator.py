@@ -3,6 +3,7 @@ import tqdm
 from tensordict import TensorDict
 
 from world_machine.data import WorldMachineDataLoader, WorldMachineDataset
+from world_machine.profile import profile_range
 from world_machine.train import CriterionSet, DatasetPassMode
 from world_machine.train.stages import LossManager, PrepareModel
 from world_machine.world_machine import WorldMachine
@@ -13,6 +14,7 @@ class MetricsGenerator:
     def __init__(self, criterion_set: CriterionSet):
         self._criterion_set = criterion_set
 
+    @profile_range("inference", category="metrics", domain="world_machine")
     def _inference(self,
                    model: WorldMachine,
                    item: TensorDict,
@@ -35,6 +37,7 @@ class MetricsGenerator:
 
         return logits, state
 
+    @profile_range("inference_previous_coded", category="metrics", domain="world_machine")
     def _inference_previous_coded(self,
                                   model: WorldMachine,
                                   item: TensorDict,
@@ -56,6 +59,7 @@ class MetricsGenerator:
 
         return logits
 
+    @profile_range("generate_masked_masks", category="metrics", domain="world_machine")
     def _generate_masked_masks(self, inputs: TensorDict) -> TensorDict:
         batch_size = inputs.batch_size[0]
         seq_len = inputs[next(
@@ -72,6 +76,7 @@ class MetricsGenerator:
 
         return sensorial_masks_masked
 
+    @profile_range("metrics_generator_call", category="metrics", domain="world_machine")
     def __call__(self, model: WorldMachine, dataloader: WorldMachineDataLoader):
         dataset = dataloader.dataset
 

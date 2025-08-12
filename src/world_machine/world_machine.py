@@ -4,7 +4,7 @@ from tensordict import TensorDict
 from world_machine.layers.positional_encoder import create_positional_encoder
 from world_machine.profile import profile_range
 
-from .layers import Clamp, LTanh, Sine, SinTanh
+from .layers import Clamp, LTanh, MultiHeadAttention, Sine, SinTanh
 
 
 @profile_range("generate_sensorial_masks", domain="world_machine")
@@ -87,6 +87,12 @@ class WorldMachine(torch.nn.Module):
         if state_dropout is not None:
             state_dropout = torch.nn.Dropout(state_dropout)
         self._state_dropout = state_dropout
+
+    @profile_range("pre_compute_attention_bias", category="world_machine", domain="world_machine")
+    def pre_compute_attention_bias(self, size: int) -> None:
+        for module in self.modules():
+            if isinstance(module, MultiHeadAttention):
+                module.pre_compute_attention_bias(size)
 
     @profile_range("world_machine_forward", domain="world_machine")
     def forward(self, state: torch.Tensor | None = None,

@@ -78,7 +78,7 @@ class LossManager(TrainStage):
                     targets_dim *= targets_masks[dimension].unsqueeze(2)
 
                     mask_factor = (
-                        targets_masks[dimension].numel() / [dimension].sum())
+                        targets_masks[dimension].numel() / targets_masks[dimension].sum())
                 else:
                     logits_dim = logits_dim[:, targets_masks[dimension][0]]
                     targets_dim = targets_dim[:, targets_masks[dimension][0]]

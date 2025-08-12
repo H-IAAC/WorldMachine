@@ -12,13 +12,18 @@ class profile_range(ContextDecorator):
         self.domain = domain
         self.category = category
 
+        torch_message = message
+        if category is not None:
+            torch_message = f"{category}:{torch_message}"
+        if domain is not None:
+            torch_message = f"{torch_message}@{domain}"
+
         self._nvtx_range = annotate_se(self.message,
                                        self.color,
                                        self.domain,
                                        self.category)
 
-        self._torch_range = record_function(self.message,
-                                            f"{self.category}@{self.domain}({self.color})")
+        self._torch_range = record_function(torch_message)
 
     def __enter__(self):
         self._nvtx_range.__enter__()
