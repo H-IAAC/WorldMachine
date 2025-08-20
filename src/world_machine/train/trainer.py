@@ -10,6 +10,7 @@ from tensordict import TensorDict
 from torch.nn import Module
 from torch.utils.data import DataLoader
 
+from world_machine.profile import profile_range
 from world_machine.train.criterion_set import CriterionSet
 from world_machine.train.stages import (
     LossManager, PrepareModel, SimpleOptimizer, TrainStage)
@@ -116,79 +117,93 @@ class Trainer:
         Returns:
             torch.Tensor: resulting loss.
         """
-        device = next(iter(model.parameters())).device
-        losses = {}
+        range_name = "train"
+        if mode == DatasetPassMode.MODE_EVALUATE:
+            range_name = "evaluate"
 
-        if device != self._generator_torch.device:
-            self._generator_torch = torch.Generator(device=device)
-            self._generator_torch.manual_seed(self.torch_seed)
-            for stage in self._stages:
-                stage.torch_generator = self._generator_torch
+        with profile_range(range_name, category="trainer", domain="world_machine"):
 
-        batch_index = 0
+            device = next(iter(model.parameters())).device
+            losses = {}
 
-        for stage in self._stages:
-            stage.pre_batch(model, mode, self._criterion_set.criterions,
-                            optimizer, device, losses, self._criterion_set.train_criterions)
-
-        n_batch = len(loader)
-
-        for item in tqdm.tqdm(loader):
-            item = item.to(device)
-
-            itens = [item]
-            batch_size = item["inputs"].batch_size[0]
-            seq_len = item["inputs"][next(
-                iter(item["inputs"].keys()))].shape[1]
-            epoch_index = self._epoch_index
-            state_size = model._state_size
-            dataset = loader.dataset
-
-            for stage in self._stages:
-                stage.pre_segment(itens, losses, batch_size,
-                                  seq_len, epoch_index, device, state_size, mode)
-
-            for segment_index, segment in enumerate(itens):
-
+            if device != self._generator_torch.device:
+                self._generator_torch = torch.Generator(device=device)
+                self._generator_torch.manual_seed(self.torch_seed)
                 for stage in self._stages:
-                    stage.pre_forward(
-                        segment_index, itens, mode, batch_size, device, epoch_index)
+                    stage.torch_generator = self._generator_torch
 
-                # Forward
-                sensorial_data = segment["inputs"]
+            batch_index = 0
 
-                sensorial_masks = None
-                if "input_masks" in segment:
-                    sensorial_masks = segment["input_masks"]
+            with profile_range("pre_batch", category="trainer", domain="world_machine"):
+                for stage in self._stages:
+                    stage.pre_batch(model, mode, self._criterion_set.criterions,
+                                    optimizer, device, losses, self._criterion_set.train_criterions)
 
-                if "state" in segment["inputs"]:
-                    state = segment["inputs"]["state"]
+            n_batch = len(loader)
 
-                    logits: TensorDict = model(
-                        state=state, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
-                else:
-                    state_decoded = segment["inputs"]["state_decoded"]
+            for item in tqdm.tqdm(loader):
+                item = item.to(device)
 
-                    logits: TensorDict = model(
-                        state_decoded=state_decoded, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
+                itens = [item]
+                batch_size = item["inputs"].batch_size[0]
+                seq_len = item["inputs"][next(
+                    iter(item["inputs"].keys()))].shape[1]
+                epoch_index = self._epoch_index
+                state_size = model._state_size
+                dataset = loader.dataset
 
-                segment["logits"] = logits
+                with profile_range("pre_segment", category="trainer", domain="world_machine"):
+                    for stage in self._stages:
+                        stage.pre_segment(itens, losses, batch_size,
+                                          seq_len, epoch_index, device, state_size, mode)
 
+                for segment_index, segment in enumerate(itens):
+
+                    with profile_range("pre_forward", category="trainer", domain="world_machine"):
+                        for stage in self._stages:
+                            stage.pre_forward(
+                                segment_index, itens, mode, batch_size, device, epoch_index)
+
+                    # Forward
+                    with profile_range("forward", category="trainer", domain="world_machine"):
+                        sensorial_data = segment["inputs"]
+
+                        sensorial_masks = None
+                        if "input_masks" in segment:
+                            sensorial_masks = segment["input_masks"]
+
+                        if "state" in segment["inputs"]:
+                            state = segment["inputs"]["state"]
+
+                            logits: TensorDict = model(
+                                state=state, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
+                        else:
+                            state_decoded = segment["inputs"]["state_decoded"]
+
+                            logits: TensorDict = model(
+                                state_decoded=state_decoded, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
+
+                    segment["logits"] = logits
+
+                    with profile_range("post_forward", category="trainer", domain="world_machine"):
+                        for stage in reversed(self._stages):
+                            stage.post_forward(segment_index, itens,
+                                               dataset, losses, mode)
+
+                with profile_range("post_segment", category="trainer", domain="world_machine"):
+                    for stage in reversed(self._stages):
+                        stage.post_segment(itens, losses, dataset,
+                                           epoch_index, self._criterion_set.criterions, mode, device, self._criterion_set.train_criterions)
+
+                with profile_range("optimize", category="trainer", domain="world_machine"):
+                    for stage in reversed(self._stages):
+                        stage.optimize(model, optimizer, batch_index,
+                                       n_batch, losses, mode)
+
+            with profile_range("post_batch", category="trainer", domain="world_machine"):
                 for stage in reversed(self._stages):
-                    stage.post_forward(segment_index, itens,
-                                       dataset, losses, mode)
-
-            for stage in reversed(self._stages):
-                stage.post_segment(itens, losses, dataset,
-                                   epoch_index, self._criterion_set.criterions, mode, device, self._criterion_set.train_criterions)
-
-            for stage in reversed(self._stages):
-                stage.optimize(model, optimizer, batch_index,
-                               n_batch, losses, mode)
-
-        for stage in reversed(self._stages):
-            stage.post_batch(model, losses, self._criterion_set.criterions,
-                             self._criterion_set.train_criterions)
+                    stage.post_batch(model, losses, self._criterion_set.criterions,
+                                     self._criterion_set.train_criterions)
 
         return losses
 
@@ -203,9 +218,10 @@ class Trainer:
 
         self._stages.sort(key=lambda s: s.execution_order)
 
-        for stage in self._stages:
-            stage.pre_train(wm, self._criterion_set.criterions,
-                            self._criterion_set.train_criterions, device)
+        with profile_range("pre_train", category="trainer", domain="world_machine"):
+            for stage in self._stages:
+                stage.pre_train(wm, self._criterion_set.criterions,
+                                self._criterion_set.train_criterions, device)
 
         self._epoch_index = 0
 
@@ -279,18 +295,20 @@ class Trainer:
 
             self._epoch_index += 1
 
-        result = {}
-        result["optimizer_loss_train"] = hist["optimizer_loss"]["train"]
-        result["optimizer_loss_val"] = hist["optimizer_loss"]["val"]
-        result["duration"] = hist["duration"]
-        for dimension in self._criterion_set.criterions:
-            for criterion_name in self._criterion_set.criterions[dimension]:
-                result[f"{dimension}_{criterion_name}_train"] = hist[dimension][criterion_name]["train"]
-                result[f"{dimension}_{criterion_name}_val"] = hist[dimension][criterion_name]["val"]
+        with profile_range("format_history", category="trainer", domain="world_machine"):
+            result = {}
+            result["optimizer_loss_train"] = hist["optimizer_loss"]["train"]
+            result["optimizer_loss_val"] = hist["optimizer_loss"]["val"]
+            result["duration"] = hist["duration"]
+            for dimension in self._criterion_set.criterions:
+                for criterion_name in self._criterion_set.criterions[dimension]:
+                    result[f"{dimension}_{criterion_name}_train"] = hist[dimension][criterion_name]["train"]
+                    result[f"{dimension}_{criterion_name}_val"] = hist[dimension][criterion_name]["val"]
 
-        for stage in reversed(self._stages):
-            stage.post_train(wm, self._criterion_set.criterions,
-                             self._criterion_set.train_criterions)
+        with profile_range("post_train", category="trainer", domain="world_machine"):
+            for stage in reversed(self._stages):
+                stage.post_train(wm, self._criterion_set.criterions,
+                                 self._criterion_set.train_criterions)
 
         return result
 

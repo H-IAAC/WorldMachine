@@ -15,7 +15,7 @@ from world_machine.train import DatasetPassMode
 
 class TrainStage(abc.ABC):
 
-    def __new__(cls):
+    def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
 
         name = cls.__name__
@@ -26,16 +26,17 @@ class TrainStage(abc.ABC):
                    "pre_forward": instance.pre_forward,
                    "post_forward": instance.post_forward,
                    "post_segment": instance.post_segment,
-                   "optmize": instance.optimize,
+                   "optimize": instance.optimize,
                    "post_batch": instance.post_batch,
                    "post_train": instance.post_train}
 
         for method_name in methods:
-            method = methods[method_name]
-            method = profile_range(
-                f"{name}_{method_name}", category="train_stage", domain="world_machine")(method)
+            if method_name in cls.__dict__:
+                method = methods[method_name]
+                method = profile_range(
+                    f"{name}_{method_name}", category="train_stage", domain="world_machine")(method)
 
-            instance.__setattr__(method_name, method)
+                instance.__setattr__(method_name, method)
 
         return instance
 

@@ -7,14 +7,37 @@ import torch
 from tensordict import MemoryMappedTensor, TensorDict
 from torch.utils.data import DataLoader, Dataset
 
+from world_machine.profile import profile_range
+
 
 class WorldMachineDataset(Dataset, abc.ABC):
 
     _states_filenames = deque()
 
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+
+        name = cls.__name__
+
+        methods = {"load_data": instance.load_data,
+                   "get_dimension_item": instance.get_dimension_item,
+                   "get_dimension_mask": instance.get_dimension_mask,
+                   "dispose_data": instance.dispose_data}
+
+        for method_name in methods:
+            if method_name in cls.__dict__:
+                method = methods[method_name]
+                method = profile_range(
+                    f"{name}_{method_name}", category="wm_dataset", domain="world_machine")(method)
+
+                instance.__setattr__(method_name, method)
+
+        return instance
+
     def __init__(self, sensorial_dimensions: list[str], size: int,
                  has_state_decoded: bool = False,
-                 has_masks: bool = False):
+                 has_masks: bool = False,
+                 map_state_to_disk: bool = True):
         super().__init__()
 
         self._sensorial_dimensions = sensorial_dimensions
@@ -22,6 +45,7 @@ class WorldMachineDataset(Dataset, abc.ABC):
         self._has_state_decoded = has_state_decoded
         self._has_masks = has_masks
 
+        self._map_state_to_disk = map_state_to_disk
         self._states = None
         self._states_filename = None
 
@@ -38,6 +62,7 @@ class WorldMachineDataset(Dataset, abc.ABC):
     def get_dimension_mask(self, dimension: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         ...
 
+    @profile_range("__getitem__", category="wm_dataset", domain="world_machine")
     def __getitem__(self, index):
         item = TensorDict(
             {"inputs": TensorDict(), "targets": TensorDict(), "index": index}, batch_size=[])
@@ -80,31 +105,36 @@ class WorldMachineDataset(Dataset, abc.ABC):
     def dispose_data(self, index: int) -> None:
         ...
 
-    def set_state(self, indexes: int, states: torch.Tensor) -> None:
+    @profile_range("set_state", category="wm_dataset", domain="world_machine")
+    def set_state(self, indexes: torch.Tensor, states: torch.Tensor) -> None:
         if self._states is None:
             dtype = states.dtype
             states_shape = list(states.shape)
             states_shape[0] = self._size
 
-            i = 0
-            while self._states is None:
-                while True:
-                    filename = f"TempStates_{self.__class__.__name__}_{i}.bin"
+            if self._map_state_to_disk:
+                i = 0
+                while self._states is None:
+                    while True:
+                        filename = f"TempStates_{self.__class__.__name__}_{i}.bin"
 
-                    if not os.path.exists(filename):
-                        break
+                        if not os.path.exists(filename):
+                            break
 
-                    i += 1
+                        i += 1
 
-                try:
-                    self._states = MemoryMappedTensor.empty(
-                        states_shape, dtype=dtype, filename=filename)
-                except RuntimeError as e:
-                    print(e)
-                    pass
+                    try:
+                        self._states = MemoryMappedTensor.empty(
+                            states_shape, dtype=dtype, filename=filename)
 
-            self._states_filename = filename
-            WorldMachineDataset._states_filenames.append(filename)
+                    except RuntimeError as e:
+                        print(e)
+                        pass
+
+                self._states_filename = filename
+                WorldMachineDataset._states_filenames.append(filename)
+            else:
+                self._states = torch.empty(states_shape, dtype=dtype)
 
         self._states[indexes.cpu()] = states.detach().cpu()
 

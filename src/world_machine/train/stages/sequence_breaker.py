@@ -39,7 +39,7 @@ class SequenceBreaker(TrainStage):
             del item["index"]
             item.batch_size = [batch_size, seq_len]
 
-            segments: list[TensorDict] = item.split(list(sizes), dim=1)
+            segments: list[TensorDict] = item.split(sizes.tolist(), dim=1)
 
             for segment in segments:
                 segment.batch_size = [batch_size]
@@ -77,4 +77,11 @@ class SequenceBreaker(TrainStage):
             next_item = itens[item_index+1]
 
             statenext_current = current_item["logits"]["state"]
-            next_item["inputs"]["state"][:, 0] = statenext_current[:, -1]
+
+            state = next_item["inputs"]["state"]
+            state = torch.cat(
+                (statenext_current[:, -1].unsqueeze(1), state[:, 1:]),
+                dim=1
+            )
+
+            next_item["inputs"]["state"] = state

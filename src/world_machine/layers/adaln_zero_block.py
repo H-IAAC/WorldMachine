@@ -61,12 +61,12 @@ class AdaLNZeroBlock(ConditioningBlock):
             gamma1, beta1, alpha1, gamma2, beta2, alpha2 = conditioning_data.chunk(
                 6, dim=2)
 
-        gamma1: torch.Tensor
-        beta1: torch.Tensor
-        alpha1: torch.Tensor
-        gamma2: torch.Tensor
-        beta2: torch.Tensor
-        alpha2: torch.Tensor
+        # gamma1: torch.Tensor
+        # beta1: torch.Tensor
+        # alpha1: torch.Tensor
+        # gamma2: torch.Tensor
+        # beta2: torch.Tensor
+        # alpha2: torch.Tensor
 
         # First part (before first +)
         y1 = self.layer_norm1(x)

@@ -6,6 +6,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from world_machine import WorldMachine
+from world_machine.profile import profile_range
 from world_machine.train import DatasetPassMode
 from world_machine.train.scheduler import ConstantScheduler, ParameterScheduler
 
@@ -30,6 +31,7 @@ class SensorialMasker(TrainStage):
         self._mask_percentage: ParameterScheduler | dict[str,
                                                          ParameterScheduler] = mask_percentage
 
+    @profile_range("SensorialMasker_generate_mask_percentage", category="train_stage", domain="world_machine")
     def _generate_mask_percentage(self, sensorial_dimensions: list[str], epoch_index: int) -> dict[str, float]:
         mask_sensorial_data = self._mask_percentage
 
@@ -79,6 +81,7 @@ class SensorialMasker(TrainStage):
             item["input_masks"].batch_size = [batch_size, seq_len]
 
 
+@profile_range("SensorialMasker_mask_mask", category="train_stage", domain="world_machine")
 @numba.njit(cache=True)
 def mask_mask(masks: np.ndarray, mask_percentage: float, batch_size: int):
     for batch_idx in range(batch_size):
@@ -103,6 +106,7 @@ def mask_mask(masks: np.ndarray, mask_percentage: float, batch_size: int):
     return masks
 
 
+@profile_range("SensorialMasker_generate_masks", category="train_stage", domain="world_machine")
 def generate_masks(sensorial_masks: TensorDict, mask_percentage: dict[str, float], batch_size: int, device):
 
     for sensorial_dim in sensorial_masks.keys():

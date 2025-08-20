@@ -88,6 +88,7 @@ class LossManager(TrainStage):
                 if criterion_name not in train_criterions[dimension]:
                     torch.set_grad_enabled(False)
 
+                # with torch.autocast("cuda"):
                 item_losses[dimension][criterion_name] = criterions[dimension][criterion_name](
                     logits_dim, targets_dim) * mask_factor
 
