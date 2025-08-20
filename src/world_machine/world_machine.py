@@ -95,7 +95,6 @@ class WorldMachine(torch.nn.Module):
                 module.pre_compute_attention_bias(size)
 
     @profile_range("world_machine_forward", domain="world_machine")
-    # @torch.autocast("cuda")
     def forward(self, state: torch.Tensor | None = None,
                 state_decoded: torch.Tensor | None = None,
                 sensorial_data: TensorDict | None = None,

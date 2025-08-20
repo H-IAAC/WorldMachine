@@ -9,7 +9,7 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
-from world_machine.train import ParameterScheduler, Trainer
+from world_machine.train import CriterionSet, ParameterScheduler, Trainer
 from world_machine.train.stages import (
     GradientAccumulator, LossManager, SensorialMasker, SequenceBreaker,
     ShortTimeRecaller, StateManager)
@@ -92,14 +92,17 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     stages.append(LossManager(state_regularizer,
                   state_cov_regularizer, multiply_target_masks=False))
 
-    trainer = Trainer(stages, seed)
-    trainer.add_decoded_state_criterion("mse", torch.nn.MSELoss())
-    trainer.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
+    cs = CriterionSet()
 
-    trainer.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
+    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss())
+    cs.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
+
+    cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
     ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
-    trainer.add_sensorial_criterion(
+    cs.add_sensorial_criterion(
         "mse", "next_measurement", MSELossOnlyFirst(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
+
+    trainer = Trainer(cs, stages, seed)
 
     history = trainer(toy1d_model_untrained, toy1d_dataloaders,
                       optimizer, n_epoch)

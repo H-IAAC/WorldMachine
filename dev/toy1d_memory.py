@@ -1,3 +1,5 @@
+import multiprocessing as mp
+
 import torch
 from hamilton import driver
 from hamilton_sdk import adapters
@@ -13,6 +15,8 @@ if __name__ == "__main__":
     #    username="EltonCN",
     #    dag_name="toy1d_parameter_variation"
     # )
+
+    mp.set_start_method("spawn")
 
     d_parameter_variation = driver.Builder().with_modules(
         parameter_variation, shared).build()  # .with_adapter(tracker).build()
