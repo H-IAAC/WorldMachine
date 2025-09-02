@@ -28,9 +28,24 @@ class MSELossOnlyFirst(torch.nn.Module):
         return self.mse(x[:, :, 0], y[:, :, 0])
 
 
+def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set()) -> CriterionSet:
+    cs = CriterionSet()
+
+    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss())
+    cs.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
+
+    cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
+    ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
+    cs.add_sensorial_criterion(
+        "mse", "next_measurement", MSELossOnlyFirst(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
+
+    return cs
+
+
 @extract_fields(fields={"toy1d_model_trained": WorldMachine, "toy1d_train_history": dict[str, np.ndarray], "toy1d_trainer": Trainer})
 def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               toy1d_dataloaders: dict[str, DataLoader],
+                              toy1d_criterion_set: CriterionSet,
                               n_epoch: int,
                               optimizer_class: Type[Optimizer],
                               learning_rate: float,
@@ -41,7 +56,6 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                                                                         ParameterScheduler] | ParameterScheduler = None,
                               discover_state: bool = False,
                               stable_state_epochs: int = 1,
-                              sensorial_train_losses: set[Dimensions] = set(),
                               seed: int | list[int] = 0,
                               n_segment: int = 1,
                               fast_forward: bool = False,
@@ -92,17 +106,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     stages.append(LossManager(state_regularizer,
                   state_cov_regularizer, multiply_target_masks=False))
 
-    cs = CriterionSet()
-
-    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss())
-    cs.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
-
-    cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
-    ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
-    cs.add_sensorial_criterion(
-        "mse", "next_measurement", MSELossOnlyFirst(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
-
-    trainer = Trainer(cs, stages, seed)
+    trainer = Trainer(toy1d_criterion_set, stages, seed)
 
     history = trainer(toy1d_model_untrained, toy1d_dataloaders,
                       optimizer, n_epoch)
