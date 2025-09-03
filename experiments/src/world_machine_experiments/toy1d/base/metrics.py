@@ -46,9 +46,12 @@ def toy1d_metrics_sample_logits(toy1d_model_trained: WorldMachine,
                                 toy1d_criterion_set: CriterionSet) -> dict[str, TensorDict]:
 
     dataset = toy1d_dataloaders["val"].dataset
-    mini_dataset, _ = random_split(dataset, [32, len(dataset)-32])
+
+    if len(dataset) > 32:
+        dataset, _ = random_split(dataset, [32, len(dataset)-32])
+
     dataloader = WorldMachineDataLoader(
-        mini_dataset, batch_size=32, shuffle=False)
+        dataset, batch_size=32, shuffle=False)
 
     mg = MetricsGenerator(toy1d_criterion_set)
 
@@ -64,7 +67,7 @@ def toy1d_metrics_sample_logits(toy1d_model_trained: WorldMachine,
     return logits
 
 
-@datasaver
+@datasaver()
 def save_toy1d_metrics_sample_logits(toy1d_metrics_sample_logits: dict[str, TensorDict], output_dir: str) -> dict:
     main_path = os.path.join(output_dir, "metrics_logits")
 
@@ -81,8 +84,10 @@ def save_toy1d_metrics_sample_logits(toy1d_metrics_sample_logits: dict[str, Tens
     return info
 
 
-def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, list[TensorDict]]) -> dict[str, Figure]:
+def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict]) -> dict[str, Figure]:
     time = np.linspace(0, 199, 200, dtype=int)
+
+    batch_size = min(toy1d_metrics_sample_logits["normal"].batch_size[0], 32)
 
     figures = {}
     for name in toy1d_metrics_sample_logits["normal"].keys():
@@ -90,12 +95,9 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, list[Tenso
         plt.subplots_adjust(left=None, bottom=None, right=None,
                             top=None, wspace=0.05, hspace=0.05)
 
-        for i in range(32):
+        for i in range(batch_size):
             row = i // 8
             column = i % 8
-
-            axs[row, column].plot(toy1d_metrics_sample_logits["targets"]
-                                  [name][i, :, 0], label="Target")
 
             axs[row, column].plot(
                 toy1d_metrics_sample_logits["normal"][name][i, :, 0], label="Normal", alpha=0.5)
@@ -108,6 +110,10 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, list[Tenso
 
             axs[row, column].plot(time[100:], toy1d_metrics_sample_logits["prediction_shallow"]
                                   [name][i, :, 0], label="Prediction Shallow")
+
+            if name in toy1d_metrics_sample_logits["targets"].keys():
+                axs[row, column].plot(toy1d_metrics_sample_logits["targets"]
+                                      [name][i, :, 0], label="Target", color="black")
 
             axs[row, column].set_xticks([])
             axs[row, column].set_yticks([])
