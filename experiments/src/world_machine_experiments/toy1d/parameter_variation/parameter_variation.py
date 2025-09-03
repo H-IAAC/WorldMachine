@@ -41,9 +41,13 @@ def toy1d_parameter_variation_worker_func(inputs):
                "save_multiple_toy1d_parameters",
                ]
 
-    if inputs["aditional_outputs"] is not None and "save_toy1d_mask_sensorial_metrics" in inputs["aditional_outputs"]:
-        outputs += ["save_multiple_toy1d_consolidated_mask_sensorial_metrics",
-                    "save_multiple_toy1d_consolidated_mask_sensorial_plots"]
+    if inputs["aditional_outputs"] is not None:
+        if "save_toy1d_mask_sensorial_metrics" in inputs["aditional_outputs"]:
+            outputs += ["save_multiple_toy1d_consolidated_mask_sensorial_metrics",
+                        "save_multiple_toy1d_consolidated_mask_sensorial_plots"]
+
+        if "save_toy1d_metrics" in inputs["aditional_outputs"]:
+            outputs.append("save_multiple_toy1d_consolidated_metrics")
 
     d.execute(outputs,
               inputs=inputs)

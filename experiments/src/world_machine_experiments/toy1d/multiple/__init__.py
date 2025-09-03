@@ -7,6 +7,9 @@ from .mask_sensorial import (
     multiple_toy1d_mask_sensorial_metrics,
     save_multiple_toy1d_consolidated_mask_sensorial_metrics,
     save_multiple_toy1d_consolidated_mask_sensorial_plots)
+from .metrics import (
+    multiple_toy1d_consolidated_metrics, multiple_toy1d_metrics,
+    save_multiple_toy1d_consolidated_metrics)
 from .multiple_runs import (
     multiple_toy1d_trainings_info, save_multiple_toy1d_parameters)
 from .plot import multiple_toy1d_train_plots, save_multiple_toy1d_train_plots

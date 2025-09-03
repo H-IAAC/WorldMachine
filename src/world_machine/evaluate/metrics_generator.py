@@ -5,7 +5,7 @@ from tensordict import TensorDict
 from world_machine.data import WorldMachineDataLoader, WorldMachineDataset
 from world_machine.profile import profile_range
 from world_machine.train import CriterionSet, DatasetPassMode
-from world_machine.train.stages import LossManager, PrepareModel
+from world_machine.train.stages import LossManager, PrepareModel, TrainStage
 from world_machine.world_machine import WorldMachine
 
 
@@ -13,6 +13,8 @@ class MetricsGenerator:
 
     def __init__(self, criterion_set: CriterionSet):
         self._criterion_set = criterion_set
+
+        self.stages: list[TrainStage] = []
 
     @profile_range("inference", category="metrics", domain="world_machine")
     def _inference(self,
@@ -79,6 +81,8 @@ class MetricsGenerator:
     @profile_range("metrics_generator_call", category="metrics", domain="world_machine")
     def __call__(self, model: WorldMachine, dataloader: WorldMachineDataLoader,
                  return_logits: bool = False,
+                 compute_use_state: bool = True,
+                 compute_prediction: bool = True,
                  compute_prediction_shallow: bool = True,
                  ):
         dataset = dataloader.dataset
@@ -98,12 +102,17 @@ class MetricsGenerator:
         loss_manager = LossManager()
         prepare_model = PrepareModel()
 
+        names = ["normal"]
+        if compute_use_state:
+            names.append("use_state")
+        if compute_prediction:
+            names.append("prediction")
+        if compute_prediction_shallow:
+            names.append("prediction_shallow")
+
         all_losses: dict[str, TensorDict] = {}
         all_logits: dict[str, list[TensorDict]] = {}
-        for name in ["normal", "use_state", "prediction", "prediction_shallow"]:
-            if not compute_prediction_shallow and name == "prediction_shallow":
-                continue
-
+        for name in names:
             all_losses[name] = {}
             loss_manager.pre_batch(model,
                                    DatasetPassMode.MODE_EVALUATE,
@@ -129,12 +138,19 @@ class MetricsGenerator:
             del item["index"]
             item.batch_size = [batch_size, seq_len]
 
+            for stage in self.stages:
+                stage.pre_segment([item], None, batch_size, seq_len, 0,
+                                  device, model._state_size, DatasetPassMode.MODE_EVALUATE)
+
             logits, state = self._inference(model,
                                             item,
                                             batch_size,
                                             seq_len)
 
             item["logits"] = logits
+
+            if return_logits:
+                all_logits["normal"].append(item["logits"].cpu())
 
             loss_manager.post_segment([item],
                                       all_losses["normal"],
@@ -145,60 +161,60 @@ class MetricsGenerator:
                                       device,
                                       self._criterion_set.train_criterions)
 
-            item["logits"] = self._inference_previous_coded(model,
-                                                            item,
-                                                            state,
-                                                            sensorial_masks_masked,
-                                                            inference_start=half_seq_len)
+            if compute_use_state or compute_prediction or compute_prediction_shallow:
+                item["logits"] = self._inference_previous_coded(model,
+                                                                item,
+                                                                state,
+                                                                sensorial_masks_masked,
+                                                                inference_start=half_seq_len)
 
-            if return_logits:
-                all_logits["normal"].append(item["logits"].cpu())
+                itens: dict[str, list[TensorDict]] = {}
+                if compute_use_state:
+                    itens["use_state"] = [item[:, :half_seq_len]]
+                if compute_prediction:
+                    itens["prediction"] = [item[:, half_seq_len:]]
 
-            itens: dict[str, list[TensorDict]] = {}
-            itens["use_state"] = [item[:, :half_seq_len]]
-            itens["prediction"] = [item[:, half_seq_len:]]
+                for name in itens:
+                    loss_manager.post_segment(itens[name],
+                                              all_losses[name],
+                                              dataset,
+                                              0,
+                                              self._criterion_set.criterions,
+                                              DatasetPassMode.MODE_EVALUATE,
+                                              device,
+                                              self._criterion_set.train_criterions)
 
-            for name in itens:
-                loss_manager.post_segment(itens[name],
-                                          all_losses[name],
-                                          dataset,
-                                          0,
-                                          self._criterion_set.criterions,
-                                          DatasetPassMode.MODE_EVALUATE,
-                                          device,
-                                          self._criterion_set.train_criterions)
-
-            del item["logits"]
-
-            if compute_prediction_shallow:
-
-                logits_pred_shallow = self._inference_previous_coded(model,
-                                                                     item,
-                                                                     state,
-                                                                     sensorial_masks_masked,
-                                                                     data_start=half_seq_len)
-
-                item = item[:, half_seq_len:]
-                item["logits"] = logits_pred_shallow
-
-                loss_manager.post_segment([item],
-                                          all_losses["prediction_shallow"],
-                                          dataset,
-                                          0,
-                                          self._criterion_set.criterions,
-                                          DatasetPassMode.MODE_EVALUATE,
-                                          device,
-                                          self._criterion_set.train_criterions)
-
-            if return_logits:
-                all_logits["use_state"].append(
-                    itens["use_state"][0]["logits"].cpu())
-                all_logits["prediction"].append(
-                    itens["prediction"][0]["logits"].cpu())
+                del item["logits"]
 
                 if compute_prediction_shallow:
-                    all_logits["prediction_shallow"].append(
-                        logits_pred_shallow.cpu())
+
+                    logits_pred_shallow = self._inference_previous_coded(model,
+                                                                         item,
+                                                                         state,
+                                                                         sensorial_masks_masked,
+                                                                         data_start=half_seq_len)
+
+                    item = item[:, half_seq_len:]
+                    item["logits"] = logits_pred_shallow
+
+                    loss_manager.post_segment([item],
+                                              all_losses["prediction_shallow"],
+                                              dataset,
+                                              0,
+                                              self._criterion_set.criterions,
+                                              DatasetPassMode.MODE_EVALUATE,
+                                              device,
+                                              self._criterion_set.train_criterions)
+
+                if return_logits:
+                    all_logits["use_state"].append(
+                        itens["use_state"][0]["logits"].cpu())
+                    all_logits["prediction"].append(
+                        itens["prediction"][0]["logits"].cpu())
+
+                    if compute_prediction_shallow:
+                        all_logits["prediction_shallow"].append(
+                            logits_pred_shallow.cpu())
 
         for name in all_losses:
             loss_manager.post_batch(

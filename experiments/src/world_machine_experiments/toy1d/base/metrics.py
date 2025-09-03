@@ -30,10 +30,6 @@ def toy1d_metrics(toy1d_model_trained: WorldMachine,
 
     metrics = mg(toy1d_model_trained, toy1d_dataloaders["val"])
 
-    for name in metrics:
-        for loss_name in metrics[name]:
-            metrics[name][loss_name]
-
     return metrics
 
 

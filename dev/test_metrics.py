@@ -45,9 +45,9 @@ if __name__ == "__main__":
     aditional_outputs = ["save_toy1d_metrics",
                          "save_toy1d_metrics_sample_logits",
                          "save_toy1d_metrics_sample_plots",
-                         "toy1d_metrics",
-                         "toy1d_metrics_sample_logits",
-                         "toy1d_metrics_sample_plots"]
+
+                         "save_toy1d_mask_sensorial_plot",
+                         "save_toy1d_mask_sensorial_metrics",]
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
 

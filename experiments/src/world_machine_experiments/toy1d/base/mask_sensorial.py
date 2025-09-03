@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -7,121 +9,100 @@ from matplotlib.figure import Figure
 from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
-from world_machine.train import Trainer
+from world_machine.evaluate import MetricsGenerator
+from world_machine.train import CriterionSet, Trainer
+from world_machine.train.stages import SensorialMasker
 from world_machine.train.trainer import DatasetPassMode
 from world_machine_experiments.shared import function_variation
+from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.shared.save_plots import save_plots
-from world_machine_experiments.shared.save_train_history import (
-    save_train_history)
 
 
 def toy1d_mask_sensorial_metrics(toy1d_model_trained: WorldMachine,
                                  toy1d_dataloaders: dict[str, DataLoader],
-                                 toy1d_trainer: Trainer,
-                                 discover_state: bool = False) -> dict[str, np.ndarray]:
+                                 toy1d_criterion_set: CriterionSet,
+                                 discover_state: bool = False) -> dict[str, dict[str, float]]:
 
+    metrics_generator = MetricsGenerator(toy1d_criterion_set)
     mask_sensorial_percentage = np.array([0, 0.25, 0.5, 0.75, 1.0])
-    state_size = toy1d_model_trained._state_size
-    device = next(iter(toy1d_model_trained.parameters())).device
-    mse = torch.nn.MSELoss()
 
-    batch_size = toy1d_dataloaders[next(iter(toy1d_dataloaders))].batch_size
-    seq_len = toy1d_model_trained._max_context_size
+    all_metrics = {}
+    for pct in mask_sensorial_percentage:
+        sm = SensorialMasker(pct, True)
+        metrics_generator.stages = [sm]
 
-    metrics = {"mask_sensorial_percentage": mask_sensorial_percentage}
+        metrics = metrics_generator(toy1d_model_trained,
+                                    toy1d_dataloaders["val"],
+                                    compute_prediction=False,
+                                    compute_use_state=False,
+                                    compute_prediction_shallow=False)
 
-    for split in ["train", "val"]:
-        loader = toy1d_dataloaders[split]
+        all_metrics[str(pct)] = metrics["normal"]
 
-        metrics["mask_sensorial_" +
-                split] = np.empty_like(mask_sensorial_percentage)
+    result = defaultdict(dict)
+    for key in all_metrics:
+        for subkey in all_metrics[key]:
+            result[subkey][key] = all_metrics[key][subkey]
 
-        for i, pct in enumerate(mask_sensorial_percentage):
-
-            toy1d_trainer._mask_sensorial_data = pct
-
-            if discover_state:
-                toy1d_model_trained.eval()
-
-                with torch.no_grad():
-                    total_loss = torch.tensor(
-                        0, dtype=torch.float32, device=device)
-                    n = 0
-                    for item in tqdm.tqdm(loader, desc="Autoregressive Mask Sensorial Metrics"):
-                        inputs: torch.Tensor = item["inputs"].to(device)
-                        targets: torch.Tensor = item["targets"]["state_decoded"].to(
-                            device)
-
-                        state = torch.rand(
-                            (batch_size, seq_len, state_size), device=device)
-                        state = (2*state)-1
-
-                        sensorial_masks = toy1d_trainer._generate_sensorial_masks(
-                            inputs, DatasetPassMode.MODE_EVALUATE, True, device, batch_size, seq_len)
-
-                        for i in range(seq_len):
-                            logits = toy1d_model_trained(
-                                state=state,
-                                sensorial_data=inputs, sensorial_masks=sensorial_masks)
-
-                            if i != seq_len-1:
-                                state[:, i+1] = logits["state"][:, i]
-
-                        loss = mse(targets[:, :, 0],
-                                   logits["state_decoded"][:, :, 0])
-                        total_loss += loss * targets.size(0)
-
-                        n += targets.size(0)
-
-                    total_loss = total_loss.cpu().item()
-                    total_loss /= n
-
-                    metrics["mask_sensorial_" +
-                            split][i] = total_loss
-
-            else:
-                losses = toy1d_trainer._compute_loss_and_optimize(
-                    toy1d_model_trained, loader, DatasetPassMode.MODE_EVALUATE, None, 0, True)
-
-                metrics["mask_sensorial_" +
-                        split][i] = losses["optimizer_loss"].cpu().item()
-
-    return metrics
+    result = dict(result)  # [criterion][pct]
+    return result
 
 
-def toy1d_masks_sensorial_plots(toy1d_mask_sensorial_metrics: dict[str, np.ndarray], y_scale: str = "log") -> dict[str, Figure]:
+def toy1d_masks_sensorial_plots(toy1d_mask_sensorial_metrics: dict[str, dict[str, float]] | dict[str, dict], y_scale: str = "log") -> dict[str, Figure]:
+    stds = None
+    if "means" in toy1d_mask_sensorial_metrics:
+        stds = toy1d_mask_sensorial_metrics["stds"]
+        toy1d_mask_sensorial_metrics = toy1d_mask_sensorial_metrics["means"]
 
-    fig = plt.figure(dpi=300)
+    figures = {}
+    for name in toy1d_mask_sensorial_metrics:
 
-    plot_args = {"fmt": "o-", "capsize": 5.0, "markersize": 4}
+        fig = plt.figure(dpi=300)
 
-    for name in ["train", "val"]:
-        if "mask_sensorial_train_std" in toy1d_mask_sensorial_metrics:
-            plt.errorbar(toy1d_mask_sensorial_metrics["mask_sensorial_percentage"],
-                         toy1d_mask_sensorial_metrics["mask_sensorial_" + name],
-                         toy1d_mask_sensorial_metrics["mask_sensorial_"+name+"_std"],
-                         label=name, **plot_args)
+        toy1d_mask_sensorial_metrics[name].items
+        percentages = np.array(list(toy1d_mask_sensorial_metrics[name].keys()))
+        values = np.array(list(toy1d_mask_sensorial_metrics[name].values()))
+
+        indexes = np.argsort(percentages)
+
+        percentages = percentages[indexes]
+        values = values[indexes]
+
+        if stds is None:
+            plt.plot(
+                percentages, values, "o-")
         else:
-            plt.plot(toy1d_mask_sensorial_metrics["mask_sensorial_percentage"],
-                     toy1d_mask_sensorial_metrics["mask_sensorial_" + name],
-                     label=name, **plot_args)
+            std_percentages = np.array(list(
+                stds[name].keys()))
+            std_values = np.array(list(stds[name].values()))
 
-    plt.title("Mask Sensorial Loss")
-    plt.xlabel("Masking Percentage")
-    plt.ylabel("Loss")
-    plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
+            std_indexes = np.argsort(std_percentages)
+            std_percentages = std_percentages[std_indexes]
+            std_values = std_values[std_indexes]
 
-    plt.yscale(y_scale)
+            plot_args = {"fmt": "o-", "capsize": 5.0, "markersize": 4}
 
-    plt.close()
+            plt.errorbar(percentages,
+                         values,
+                         std_values, **plot_args)
 
-    figures = {"mask_sensorial": fig}
+        plt.suptitle("Mask Sensorial Loss")
+        plt.title(name)
+        plt.xlabel("Masking Percentage")
+        plt.ylabel("Loss")
+        # plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
+
+        plt.yscale(y_scale)
+
+        plt.close()
+
+        figures[f"mask_sensorial_{name}"] = fig
 
     return figures
 
 
-save_toy1d_masks_sensorial_plot = function_variation({"plots": source(
-    "toy1d_masks_sensorial_plots")}, "save_toy1d_masks_sensorial_plot")(save_plots)
+save_toy1d_mask_sensorial_plot = function_variation({"plots": source(
+    "toy1d_masks_sensorial_plots")}, "save_toy1d_mask_sensorial_plot")(save_plots)
 
-save_toy1d_mask_sensorial_metrics = function_variation({"train_history": source(
-    "toy1d_mask_sensorial_metrics"), "history_name": value("mask_sensorial_metrics")}, "save_toy1d_mask_sensorial_metrics")(save_train_history)
+save_toy1d_mask_sensorial_metrics = function_variation({"metrics": source(
+    "toy1d_mask_sensorial_metrics"), "metrics_name": value("mask_sensorial_metrics")}, "save_toy1d_mask_sensorial_metrics")(save_metrics)
