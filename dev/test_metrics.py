@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
                                            inputs={"base_seed": 42,
                                                    "output_dir": output_dir,
-                                                   "n_run": 5,
+                                                   "n_run": 1,
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,

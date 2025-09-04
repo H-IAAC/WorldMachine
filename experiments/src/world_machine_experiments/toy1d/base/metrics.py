@@ -94,20 +94,20 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict
             column = i % 8
 
             axs[row, column].plot(
-                toy1d_metrics_sample_logits["normal"][name][i, :, 0], label="Normal", alpha=0.5)
+                toy1d_metrics_sample_logits["normal"][name][i], label="Normal", alpha=0.5)
 
             axs[row, column].plot(time[:100], toy1d_metrics_sample_logits["use_state"]
-                                  [name][i, :, 0], label="Use State")
+                                  [name][i], label="Use State")
 
             axs[row, column].plot(time[100:], toy1d_metrics_sample_logits["prediction"]
-                                  [name][i, :, 0], label="Prediction")
+                                  [name][i], label="Prediction")
 
             axs[row, column].plot(time[100:], toy1d_metrics_sample_logits["prediction_shallow"]
-                                  [name][i, :, 0], label="Prediction Shallow")
+                                  [name][i], label="Prediction Shallow")
 
             if name in toy1d_metrics_sample_logits["targets"].keys():
                 axs[row, column].plot(toy1d_metrics_sample_logits["targets"]
-                                      [name][i, :, 0], label="Target", color="black")
+                                      [name][i], label="Target", color="black")
 
             axs[row, column].set_xticks([])
             axs[row, column].set_yticks([])

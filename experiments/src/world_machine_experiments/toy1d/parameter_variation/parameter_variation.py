@@ -96,26 +96,34 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
     return result
 
 
-toy1d_load_train_history = function_variation({"metrics_name": value(
-    "toy1d_train_history"), "output_dir": source("base_dir")}, "toy1d_load_train_history")(load_multiple_metrics)
+toy1d_load_train_history = function_variation({
+    "metrics_name": value("toy1d_train_history"),
+    "output_dir": source("base_dir")},
+    "toy1d_load_train_history")(load_multiple_metrics)
 
-toy1d_parameter_variation_plots = function_variation({"train_history": source(
-    "toy1d_load_train_history")}, "toy1d_parameter_variation_plots")(parameter_variation_plots)
+toy1d_parameter_variation_plots = function_variation({
+    "train_history": source("toy1d_load_train_history")},
+    "toy1d_parameter_variation_plots")(parameter_variation_plots)
 
 
 # PLOT
-save_toy1d_parameter_variation_plots = function_variation({"plots": source(
-    "toy1d_parameter_variation_plots")}, "save_toy1d_parameter_variation_plots")(save_plots)
+save_toy1d_parameter_variation_plots = function_variation({
+    "plots": source("toy1d_parameter_variation_plots")},
+    "save_toy1d_parameter_variation_plots")(save_plots)
 
 # MASK SENSORIAL
-toy1d_load_mask_sensorial_metrics = function_variation({"metrics_name": value(
-    "toy1d_mask_sensorial_metrics"), "output_dir": source("base_dir")}, "toy1d_load_mask_sensorial_metrics")(load_multiple_metrics)
+toy1d_load_mask_sensorial_metrics = function_variation({
+    "metrics_name": value("toy1d_mask_sensorial_metrics"),
+    "output_dir": source("base_dir")},
+    "toy1d_load_mask_sensorial_metrics")(load_multiple_metrics)
 
 toy1d_parameter_variation_mask_sensorial_plots = function_variation({
     "train_history": source("toy1d_load_mask_sensorial_metrics"),
     "x_axis": value("mask_sensorial_percentage"),
     "plot_prefix": value("mask_sensorial"),
-    "series_names": value([])}, "toy1d_parameter_variation_mask_sensorial_plots")(parameter_variation_plots)
+    "series_names": value([])},
+    "toy1d_parameter_variation_mask_sensorial_plots")(parameter_variation_plots)
 
-save_toy1d_parameter_variation_mask_sensorial_plots = function_variation({"plots": source(
-    "toy1d_parameter_variation_mask_sensorial_plots")}, "save_toy1d_parameter_variation_mask_sensorial_plots")(save_plots)
+save_toy1d_parameter_variation_mask_sensorial_plots = function_variation({
+    "plots": source("toy1d_parameter_variation_mask_sensorial_plots")},
+    "save_toy1d_parameter_variation_mask_sensorial_plots")(save_plots)
