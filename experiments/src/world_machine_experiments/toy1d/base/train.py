@@ -14,8 +14,7 @@ from world_machine.train.stages import (
     GradientAccumulator, LossManager, SensorialMasker, SequenceBreaker,
     ShortTimeRecaller, StateManager)
 from world_machine_experiments.shared import function_variation
-from world_machine_experiments.shared.save_train_history import (
-    save_train_history)
+from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.toy1d.dimensions import Dimensions
 
 
@@ -128,5 +127,5 @@ def save_toy1d_model(toy1d_model_trained: WorldMachine, output_dir: str) -> dict
     return info
 
 
-save_toy1d_train_history = function_variation({"train_history": source(
-    "toy1d_train_history"), "history_name": value("toy1d_train_history")}, "save_toy1d_train_history")(save_train_history)
+save_toy1d_train_history = function_variation({"metrics": source(
+    "toy1d_train_history"), "metrics_name": value("toy1d_train_history")}, "save_toy1d_train_history")(save_metrics)

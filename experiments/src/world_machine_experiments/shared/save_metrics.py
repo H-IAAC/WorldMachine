@@ -1,7 +1,42 @@
+import glob
 import json
 import os
 
+import numpy as np
 from hamilton.function_modifiers import datasaver
+
+
+def encoder(obj):
+    '''
+        Encode a Data class to JSON
+
+        Implements encoding of numpy data types. Other data types are returned as dicts
+
+        Parameters:
+            obj (Object): object to be encoded
+
+        Returns
+            @returns encoded object
+    '''
+
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+
+    return obj.__dict__
+
+
+def decoder(obj: dict):
+    for key in obj:
+        if isinstance(obj[key], dict):
+            obj[key] = decoder(obj[key])
+        elif isinstance(obj[key], list):
+            obj[key] = np.array(obj[key])
+
+    return obj
 
 
 @datasaver()
@@ -10,7 +45,30 @@ def save_metrics(metrics: dict, output_dir: str, metrics_name: str) -> dict:
 
     file_path = os.path.join(output_dir, metrics_name+".json")
 
-    with open(file_path, "w") as file:
-        json.dump(metrics, file)
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(metrics, file, default=encoder)
 
     return {"path": file_path}
+
+
+def load_metrics(output_dir: str, metrics_name: str) -> dict:
+    file_path = os.path.join(output_dir, metrics_name+".json")
+    with open(file_path, "r", encoding="utf-8") as file:
+        metrics = json.load(file, object_hook=decoder)
+
+    return metrics
+
+
+def load_multiple_metrics(output_dir: str, metrics_name: str) -> dict[str, dict]:
+    metrics = {}
+
+    paths = glob.glob(os.path.join(output_dir, "*"))
+    for path in paths:
+        if os.path.isdir(path):
+            experiment_name = os.path.basename(path)
+            file_path = os.path.join(path, metrics_name+".json")
+
+            with open(file_path, "r", encoding="utf-8") as file:
+                metrics[experiment_name] = json.load(file, object_hook=decoder)
+
+    return metrics

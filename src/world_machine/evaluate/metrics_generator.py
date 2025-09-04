@@ -2,7 +2,7 @@ import torch
 import tqdm
 from tensordict import TensorDict
 
-from world_machine.data import WorldMachineDataLoader, WorldMachineDataset
+from world_machine.data import WorldMachineDataLoader
 from world_machine.profile import profile_range
 from world_machine.train import CriterionSet, DatasetPassMode
 from world_machine.train.stages import LossManager, PrepareModel, TrainStage

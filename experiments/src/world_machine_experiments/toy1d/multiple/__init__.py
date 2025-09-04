@@ -1,15 +1,15 @@
-from .consolidate import (
-    multiple_toy1d_consolidated_train_statistics,
-    save_multiple_toy1d_consolidated_train_statistics)
-from .mask_sensorial import (
+from .multiple_runs import (
+    multiple_toy1d_autoregressive_metrics,
+    multiple_toy1d_consolidated_autoregressive_metrics,
     multiple_toy1d_consolidated_mask_sensorial_metrics,
     multiple_toy1d_consolidated_mask_sensorial_plots,
-    multiple_toy1d_mask_sensorial_metrics,
+    multiple_toy1d_consolidated_metrics,
+    multiple_toy1d_consolidated_train_statistics,
+    multiple_toy1d_mask_sensorial_metrics, multiple_toy1d_metrics,
+    multiple_toy1d_train_plots, multiple_toy1d_trainings_info,
+    save_multiple_toy1d_consolidated_autoregressive_metrics,
     save_multiple_toy1d_consolidated_mask_sensorial_metrics,
-    save_multiple_toy1d_consolidated_mask_sensorial_plots)
-from .metrics import (
-    multiple_toy1d_consolidated_metrics, multiple_toy1d_metrics,
-    save_multiple_toy1d_consolidated_metrics)
-from .multiple_runs import (
-    multiple_toy1d_trainings_info, save_multiple_toy1d_parameters)
-from .plot import multiple_toy1d_train_plots, save_multiple_toy1d_train_plots
+    save_multiple_toy1d_consolidated_mask_sensorial_plots,
+    save_multiple_toy1d_consolidated_metrics,
+    save_multiple_toy1d_consolidated_train_statistics,
+    save_multiple_toy1d_parameters, save_multiple_toy1d_train_plots)

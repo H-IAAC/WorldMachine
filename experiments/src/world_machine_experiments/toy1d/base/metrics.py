@@ -13,13 +13,10 @@ from torch.utils.data import DataLoader, random_split
 from world_machine import WorldMachine
 from world_machine.data import WorldMachineDataLoader
 from world_machine.evaluate import MetricsGenerator
-from world_machine.train import CriterionSet, Trainer
-from world_machine.train.trainer import DatasetPassMode
+from world_machine.train import CriterionSet
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.shared.save_plots import save_plots
-from world_machine_experiments.shared.save_train_history import (
-    save_train_history)
 
 
 def toy1d_metrics(toy1d_model_trained: WorldMachine,
@@ -56,8 +53,9 @@ def toy1d_metrics_sample_logits(toy1d_model_trained: WorldMachine,
     logits["targets"] = []
 
     for item in dataloader:
+        item["targets"]["state"] = torch.roll(item["inputs"]["state"], -1, 1)
         logits["targets"].append(item["targets"])
-
+        logits["targets"]
     logits["targets"] = torch.cat(logits["targets"], 0)
 
     return logits

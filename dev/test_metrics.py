@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    n_epoch = 1
+    n_epoch = 2
     output_dir = "test_metrics"
 
     toy1d_base_args = {"sequence_lenght": 1000,
@@ -39,7 +39,8 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "Base": {"discover_state": True}
+        "Base": {"discover_state": True},
+        "M0-100": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "discover_state": True}
     }
 
     aditional_outputs = ["save_toy1d_metrics",
@@ -47,13 +48,15 @@ if __name__ == "__main__":
                          "save_toy1d_metrics_sample_plots",
 
                          "save_toy1d_mask_sensorial_plot",
-                         "save_toy1d_mask_sensorial_metrics",]
+                         "save_toy1d_mask_sensorial_metrics",
 
-    output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
+                         "save_toy1d_autoregressive_metrics"]
+
+    output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots", "save_toy1d_parameter_variation_mask_sensorial_plots"],
 
                                            inputs={"base_seed": 42,
                                                    "output_dir": output_dir,
-                                                   "n_run": 1,
+                                                   "n_run": 5,
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,

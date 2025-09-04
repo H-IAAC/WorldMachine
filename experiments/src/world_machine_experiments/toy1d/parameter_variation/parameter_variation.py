@@ -15,10 +15,11 @@ from hamilton_sdk import adapters
 
 from world_machine_experiments import shared
 from world_machine_experiments.shared import function_variation
-from world_machine_experiments.shared.load_train_history import (
-    load_train_history)
 from world_machine_experiments.shared.parameter_variation_plots import (
     parameter_variation_plots)
+from world_machine_experiments.shared.save_metrics import (
+    load_metrics, load_multiple_metrics)
+from world_machine_experiments.shared.save_plots import save_plots
 from world_machine_experiments.toy1d import multiple
 
 
@@ -27,13 +28,6 @@ def worker_initializer(lock):
 
 
 def toy1d_parameter_variation_worker_func(inputs):
-    # tracker = adapters.HamiltonTracker(
-    #    project_id=1,
-    #    username="EltonCN",
-    #    dag_name="toy1d_multiple_train"
-    # )
-
-    # .with_adapter(tracker).build()
     d = driver.Builder().with_modules(multiple, shared).build()
 
     outputs = ["save_multiple_toy1d_train_plots",
@@ -48,6 +42,10 @@ def toy1d_parameter_variation_worker_func(inputs):
 
         if "save_toy1d_metrics" in inputs["aditional_outputs"]:
             outputs.append("save_multiple_toy1d_consolidated_metrics")
+
+        if "save_toy1d_autoregressive_metrics" in inputs["aditional_outputs"]:
+            outputs.append(
+                "save_multiple_toy1d_consolidated_autoregressive_metrics")
 
     d.execute(outputs,
               inputs=inputs)
@@ -98,7 +96,26 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
     return result
 
 
-toy1d_load_train_history = function_variation({"history_file_name": value(
-    "toy1d_train_history")}, "toy1d_load_train_history")(load_train_history)
+toy1d_load_train_history = function_variation({"metrics_name": value(
+    "toy1d_train_history"), "output_dir": source("base_dir")}, "toy1d_load_train_history")(load_multiple_metrics)
+
 toy1d_parameter_variation_plots = function_variation({"train_history": source(
     "toy1d_load_train_history")}, "toy1d_parameter_variation_plots")(parameter_variation_plots)
+
+
+# PLOT
+save_toy1d_parameter_variation_plots = function_variation({"plots": source(
+    "toy1d_parameter_variation_plots")}, "save_toy1d_parameter_variation_plots")(save_plots)
+
+# MASK SENSORIAL
+toy1d_load_mask_sensorial_metrics = function_variation({"metrics_name": value(
+    "toy1d_mask_sensorial_metrics"), "output_dir": source("base_dir")}, "toy1d_load_mask_sensorial_metrics")(load_multiple_metrics)
+
+toy1d_parameter_variation_mask_sensorial_plots = function_variation({
+    "train_history": source("toy1d_load_mask_sensorial_metrics"),
+    "x_axis": value("mask_sensorial_percentage"),
+    "plot_prefix": value("mask_sensorial"),
+    "series_names": value([])}, "toy1d_parameter_variation_mask_sensorial_plots")(parameter_variation_plots)
+
+save_toy1d_parameter_variation_mask_sensorial_plots = function_variation({"plots": source(
+    "toy1d_parameter_variation_mask_sensorial_plots")}, "save_toy1d_parameter_variation_mask_sensorial_plots")(save_plots)

@@ -1,33 +1,41 @@
 import os
+import time
 from typing import Any
 
+import matplotlib.pyplot as plt
 import numpy as np
+import torch
 import tqdm
 from hamilton import driver
-from hamilton.function_modifiers import source
+from hamilton.function_modifiers import source, value
 from hamilton_sdk import adapters
+from matplotlib.figure import Figure
+from torch.utils.data import DataLoader
 
+from world_machine import WorldMachine
 from world_machine_experiments import shared, toy1d
 from world_machine_experiments.shared import function_variation
+from world_machine_experiments.shared.load_multiple_metrics import (
+    load_multiple_metrics)
+from world_machine_experiments.shared.save_metrics import (
+    load_metrics, save_metrics)
 from world_machine_experiments.shared.save_parameters import save_parameters
+from world_machine_experiments.shared.save_plots import save_plots
+from world_machine_experiments.shared.statistics import consolidated_metrics
+from world_machine_experiments.shared.train_plots import train_plots
 from world_machine_experiments.toy1d import base
+from world_machine_experiments.toy1d.base import toy1d_masks_sensorial_plots
 
 
 def multiple_toy1d_trainings_info(n_run: int,
                                   base_seed: int,
                                   output_dir: str,
                                   toy1d_args: dict[str, Any],
-                                  aditional_outputs: list[str] | None = None) -> list[dict[str, np.ndarray]]:
-    # tracker = adapters.HamiltonTracker(
-    #    project_id=1,
-    #    username="EltonCN",
-    #    dag_name="toy1d_train"
-    # )
+                                  aditional_outputs: list[str] | None = None) -> list[dict]:
 
     if aditional_outputs is None:
         aditional_outputs = []
 
-    # .with_adapter(tracker).build()
     d = driver.Builder().with_modules(base, shared).build()
 
     results = []
@@ -41,20 +49,105 @@ def multiple_toy1d_trainings_info(n_run: int,
         if not os.path.exists(run_dir):
             os.makedirs(run_dir, exist_ok=True)
 
-        final_vars = ["toy1d_train_history",
-                      "save_toy1d_model",
-                      "save_toy1d_train_history",
-                      "save_toy1d_train_plots",
-                      "save_toy1d_prediction_plots"]
+        run_check = os.path.join(run_dir, "run_check.txt")
+        if not os.path.exists(run_check):
 
-        final_vars += aditional_outputs
+            final_vars = ["toy1d_train_history",
+                          "save_toy1d_model",
+                          "save_toy1d_train_history",
+                          "save_toy1d_train_plots",
+                          "save_toy1d_prediction_plots"]
 
-        outputs = d.execute(final_vars, inputs=toy1d_args)
+            final_vars += aditional_outputs
+
+            outputs = d.execute(final_vars, inputs=toy1d_args)
+
+            with open(run_check, "w") as file:
+                file.write(str(time.time()))
+        else:
+            outputs = {}
+
+            outputs["toy1d_train_history"] = load_metrics(
+                run_dir, "toy1d_train_history")
 
         results.append(outputs["toy1d_train_history"])
 
     return results
 
 
-save_multiple_toy1d_parameters = function_variation(
-    {"parameters": source("toy1d_args")}, "save_multiple_toy1d_parameters")(save_parameters)
+save_multiple_toy1d_parameters = function_variation({
+    "parameters": source("toy1d_args")},
+    "save_multiple_toy1d_parameters")(save_parameters)
+
+
+# TRAIN HIST
+
+multiple_toy1d_consolidated_train_statistics = function_variation({
+    "metrics": source("multiple_toy1d_trainings_info")},
+    "multiple_toy1d_consolidated_train_statistics")(consolidated_metrics)
+
+save_multiple_toy1d_consolidated_train_statistics = function_variation({
+    "metrics": source("multiple_toy1d_consolidated_train_statistics"),
+    "metrics_name": value("toy1d_train_history")},
+    "save_multiple_toy1d_consolidated_train_statistics")(save_metrics)
+
+multiple_toy1d_train_plots = function_variation({
+    "train_history": source("multiple_toy1d_consolidated_train_statistics")},
+    "multiple_toy1d_train_plots")(train_plots)
+save_multiple_toy1d_train_plots = function_variation({
+    "plots": source("multiple_toy1d_train_plots")},
+    "save_multiple_toy1d_train_plots")(save_plots)
+
+
+# METRICS
+multiple_toy1d_metrics = function_variation({
+    "metrics_name": value("metrics")},
+    "multiple_toy1d_metrics")(load_multiple_metrics)
+
+multiple_toy1d_consolidated_metrics = function_variation({
+    "metrics": source(
+        "multiple_toy1d_metrics")},
+    "multiple_toy1d_consolidated_metrics")(consolidated_metrics)
+
+save_multiple_toy1d_consolidated_metrics = function_variation({
+    "metrics": source("multiple_toy1d_consolidated_metrics"),
+    "metrics_name": value("toy1d_metrics")},
+    "save_multiple_toy1d_consolidated_metrics")(save_metrics)
+
+# MASK SENSORIAL
+
+multiple_toy1d_mask_sensorial_metrics = function_variation({
+    "metrics_name": value("mask_sensorial_metrics")},
+    "multiple_toy1d_mask_sensorial_metrics")(load_multiple_metrics)
+
+multiple_toy1d_consolidated_mask_sensorial_metrics = function_variation(
+    {"metrics": source("multiple_toy1d_mask_sensorial_metrics")},
+    "multiple_toy1d_consolidated_mask_sensorial_metrics")(consolidated_metrics)
+
+save_multiple_toy1d_consolidated_mask_sensorial_metrics = function_variation(
+    {"metrics": source("multiple_toy1d_consolidated_mask_sensorial_metrics"),
+     "metrics_name": value("toy1d_mask_sensorial_metrics")},
+    "save_multiple_toy1d_consolidated_mask_sensorial_metrics")(save_metrics)
+
+multiple_toy1d_consolidated_mask_sensorial_plots = function_variation({
+    "toy1d_mask_sensorial_metrics": source("multiple_toy1d_consolidated_mask_sensorial_metrics")},
+    "multiple_toy1d_consolidated_mask_sensorial_plots")(toy1d_masks_sensorial_plots)
+
+save_multiple_toy1d_consolidated_mask_sensorial_plots = function_variation({
+    "plots": source("multiple_toy1d_consolidated_mask_sensorial_plots")},
+    "save_multiple_toy1d_consolidated_mask_sensorial_plots")(save_plots)
+
+# AUTOREGRESSIVE
+
+multiple_toy1d_autoregressive_metrics = function_variation({
+    "metrics_name": value("autoregressive_metrics")},
+    "multiple_toy1d_autoregressive_metrics")(load_multiple_metrics)
+
+multiple_toy1d_consolidated_autoregressive_metrics = function_variation({
+    "metrics": source("multiple_toy1d_autoregressive_metrics")},
+    "multiple_toy1d_consolidated_autoregressive_metrics")(consolidated_metrics)
+
+save_multiple_toy1d_consolidated_autoregressive_metrics = function_variation({
+    "metrics": source("multiple_toy1d_consolidated_autoregressive_metrics"),
+    "metrics_name": value("toy1d_autoregressive_metrics")},
+    "save_multiple_toy1d_consolidated_autoregressive_metrics")(save_metrics)

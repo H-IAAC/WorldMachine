@@ -7,3 +7,4 @@
 *.pt
 *.npz
 *.memmap
+*.txt
