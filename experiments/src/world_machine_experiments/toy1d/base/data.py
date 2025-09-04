@@ -51,7 +51,7 @@ def _periodic_state_control(state: np.ndarray, generator: np.random.Generator, i
         control_state["values"] = control
 
         period = np.full(n_sequence, sequence_length/10)
-        period += 3*(generator.random(n_sequence)-0.5)*period
+        period += 2*(generator.random(n_sequence)-0.5)*period
 
         phase = generator.random(n_sequence)*period
         t = np.linspace(phase, sequence_length+phase,
@@ -87,8 +87,7 @@ def _observation_matrix(generator: np.random.Generator, measurement_size: int = 
 def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
                generator_numpy: np.random.Generator | None = None,
                state_control: str | None = None,
-               measurement_size: int = 2,
-               measurement_shift: int = -1) -> dict[str, np.ndarray]:
+               measurement_size: int = 2) -> dict[str, np.ndarray]:
 
     if generator_numpy is None:
         generator_numpy = np.random.default_rng(0)
@@ -138,14 +137,14 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     # State Controls
     state_controls = np.transpose(state_controls, (1, 0, 2))
 
-    state_controls = (state_controls - state_controls.min()) / \
-        (state_controls.max()-state_controls.min())
-    state_controls = 2*(state_controls-0.5)
-
     # Measurements
-    next_states = np.roll(states, shift=measurement_shift, axis=1)
     measurements = np.dot(
-        H, next_states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, measurement_size))
+        H, states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, measurement_size))
+
+    measurements = (measurements-state_min)/(state_max-state_min)
+    measurements = (2*measurements)-1
+
+    measurements = np.tanh(0.1*measurements)
 
     data = {"state_decoded": states, "state_control": state_controls,
             "next_measurement": measurements}
@@ -155,3 +154,11 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
 
 def toy1d_data_splitted(toy1d_data: dict[str, np.ndarray]) -> dict[str, dict[str, np.ndarray]]:
     return split_data_dict(toy1d_data)
+
+
+def resize(sequence):
+    # min = torch.min(sequence, dim=1)[0]
+    # max = torch.max(sequence, dim=1)[0]
+    # return (sequence-min.unsqueeze(1))/((max-min).unsqueeze(1))
+
+    return sequence

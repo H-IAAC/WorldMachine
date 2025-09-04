@@ -22,7 +22,7 @@ if __name__ == "__main__":
     output_dir = "test_metrics"
 
     toy1d_base_args = {"sequence_lenght": 1000,
-                       "n_sequence": 40,
+                       "n_sequence": 10000,
                        "context_size": 200,
                        "state_dimensions": None,
                        "batch_size": 32,
@@ -62,7 +62,6 @@ if __name__ == "__main__":
                          "save_toy1d_autoregressive_metrics"]
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots", "save_toy1d_parameter_variation_mask_sensorial_plots"],
-
                                            inputs={"base_seed": 42,
                                                    "output_dir": output_dir,
                                                    "n_run": 1,
@@ -70,7 +69,5 @@ if __name__ == "__main__":
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
                                                    "aditional_outputs": aditional_outputs
-                                                   },
-                                           # overrides={
-                                           #    "base_dir": output_dir}
+                                                   }
                                            )
