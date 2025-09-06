@@ -32,11 +32,6 @@ class Toy1dDataset(WorldMachineDataset):
         start = item_seq_index*self._context_size
         end = start+self._context_size
 
-        state_decoded = self._data["state_decoded"][item_index,
-                                                    start:end+1][:, 0]
-        s_max = state_decoded.max()
-        s_min = state_decoded.min()
-
         item = []
 
         for i in range(2):
@@ -46,8 +41,16 @@ class Toy1dDataset(WorldMachineDataset):
             if self._return_dimensions is not None and dimension == "state_decoded":
                 item[i] = item[i][:, self._return_dimensions]
 
+            data_raw = self._data[dimension][item_index,
+                                             start:end+1][:, 0]
+            s_max = data_raw.max()
+            s_min = data_raw.min()
+
             item[i] = (item[i]-s_min)/(s_max-s_min)
             item[i] = (2*item[i])-1
+
+            if dimension == "next_measurement":
+                item[i] = np.tanh(item[i])
 
         return item
 

@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    n_epoch = 2
+    n_epoch = 100
     output_dir = "toy1d_experiment0_protocol_test"
 
     toy1d_base_args = {"sequence_lenght": 1000,
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         "SensorialMask": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0},
 
         "CompleteProtocol": {
-            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": set([Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5, "recall_n_future": 5,
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
             "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
             "n_segment": 2,  "fast_forward": True},
     }

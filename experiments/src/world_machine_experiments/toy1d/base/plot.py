@@ -16,7 +16,7 @@ def toy1d_prediction_plots(toy1d_model_trained: WorldMachine, toy1d_dataloaders:
 
     figures = {}
 
-    for name in toy1d_dataloaders:
+    for name in ["train", "val"]:
         item = next(iter(toy1d_dataloaders[name]))
 
         inputs: torch.Tensor = item["inputs"].to(device)

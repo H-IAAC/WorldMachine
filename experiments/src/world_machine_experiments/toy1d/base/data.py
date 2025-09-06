@@ -128,23 +128,12 @@ def toy1d_data(n_sequence: int = 10000, sequence_length: int = 1000,
     # States
     states = np.transpose(states, (1, 0, 2))
 
-    state_max = states[:, :, 0].max()
-    state_min = states[:, :, 0].min()
-
-    states = (states - state_min)/(state_max-state_min)
-    states = 2*(states-0.5)
-
     # State Controls
     state_controls = np.transpose(state_controls, (1, 0, 2))
 
     # Measurements
     measurements = np.dot(
         H, states.reshape(-1, 3).T).T.reshape((n_sequence, sequence_length, measurement_size))
-
-    measurements = (measurements-state_min)/(state_max-state_min)
-    measurements = (2*measurements)-1
-
-    measurements = np.tanh(0.1*measurements)
 
     data = {"state_decoded": states, "state_control": state_controls,
             "next_measurement": measurements}
