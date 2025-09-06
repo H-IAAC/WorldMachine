@@ -19,7 +19,7 @@ if __name__ == "__main__":
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     n_epoch = 2
-    output_dir = "test_metrics"
+    output_dir = "toy1d_experiment0_protocol_test"
 
     toy1d_base_args = {"sequence_lenght": 1000,
                        "n_sequence": 10000,
