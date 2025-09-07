@@ -29,12 +29,16 @@ class MetricsGenerator:
 
         inputs: torch.Tensor = item["inputs"].to(device)
 
+        masks = None
+        if "input_masks" in item:
+            masks = item["input_masks"]
+
         state = torch.empty(
             [batch_size, seq_len, state_size], device=device)
         state[:, 0, :] = 0
 
         logits = model.inference(
-            state, inputs, total_size=inputs.shape[1])
+            state, inputs, masks, total_size=inputs.shape[1])
         state[:, 1:] = logits["state"][:, :-1]
 
         return logits, state
