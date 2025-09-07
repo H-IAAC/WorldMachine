@@ -30,6 +30,7 @@ if __name__ == "__main__":
                        "learning_rate": 5e-4,
                        "weight_decay": 5e-5,
                        "accumulation_steps": 1,
+                       "state_dimensions": [0],
                        "optimizer_class": AdamW,
                        "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
                        "device": device,
@@ -43,8 +44,8 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "Base": {"measurement_shift": 0},
-        "SensorialMask": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "measurement_shift": 0},
+        "Base": {},
+        "SensorialMask": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch)},
 
         "CompleteProtocol": {
             "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
@@ -64,7 +65,7 @@ if __name__ == "__main__":
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots", "save_toy1d_parameter_variation_mask_sensorial_plots"],
                                            inputs={"base_seed": 42,
                                                    "output_dir": output_dir,
-                                                   "n_run": 5,
+                                                   "n_run": 1,
                                                    "toy1d_base_args": toy1d_base_args,
                                                    "n_worker": 6,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,

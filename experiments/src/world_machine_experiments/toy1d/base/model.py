@@ -23,20 +23,24 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
                                   max_context_size, positional_encoder_type,
                                   learn_sensorial_mask)
 
-    builder.add_sensorial_dimension("state_control", state_size,
-                                    torch.nn.Linear(3, state_size),
-                                    torch.nn.Linear(state_size, 3))
+    if Dimensions.STATE_CONTROL in block_configuration:
+        builder.add_sensorial_dimension("state_control", state_size,
+                                        torch.nn.Linear(3, state_size),
+                                        torch.nn.Linear(state_size, 3))
 
-    builder.add_sensorial_dimension("next_measurement", state_size,
-                                    PointwiseFeedforward(
-                                        input_dim=measurement_size, hidden_size=2*state_size, output_dim=state_size),
-                                    PointwiseFeedforward(
-                                        input_dim=state_size, hidden_size=2*state_size, output_dim=measurement_size)
-                                    )
+    if Dimensions.NEXT_MEASUREMENT in block_configuration:
+        builder.add_sensorial_dimension("next_measurement", state_size,
+                                        PointwiseFeedforward(
+                                            input_dim=measurement_size, hidden_size=2*state_size, output_dim=state_size),
+                                        PointwiseFeedforward(
+                                            input_dim=state_size, hidden_size=2*state_size, output_dim=measurement_size)
+                                        )
 
-    builder.add_sensorial_dimension("state_decoded", state_size,
-                                    torch.nn.Linear(3, state_size),
-                                    torch.nn.Linear(state_size, 3))
+    if Dimensions.STATE_DECODED in block_configuration:
+        builder.add_sensorial_dimension("state_decoded", state_size,
+                                        torch.nn.Linear(
+                                            decoded_state_size, state_size),
+                                        torch.nn.Linear(state_size, decoded_state_size))
 
     # torch.nn.Linear(decoded_state_size, state_size)
     builder.state_encoder = PointwiseFeedforward(

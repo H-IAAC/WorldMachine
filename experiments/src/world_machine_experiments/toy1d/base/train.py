@@ -2,6 +2,7 @@ import os
 from typing import Type
 
 import numpy as np
+import pysdtw
 import torch
 from hamilton.function_modifiers import (
     datasaver, extract_fields, source, value)
@@ -27,16 +28,27 @@ class MSELossOnlyFirst(torch.nn.Module):
         return self.mse(x[:, :, 0], y[:, :, 0])
 
 
+class MeanSoftDTW(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.stdw = pysdtw.SoftDTW(gamma=.1, use_cuda=False)
+
+    def forward(self, x, y):
+        return self.stdw(x.cpu(), y.cpu()).mean().to(x.device)
+
+
 def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set()) -> CriterionSet:
     cs = CriterionSet()
 
-    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss())
-    cs.add_decoded_state_criterion("mse_first", MSELossOnlyFirst(), True)
+    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), True)
+    cs.add_decoded_state_criterion("sdtw", MeanSoftDTW())
 
     cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
     ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
     cs.add_sensorial_criterion(
-        "mse", "next_measurement", MSELossOnlyFirst(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
+        "mse", "next_measurement", torch.nn.MSELoss(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
+    cs.add_sensorial_criterion("sdtw", "next_measurement", MeanSoftDTW())
 
     return cs
 
@@ -66,12 +78,16 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               measurement_size: int = 2,
                               state_regularizer: str | None = None,
                               check_input_masks: bool = False,
-                              state_cov_regularizer: float | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              state_cov_regularizer: float | None = None,
+                              state_dimensions: list[int] | None = None,) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
 
     toy1d_model_untrained.to(device)
+
+    decoded_state_size = len(
+        state_dimensions) if state_dimensions is not None else 3
 
     stages = []
 
@@ -89,11 +105,11 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
 
         for dim in short_time_recall:
             if dim == Dimensions.STATE_DECODED:
-                dimension_sizes["state_decoded"] = 3
-                criterions["state_decoded"] = MSELossOnlyFirst()
+                dimension_sizes["state_decoded"] = decoded_state_size
+                criterions["state_decoded"] = torch.nn.MSELoss()
             elif dim == Dimensions.NEXT_MEASUREMENT:
                 dimension_sizes["next_measurement"] = measurement_size
-                criterions["next_measurement"] = MSELossOnlyFirst()
+                criterions["next_measurement"] = torch.nn.MSELoss()
 
         stages.append(ShortTimeRecaller(dimension_sizes=dimension_sizes,
                                         criterions=criterions,

@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "world_machine_experiments"
-authors = [{name = "Elton Cardoso do Nascimento", email = "e233840@dac.unicamp.br"}]
+authors = [
+    { name = "Elton Cardoso do Nascimento", email = "e233840@dac.unicamp.br" },
+]
 description = ""
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -21,7 +23,8 @@ dependencies = [
     "numpy",
     "docstring_parser",
     "sf-hamilton",
-    "scipy"
+    "scipy",
+    "pysdtw",
 
 ]
 
@@ -39,7 +42,7 @@ content-type = "text/markdown"
 
 [tool.setuptools]
 include-package-data = true
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 license-files = ["LICENSE"]
 
 [tool.setuptools.packages.find]
