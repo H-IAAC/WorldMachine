@@ -50,6 +50,8 @@ def train_plots(train_history: dict[str, np.ndarray],
     for name in names:
         fig = plt.figure(dpi=300)
 
+        negative = False
+
         for s_name in series_names:
             suffix = ""
             if s_name != "":
@@ -62,10 +64,16 @@ def train_plots(train_history: dict[str, np.ndarray],
                              train_history["means"][name+suffix],
                              train_history["stds"][name+suffix],
                              label=(name+suffix).capitalize(), **plot_args)
+
+                negative = negative or bool(
+                    np.any(train_history["means"][name+suffix] <= 0))
             else:
 
                 plt.plot(x_axis_values,
                          train_history[name+suffix], "o-", label=(name+suffix).capitalize())
+
+                negative = negative or bool(
+                    np.any(train_history[name+suffix] <= 0))
 
         name_format = name.replace("_", " ").title()
 
@@ -77,7 +85,7 @@ def train_plots(train_history: dict[str, np.ndarray],
         plt.ylabel("Metric")
         plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
-        if log_y_axis:
+        if log_y_axis and not negative:
             plt.yscale("log")
 
         plt.close()

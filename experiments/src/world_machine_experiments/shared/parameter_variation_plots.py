@@ -53,6 +53,8 @@ def parameter_variation_plots(train_history: dict,
     for combination_name in plot_combinations:
         combination = plot_combinations[combination_name]
 
+        negative = False
+
         for s_name in series_names:
             suffix = ""
             if s_name != "":
@@ -75,6 +77,9 @@ def parameter_variation_plots(train_history: dict,
                                  color=color_map[variation_name],
                                  **plot_args)
 
+                    negative = negative or bool(
+                        np.any(train_history[variation_name]["means"][key] == 0))
+
                 name_format = name.replace("_", " ").title()
 
                 for acro in acronyms:
@@ -90,7 +95,7 @@ def parameter_variation_plots(train_history: dict,
                 plt.ylabel("Metric")
                 plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
-                if log_y_axis:
+                if log_y_axis and not negative:
                     plt.yscale("log")
 
                 plt.close()

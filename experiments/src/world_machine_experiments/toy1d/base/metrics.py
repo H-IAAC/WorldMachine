@@ -38,13 +38,17 @@ def toy1d_metrics_sample_logits(toy1d_model_trained: WorldMachine,
                                 toy1d_dataloaders: dict[str, DataLoader],
                                 toy1d_criterion_set: CriterionSet) -> dict[str, TensorDict]:
 
+    generator = torch.Generator()
+    generator.manual_seed(0)
+
     dataset = toy1d_dataloaders["val"].dataset
 
     if len(dataset) > 32:
-        dataset, _ = random_split(dataset, [32, len(dataset)-32])
+        dataset, _ = random_split(
+            dataset, [32, len(dataset)-32], generator=generator)
 
     dataloader = WorldMachineDataLoader(
-        dataset, batch_size=32, shuffle=False)
+        dataset, batch_size=32, shuffle=False, generator=generator)
 
     mg = MetricsGenerator(toy1d_criterion_set)
 
@@ -93,6 +97,10 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict
             row = i // 8
             column = i % 8
 
+            if name in toy1d_metrics_sample_logits["targets"].keys():
+                axs[row, column].plot(toy1d_metrics_sample_logits["targets"]
+                                      [name][i], label="Target", color="black")
+
             axs[row, column].plot(
                 toy1d_metrics_sample_logits["normal"][name][i], label="Normal", alpha=0.5)
 
@@ -104,10 +112,6 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict
 
             axs[row, column].plot(time[100:], toy1d_metrics_sample_logits["prediction_shallow"]
                                   [name][i], label="Prediction Shallow")
-
-            if name in toy1d_metrics_sample_logits["targets"].keys():
-                axs[row, column].plot(toy1d_metrics_sample_logits["targets"]
-                                      [name][i], label="Target", color="black")
 
             axs[row, column].set_xticks([])
             axs[row, column].set_yticks([])
