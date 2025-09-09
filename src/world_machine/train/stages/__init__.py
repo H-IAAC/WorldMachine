@@ -1,9 +1,10 @@
 from .gradient_accumulator import GradientAccumulator
 from .loss_manager import LossManager
+from .noise_adder import NoiseAdder
 from .prepare_model import PrepareModel
 from .sensorial_masker import SensorialMasker
 from .sequence_breaker import SequenceBreaker
 from .short_time_recaller import ShortTimeRecaller
 from .simple_optimizer import SimpleOptimizer
-from .state_manager import StateManager
+from .state_manager import StateManager, StateSaveMethod
 from .train_stage import TrainStage

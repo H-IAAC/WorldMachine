@@ -1,7 +1,8 @@
+import enum
+
 import torch
 from tensordict import TensorDict
 from torch.nn import Module
-from torch.optim import Optimizer
 
 from world_machine import WorldMachine
 from world_machine.data import WorldMachineDataset
@@ -10,12 +11,21 @@ from world_machine.train import DatasetPassMode
 from .train_stage import TrainStage
 
 
+class StateSaveMethod(enum.Enum):
+    REPLACE = 0
+    MEAN = 1
+
+
 class StateManager(TrainStage):
-    def __init__(self, stable_state_epochs: int = 1, check_input_masks: bool = False):
+    def __init__(self,
+                 stable_state_epochs: int = 1,
+                 check_input_masks: bool = False,
+                 state_save_method: StateSaveMethod = StateSaveMethod.REPLACE):
         super().__init__(1)
 
         self._stable_state_epochs = stable_state_epochs
         self._check_input_masks = check_input_masks
+        self._state_save_method = state_save_method
 
     def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
                     seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode) -> None:
@@ -60,6 +70,10 @@ class StateManager(TrainStage):
 
                 state_current[torch.bitwise_not(
                     mask)] = state_input[torch.bitwise_not(mask)]
+
+            # REPLACE = do nothing
+            if self._state_save_method == StateSaveMethod.MEAN:
+                state_current = (state_current+state_input)/2
 
             indexes = item["index"]
 

@@ -12,8 +12,8 @@ from torch.utils.data import DataLoader
 from world_machine import WorldMachine
 from world_machine.train import CriterionSet, ParameterScheduler, Trainer
 from world_machine.train.stages import (
-    GradientAccumulator, LossManager, SensorialMasker, SequenceBreaker,
-    ShortTimeRecaller, StateManager)
+    GradientAccumulator, LossManager, NoiseAdder, SensorialMasker,
+    SequenceBreaker, ShortTimeRecaller, StateManager, StateSaveMethod)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.toy1d.dimensions import Dimensions
@@ -66,6 +66,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               mask_sensorial_data:  float | None | dict[str, float |
                                                                         ParameterScheduler] | ParameterScheduler = None,
                               discover_state: bool = False,
+                              state_save_method: StateSaveMethod = StateSaveMethod.REPLACE,
                               stable_state_epochs: int = 1,
                               seed: int | list[int] = 0,
                               n_segment: int = 1,
@@ -79,7 +80,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               state_regularizer: str | None = None,
                               check_input_masks: bool = False,
                               state_cov_regularizer: float | None = None,
-                              state_dimensions: list[int] | None = None,) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              state_dimensions: list[int] | None = None,
+                              noise_config: dict[str, dict[str, float]] | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
@@ -96,7 +98,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
     if mask_sensorial_data != None:
         stages.append(SensorialMasker(mask_sensorial_data))
     if discover_state:
-        stages.append(StateManager(stable_state_epochs, check_input_masks))
+        stages.append(StateManager(stable_state_epochs,
+                      check_input_masks, state_save_method))
     if n_segment != 1:
         stages.append(SequenceBreaker(n_segment, fast_forward))
     if len(short_time_recall) != 0:
@@ -117,6 +120,21 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                                         n_future=recall_n_future,
                                         stride_past=recall_stride_past,
                                         stride_future=recall_stride_future))
+
+    if noise_config is not None:
+        means = {}
+        stds = {}
+        mins = {}
+        maxs = {}
+
+        for name in noise_config:
+            means[name] = noise_config[name]["mean"]
+            stds[name] = noise_config[name]["std"]
+
+            mins[name] = -1
+            maxs[name] = 1
+
+        stages.append(NoiseAdder(means, stds, mins, maxs))
 
     stages.append(LossManager(state_regularizer,
                   state_cov_regularizer, multiply_target_masks=False))
