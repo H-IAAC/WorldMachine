@@ -101,7 +101,8 @@ class function_variation():
     def _update_module(self, func):
 
         # 0 = _update_module|1 = __call__ NOSONAR
-        func.__module__ = inspect.getmodule(inspect.stack()[2][0]).__name__
+        if inspect.getmodule(inspect.stack()[2][0]) is not None:
+            func.__module__ = inspect.getmodule(inspect.stack()[2][0]).__name__
 
     def _update_annotations(self, func):
 
