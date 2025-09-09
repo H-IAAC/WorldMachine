@@ -50,6 +50,10 @@ def toy1d_parameter_variation_worker_func(inputs):
     d.execute(outputs,
               inputs=inputs)
 
+    if "device" in inputs["toy1d_args"]:
+        return inputs["toy1d_args"]["device"]
+    return None
+
 
 @extract_fields({"experiment_paths": dict[str, str], "base_dir": str})
 @datasaver()
@@ -59,7 +63,8 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                                         n_run: int,
                                         base_seed: int,
                                         n_worker: int = 5,
-                                        aditional_outputs: list[str] | None = None) -> dict:
+                                        aditional_outputs: list[str] | None = None,
+                                        max_jobs_per_device: int | None = None) -> dict:
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -68,11 +73,49 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
     executor = ProcessPoolExecutor(
         n_worker,  initializer=worker_initializer, initargs=(lock,))
 
+    devices = []
+    if "device" in toy1d_base_args:
+        if isinstance(toy1d_base_args["device"], list):
+            devices += toy1d_base_args["device"]
+        else:
+            devices.append(toy1d_base_args["device"])
+    else:
+        devices.append(None)
+
+    jobs_per_device = np.zeros(len(devices), int)
+
     futures: list[Future] = []
     paths = {}
-    for run_name in toy1d_parameter_variation:
+
+    names = list(toy1d_parameter_variation.keys())
+
+    pbar = tqdm.tqdm(total=len(toy1d_parameter_variation),
+                     desc="Parameter Variation")
+
+    while len(names) != 0:
+        run_name = names.pop()
+
+        device_index = np.argmin(jobs_per_device)
+
+        if (max_jobs_per_device is not None and
+                jobs_per_device[device_index] >= max_jobs_per_device):
+
+            future = next(as_completed(futures))
+            futures.remove(future)
+            pbar.update(1)
+
+            device = future.result()
+            done_device_index = devices.index(device)
+            jobs_per_device[done_device_index] -= 1
+
+            device_index = np.argmin(jobs_per_device)
+
         toy1d_args = toy1d_base_args.copy()
         toy1d_args.update(toy1d_parameter_variation[run_name])
+
+        device = devices[device_index]
+        if device is not None:
+            toy1d_args["device"] = device
 
         run_dir = os.path.join(output_dir, run_name)
         paths[run_name] = run_dir
@@ -86,10 +129,13 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
         future = executor.submit(toy1d_parameter_variation_worker_func, inputs)
         futures.append(future)
 
-    with tqdm.tqdm(total=len(futures)) as pbar:
-        for future in as_completed(futures):
-            future.result()
-            pbar.update(1)
+        jobs_per_device[device_index] += 1
+
+    for future in as_completed(futures):
+        future.result()
+        pbar.update(1)
+
+    pbar.close()
 
     result = {"experiment_paths": paths, "base_dir": output_dir}
 
