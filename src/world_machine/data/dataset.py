@@ -138,13 +138,28 @@ class WorldMachineDataset(Dataset, abc.ABC):
 
         self._states[indexes.cpu()] = states.detach().cpu()
 
+    def clear_states(self) -> None:
+        del self._states
+        self._states = None
+
+        if self._states_filename is not None:
+            self.delete_file(self._states_filename)
+
+    def __del__(self) -> None:
+        if self._states_filename is not None:
+            self.delete_file(self._states_filename)
+
     @classmethod
-    def _delete_files(cls):
+    def delete_file(cls, filename: str) -> None:
+        try:
+            os.remove(filename)
+        except FileNotFoundError:
+            pass
+
+    @classmethod
+    def _delete_files(cls) -> None:
         for filename in cls._states_filenames:
-            try:
-                os.remove(filename)
-            except FileNotFoundError:
-                pass
+            cls.delete_file(filename)
 
 
 atexit.register(WorldMachineDataset._delete_files)

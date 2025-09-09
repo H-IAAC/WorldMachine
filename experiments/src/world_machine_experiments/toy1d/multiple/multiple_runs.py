@@ -2,18 +2,12 @@ import os
 import time
 from typing import Any
 
-import matplotlib.pyplot as plt
-import numpy as np
-import torch
 import tqdm
 from hamilton import driver
 from hamilton.function_modifiers import source, value
-from hamilton_sdk import adapters
-from matplotlib.figure import Figure
-from torch.utils.data import DataLoader
 
-from world_machine import WorldMachine
-from world_machine_experiments import shared, toy1d
+from world_machine.data import WorldMachineDataset
+from world_machine_experiments import shared
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.load_multiple_metrics import (
     load_multiple_metrics)
@@ -56,11 +50,16 @@ def multiple_toy1d_trainings_info(n_run: int,
                           "save_toy1d_model",
                           "save_toy1d_train_history",
                           "save_toy1d_train_plots",
-                          "save_toy1d_prediction_plots"]
+                          "save_toy1d_prediction_plots",
+                          "toy1d_datasets"]
 
             final_vars += aditional_outputs
 
             outputs = d.execute(final_vars, inputs=toy1d_args)
+
+            for dataset_name in outputs["toy1d_datasets"]:
+                dataset: WorldMachineDataset = outputs["toy1d_datasets"][dataset_name]
+                dataset.clear_states()
 
             with open(run_check, "w") as file:
                 file.write(str(time.time()))
