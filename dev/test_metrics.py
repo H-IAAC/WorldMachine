@@ -21,7 +21,7 @@ if __name__ == "__main__":
     n_epoch = 2
     output_dir = "test_metrics"
 
-    toy1d_base_args = {"sequence_lenght": 1000,
+    toy1d_base_args = {"sequence_length": 1000,
                        "n_sequence": 40,
                        "context_size": 200,
                        "state_dimensions": None,

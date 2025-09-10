@@ -29,20 +29,38 @@ class MSELossOnlyFirst(torch.nn.Module):
 
 
 class MeanSoftDTW(torch.nn.Module):
-    def __init__(self):
+    def __init__(self, gamma=.1, scale: float = 1):
         super().__init__()
 
         self.stdw = pysdtw.SoftDTW(gamma=.1, use_cuda=False)
+        self.scale = scale
 
-    def forward(self, x, y):
-        return self.stdw(x.cpu(), y.cpu()).mean().to(x.device)
+    def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        x = x.cpu()
+        y = y.cpu()
+
+        input1 = torch.cat([x, x, y])
+        input2 = torch.cat([y, x, y])
+
+        loss: torch.Tensor = self.stdw(input1, input2)
+
+        loss_xy, loss_xx, loss_yy = torch.split(loss, x.shape[0])
+
+        loss = loss_xy - 1/2*(loss_xx+loss_yy)
+
+        loss = loss.mean()
+        loss *= self.scale
+        loss = loss.to(x.device)
+
+        return loss
 
 
-def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set()) -> CriterionSet:
+def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set(), train_mse: bool = True, train_sdtw: bool = False) -> CriterionSet:
     cs = CriterionSet()
 
-    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), True)
-    cs.add_decoded_state_criterion("sdtw", MeanSoftDTW())
+    cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), train_mse)
+    cs.add_decoded_state_criterion(
+        "0.1sdtw", MeanSoftDTW(scale=.1), train_sdtw)
 
     cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
     ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))

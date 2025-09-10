@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
-acronyms = ["MSE"]
+from world_machine_experiments.shared.acronyms import acronyms
 
 
 def parameter_variation_plots(train_history: dict,
@@ -62,6 +62,7 @@ def parameter_variation_plots(train_history: dict,
                 key = name+suffix
 
                 fig, _ = plt.subplots(dpi=300)
+                negative = False
 
                 for variation_name in combination:
 
@@ -74,6 +75,9 @@ def parameter_variation_plots(train_history: dict,
                                  label=variation_name,
                                  color=color_map[variation_name],
                                  **plot_args)
+
+                    negative = negative or bool(
+                        np.any(train_history[variation_name]["means"][key] <= 0))
 
                 name_format = name.replace("_", " ").title()
 
@@ -91,7 +95,10 @@ def parameter_variation_plots(train_history: dict,
                 plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
                 if log_y_axis:
-                    plt.yscale("asinh")
+                    if not negative:
+                        plt.yscale("log")
+                    else:
+                        plt.yscale("asinh")
 
                 plt.close()
 

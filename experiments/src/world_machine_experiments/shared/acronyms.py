@@ -1,1 +1,1 @@
-acronyms = set(["MSE"])
+acronyms = set(["MSE", "SDTW"])

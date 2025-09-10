@@ -85,8 +85,11 @@ def train_plots(train_history: dict[str, np.ndarray],
         plt.ylabel("Metric")
         plt.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
 
-        if log_y_axis and not negative:
-            plt.yscale("log")
+        if log_y_axis:
+            if not negative:
+                plt.yscale("log")
+            else:
+                plt.yscale("asinh")
 
         plt.close()
 

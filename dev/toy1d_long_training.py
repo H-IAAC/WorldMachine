@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    toy1d_base_args = {"sequence_lenght": 1000,
+    toy1d_base_args = {"sequence_length": 1000,
                        "n_sequence": 10000,
                        "context_size": 200,
                        "state_dimensions": None,
