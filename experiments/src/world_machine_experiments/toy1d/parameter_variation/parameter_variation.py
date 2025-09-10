@@ -1,24 +1,19 @@
-import glob
 import multiprocessing as mp
 import os
-from concurrent.futures import (
-    Future, ProcessPoolExecutor, ThreadPoolExecutor, as_completed, wait)
+from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from typing import Any
 
-import matplotlib.pyplot as plt
 import numpy as np
 import tqdm
 from hamilton import driver
 from hamilton.function_modifiers import (
-    dataloader, datasaver, extract_fields, source, value)
-from hamilton_sdk import adapters
+    datasaver, extract_fields, source, value)
 
 from world_machine_experiments import shared
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.parameter_variation_plots import (
     parameter_variation_plots)
-from world_machine_experiments.shared.save_metrics import (
-    load_metrics, load_multiple_metrics)
+from world_machine_experiments.shared.save_metrics import load_multiple_metrics
 from world_machine_experiments.shared.save_plots import save_plots
 from world_machine_experiments.toy1d import multiple
 
