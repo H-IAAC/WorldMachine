@@ -105,8 +105,13 @@ class WorldMachineBuilder:
                                               is_causal=True,
                                               positional_encoder_type=self._positional_encoder_type)
             else:
+                if sensorial_dimension == "state":
+                    dimension_size = self._state_size
+                else:
+                    dimension_size = self._sensorial_dimensions[sensorial_dimension]
+
                 block = AdaLNZeroBlock(self._state_size,
-                                       self._sensorial_dimensions[sensorial_dimension],
+                                       dimension_size,
                                        hidden_size_multiplier*self._state_size,
                                        n_attention_head,
                                        positional_encoder_type=self._positional_encoder_type,

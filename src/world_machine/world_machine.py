@@ -1,6 +1,7 @@
 import torch
 from tensordict import TensorDict
 
+from world_machine.layers import BlockContainer
 from world_machine.layers.positional_encoder import create_positional_encoder
 from world_machine.profile import profile_range
 
@@ -41,6 +42,16 @@ class WorldMachine(torch.nn.Module):
         self._state_size = state_size
 
         self._blocks = blocks
+
+        sensorial_dimensions: set[str] = set()
+        for block in blocks:
+            block: BlockContainer
+            sensorial_dimensions.add(block.sensorial_dimension)
+
+            if block.sensorial_dimension == "state":
+                block.sensorial_dimension = "state_input"
+
+        self._sensorial_dimensions = sensorial_dimensions
 
         if sensorial_encoders is None:
             sensorial_encoders = torch.nn.ModuleDict()
@@ -126,9 +137,9 @@ class WorldMachine(torch.nn.Module):
 
         with profile_range("prepare_sensorial_masks",
                            category="main_forward", domain="world_machine"):
-            if sensorial_masks is None:
-                sensorial_masks = generate_sensorial_masks(sensorial_data)
-            if sensorial_masks.shape[1] != seq_len:
+            # if sensorial_masks is None:
+            #    sensorial_masks = generate_sensorial_masks(sensorial_data)
+            if sensorial_masks is not None and sensorial_masks.shape[1] != seq_len:
                 sensorial_masks = sensorial_masks[:, :seq_len]
 
         with profile_range("clone_sensorial_data",
@@ -151,10 +162,14 @@ class WorldMachine(torch.nn.Module):
         if self._state_dropout is not None:
             x["state"] = self._state_dropout(x["state"])
 
+        if "state" in self._sensorial_dimensions:
+            state_input: torch.Tensor = x["state"].clone()
+            x["state_input"] = state_input
+
         if input_sequence_size is not None:
             x = x.contiguous()
 
-        # Sensorial encoding
+            # Sensorial encoding
         with profile_range("sensorial_encoding",
                            category="main_forward", domain="world_machine"):
             for name in self._sensorial_encoders:

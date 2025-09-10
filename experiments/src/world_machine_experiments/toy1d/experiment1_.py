@@ -59,7 +59,8 @@ if __name__ == "__main__":
         "Base": {},
         "StateMEAN": {"state_save_method": StateSaveMethod.MEAN},
         "NoiseAdderState": {"noise_config": {"state": {"mean": 0, "std": 0.05}}},
-        "NoiseAdderSensorial": {"noise_config": {"next_measurement": {"mean": 0, "std": 0.05}}}
+        "NoiseAdderSensorial": {"noise_config": {"next_measurement": {"mean": 0, "std": 0.05}}},
+        "StateInput": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_INPUT], },
     }
 
     aditional_outputs = ["save_toy1d_metrics",

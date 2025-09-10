@@ -6,3 +6,4 @@ class Dimensions(enum.Enum):
     STATE_CONTROL = 1
     NEXT_MEASUREMENT = 2
     STATE_DECODED = 3
+    STATE_INPUT = 4

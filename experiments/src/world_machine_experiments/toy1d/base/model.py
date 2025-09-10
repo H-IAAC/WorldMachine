@@ -61,6 +61,9 @@ def toy1d_model_untrained(block_configuration: list[Dimensions], state_dimension
         elif config == Dimensions.STATE_DECODED:
             builder.add_block(sensorial_dimension="state_decoded",
                               n_attention_head=n_attention_head)
+        elif config == Dimensions.STATE_INPUT:
+            builder.add_block(sensorial_dimension="state",
+                              n_attention_head=n_attention_head)
 
     builder.remove_positional_encoding = remove_positional_encoding
     builder.state_activation = state_activation

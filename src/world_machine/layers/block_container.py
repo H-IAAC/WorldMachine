@@ -15,7 +15,7 @@ class BlockContainer(torch.nn.Module):
 
     @profile_range("block_container_forward", domain="world_machine")
     def forward(self, x: TensorDict,
-                sensorial_masks: TensorDict) -> TensorDict:
+                sensorial_masks: TensorDict | None = None) -> TensorDict:
 
         state = x["state"]
         y = x.copy()
@@ -24,7 +24,11 @@ class BlockContainer(torch.nn.Module):
             y["state"] = self.block(state)
         else:
             sensorial = x[self.sensorial_dimension]
-            mask = sensorial_masks[self.sensorial_dimension]
+
+            mask = None
+            if sensorial_masks is not None and self.sensorial_dimension in sensorial_masks:
+                mask = sensorial_masks[self.sensorial_dimension]
+
             y["state"] = self.block(state, sensorial, mask)
 
         return y

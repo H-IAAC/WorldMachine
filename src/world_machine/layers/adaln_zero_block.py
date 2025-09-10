@@ -42,19 +42,17 @@ class AdaLNZeroBlock(ConditioningBlock):
 
         context_size = x.shape[1]
 
-        if conditioning_mask is None:
-            conditioning_mask = torch.ones(context_size, dtype=bool)
-
         # Conditioning MLP
         with profile_range("conditioning_mlp", category="adaln_zero", domain="world_machine"):
             conditioning_data = self.conditioning_mlp(conditioning)[
                 :, :context_size]
 
-            if self.sensorial_replace is None:
-                conditioning_data *= conditioning_mask.unsqueeze(-1)
-            else:
-                conditioning_data[torch.bitwise_not(
-                    conditioning_mask)] = self.sensorial_replace
+            if conditioning_mask is not None:
+                if self.sensorial_replace is None:
+                    conditioning_data *= conditioning_mask.unsqueeze(-1)
+                else:
+                    conditioning_data[torch.bitwise_not(
+                        conditioning_mask)] = self.sensorial_replace
 
             # scale -> gamma, alpha
             # shift -> beta
