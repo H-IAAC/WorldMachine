@@ -1,8 +1,8 @@
-import multiprocessing as mp
 import os
 import pickle
 
 import torch
+import torch.multiprocessing as mp
 from hamilton import driver
 from torch.optim import AdamW
 
@@ -29,8 +29,11 @@ if __name__ == "__main__":
     else:
         devices.append('cpu')
 
-    max_jobs_per_device = 10
+    max_jobs_per_device = 15
     n_worker = n_device * max_jobs_per_device
+
+    print("DEVICES", devices)
+    print(f"nDevice: {n_device} | nWorker: {n_worker}")
 
     output_dir = "toy1d_experiment1_configuration_test"
     n_epoch = 100
@@ -48,7 +51,7 @@ if __name__ == "__main__":
                        "device": devices,
                        "state_control": "periodic",
                        "discover_state": True,
-                       "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT],
+                       "sensorial_train_losses": [Dimensions.MEASUREMENT],
                        "state_size": 128,
                        "positional_encoder_type": "alibi",
                        "n_attention_head": 4,
@@ -56,7 +59,7 @@ if __name__ == "__main__":
 
     n_variation = 0
     configurations = {}
-    for n_segment in [1, 2]:
+    for n_segment in [2, 1]:
         fast_forward_choices = [False]
         if n_segment > 1:
             fast_forward_choices = [True, False]
@@ -66,58 +69,79 @@ if __name__ == "__main__":
                 for check_input_masks in [True, False]:
                     for state_save_method in [StateSaveMethod.MEAN, StateSaveMethod.REPLACE]:
                         for mask_sensorial_data in [UniformScheduler(0, 1, n_epoch)]:
-                            for short_time_recall in [set(), {Dimensions.NEXT_MEASUREMENT}]:
+                            for short_time_recall in [{Dimensions.MEASUREMENT}, set()]:
 
                                 recall_n_past_choices = [0]
                                 recall_stride_choices = [0]
                                 if len(short_time_recall) > 0:
-                                    recall_n_past_choices = [0, 1, 5]
-                                    recall_stride_choices = [1, 3]
+                                    recall_n_past_choices = [5, 1, 0]
+                                    recall_stride_choices = [3, 1]
 
                                 for recall_stride in recall_stride_choices:
                                     for recall_n_past in recall_n_past_choices:
 
                                         recall_n_future_choices = []
                                         if len(short_time_recall) > 0 and recall_n_past > 0:
-                                            recall_n_future_choices = [0, 1, 5]
+                                            recall_n_future_choices = [5, 1, 0]
                                         elif len(short_time_recall) > 0:
-                                            recall_n_future_choices = [1, 5]
+                                            recall_n_future_choices = [5, 1]
 
                                         for recall_n_future in recall_n_future_choices:
                                             for positional_encoder_type in ["alibi"]:
-                                                for block_configuration in [[Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
-                                                                            [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_INPUT]]:
-                                                    for state_activation in ["tanh", "ltanh", None]:
+                                                for block_configuration in [[Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
+                                                                            [Dimensions.MEASUREMENT, Dimensions.STATE_INPUT]]:
+                                                    for state_activation in ["tanh", None]:
                                                         state_regularizer = None
                                                         if state_activation is None:
                                                             state_regularizer = "mse"
 
-                                                        n_variation += 1
+                                                        for train_mse in [True]:
+                                                            for train_stdw in [False]:
+                                                                for noise_config in [None,
+                                                                                     {"state": {
+                                                                                         "mean": 0.0, "std": 0.1}},
+                                                                                     {"measurement": {
+                                                                                         "mean": 0.0, "std": 0.1}},
+                                                                                     {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}}]:
 
-                                                        config = {"n_segment": n_segment,
-                                                                  "fast_forward": fast_forward,
-                                                                  "stable_state_epochs": stable_state_epochs,
-                                                                  "check_input_masks": check_input_masks,
-                                                                  "state_save_method": state_save_method,
-                                                                  "mask_sensorial_data": mask_sensorial_data,
-                                                                  "short_time_recall": short_time_recall,
-                                                                  "recall_stride_past": recall_stride,
-                                                                  "recall_stride_future": recall_stride,
-                                                                  "recall_n_past": recall_n_past,
-                                                                  "recall_n_future": recall_n_future,
-                                                                  "positional_encoder_type": positional_encoder_type,
-                                                                  "block_configuration": block_configuration,
-                                                                  "state_activation": state_activation}
+                                                                    n_variation += 1
 
-                                                        model = make_model(
-                                                            config, "ParametersModel").model_validate(config)
-                                                        model_json = model.model_dump_json()
-                                                        variation_hash = hash(
-                                                            model_json)
+                                                                    config = {"n_segment": n_segment,
+                                                                              "fast_forward": fast_forward,
+                                                                              "stable_state_epochs": stable_state_epochs,
+                                                                              "check_input_masks": check_input_masks,
+                                                                              "state_save_method": state_save_method,
+                                                                              "mask_sensorial_data": mask_sensorial_data,
+                                                                              "short_time_recall": short_time_recall,
+                                                                              "recall_stride_past": recall_stride,
+                                                                              "recall_stride_future": recall_stride,
+                                                                              "recall_n_past": recall_n_past,
+                                                                              "recall_n_future": recall_n_future,
+                                                                              "positional_encoder_type": positional_encoder_type,
+                                                                              "block_configuration": block_configuration,
+                                                                              "state_activation": state_activation,
+                                                                              "state_regularizer": state_regularizer,
+                                                                              "train_mse": train_mse,
+                                                                              "train_sdtw": train_stdw,
+                                                                              "noise_config": noise_config}
 
-                                                        configurations[variation_hash] = config
+                                                                    model = make_model(
+                                                                        config, "ParametersModel").model_validate(config)
+                                                                    model_json = model.model_dump_json()
+                                                                    variation_hash = hash(
+                                                                        model_json)
+
+                                                                    configurations["variation"+str(
+                                                                        variation_hash)] = config
 
     assert len(configurations) == n_variation
+
+    # keys = list(configurations.keys())
+    # conf2 = {}
+    # for i in range(max_jobs_per_device*n_device):
+    #    conf2[keys[i]] = configurations[keys[i]]
+
+    os.makedirs(output_dir, exist_ok=True)
     configurations_path = os.path.join(output_dir, "configurations.bin")
     with open(configurations_path, "wb") as file:
         pickle.dump(configurations, file)

@@ -31,12 +31,12 @@ if __name__ == "__main__":
                        "accumulation_steps": 1,
                        "state_dimensions": [0],
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
+                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
                        "device": device,
                        "state_control": "periodic",
                        "state_activation": "tanh",
                        "discover_state": True,
-                       "sensorial_train_losses": [Dimensions.NEXT_MEASUREMENT],
+                       "sensorial_train_losses": [Dimensions.MEASUREMENT],
                        "state_size": 128,
                        "positional_encoder_type": "alibi",
                        "n_attention_head": 4
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         "SensorialMask": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch)},
 
         "CompleteProtocol": {
-            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.NEXT_MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
             "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
             "n_segment": 2,  "fast_forward": True},
     }

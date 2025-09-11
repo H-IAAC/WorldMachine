@@ -31,7 +31,7 @@ if __name__ == "__main__":
                        "weight_decay": 5e-5,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT],
+                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
                        "device": device,
                        "state_control": "periodic",
                        "positional_encoder_type": "learnable_alibi",

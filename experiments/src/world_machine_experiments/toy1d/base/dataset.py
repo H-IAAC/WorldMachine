@@ -20,7 +20,7 @@ class Toy1dDataset(WorldMachineDataset):
         size = self._n_sequence*int((self._sequence_size-1)/context_size)
 
         super().__init__(
-            ["state_control", "next_measurement"],
+            ["state_control", "measurement"],
             size=size,
             has_state_decoded=True,
             has_masks=False)
@@ -49,7 +49,7 @@ class Toy1dDataset(WorldMachineDataset):
             item[i] = (item[i]-s_min)/(s_max-s_min)
             item[i] = (2*item[i])-1
 
-            if dimension == "next_measurement":
+            if dimension == "measurement":
                 item[i] = np.tanh(item[i])
 
         return item

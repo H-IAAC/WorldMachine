@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     toy1d_parameter_variation = {
         "S": {"block_configuration": [Dimensions.STATE]},
-        "M": {"block_configuration": [Dimensions.NEXT_MEASUREMENT]},
+        "M": {"block_configuration": [Dimensions.MEASUREMENT]},
     }
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],

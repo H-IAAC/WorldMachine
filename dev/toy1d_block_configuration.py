@@ -34,12 +34,12 @@ if __name__ == "__main__":
 
     toy1d_parameter_variation = {
         "S": {"block_configuration": [Dimensions.STATE]},
-        "M": {"block_configuration": [Dimensions.NEXT_MEASUREMENT]},
+        "M": {"block_configuration": [Dimensions.MEASUREMENT]},
         "C": {"block_configuration": [Dimensions.STATE_CONTROL]},
         "SS": {"block_configuration": [Dimensions.STATE, Dimensions.STATE]},
-        "MM": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.NEXT_MEASUREMENT]},
-        "SM": {"block_configuration": [Dimensions.STATE, Dimensions.NEXT_MEASUREMENT]},
-        "MS": {"block_configuration": [Dimensions.NEXT_MEASUREMENT, Dimensions.STATE]},
+        "MM": {"block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT]},
+        "SM": {"block_configuration": [Dimensions.STATE, Dimensions.MEASUREMENT]},
+        "MS": {"block_configuration": [Dimensions.MEASUREMENT, Dimensions.STATE]},
         "CC": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE_CONTROL]},
         "CS": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE]},
     }

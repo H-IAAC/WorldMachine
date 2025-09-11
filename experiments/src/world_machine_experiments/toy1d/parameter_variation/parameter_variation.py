@@ -1,9 +1,10 @@
-import multiprocessing as mp
 import os
 from concurrent.futures import Future, ProcessPoolExecutor, as_completed
 from typing import Any
 
 import numpy as np
+import torch
+import torch.multiprocessing as mp
 import tqdm
 from hamilton import driver
 from hamilton.function_modifiers import (
@@ -18,8 +19,11 @@ from world_machine_experiments.shared.save_plots import save_plots
 from world_machine_experiments.toy1d import multiple
 
 
-def worker_initializer(lock):
+def worker_initializer(lock, num_threads: int | None = None):
     tqdm.tqdm.set_lock(lock)
+
+    if num_threads is not None:
+        torch.set_num_threads(num_threads)
 
 
 def toy1d_parameter_variation_worker_func(inputs):
@@ -65,8 +69,10 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
     lock = mp.RLock()
 
+    n_thread_per_worker = mp.cpu_count()//n_worker
+
     executor = ProcessPoolExecutor(
-        n_worker,  initializer=worker_initializer, initargs=(lock,))
+        n_worker,  initializer=worker_initializer, initargs=(lock, n_thread_per_worker))
 
     devices = []
     if "device" in toy1d_base_args:

@@ -5,6 +5,7 @@ from typing import Any
 import tqdm
 from hamilton import driver
 from hamilton.function_modifiers import source, value
+from numba import cuda
 
 from world_machine.data import WorldMachineDataset
 from world_machine_experiments import shared
@@ -29,6 +30,12 @@ def multiple_toy1d_trainings_info(n_run: int,
 
     if aditional_outputs is None:
         aditional_outputs = []
+
+    if "device" in toy1d_args:
+        device = toy1d_args["device"]
+
+        if "cuda" in device and len(device) > 4:
+            cuda.select_device(int(device[5:]))
 
     d = driver.Builder().with_modules(base, shared).build()
 

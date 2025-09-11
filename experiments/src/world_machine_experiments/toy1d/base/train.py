@@ -29,15 +29,22 @@ class MSELossOnlyFirst(torch.nn.Module):
 
 
 class MeanSoftDTW(torch.nn.Module):
-    def __init__(self, gamma=.1, scale: float = 1):
+    def __init__(self, gamma=.1, scale: float = 1, use_cuda=False):
         super().__init__()
 
-        self.stdw = pysdtw.SoftDTW(gamma=.1, use_cuda=False)
+        self._use_cuda = use_cuda
+
+        self.stdw = pysdtw.SoftDTW(gamma=.1, use_cuda=use_cuda)
+
         self.scale = scale
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
-        x = x.cpu()
-        y = y.cpu()
+        if not self._use_cuda:
+            x = x.cpu()
+            y = y.cpu()
+        elif x.device.type == "cpu" or y.device.type == "cpu":
+            raise ValueError(
+                "Inputs must be in CUDA device when 'use_cuda' = True")
 
         input1 = torch.cat([x, x, y])
         input2 = torch.cat([y, x, y])
@@ -60,13 +67,14 @@ def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set(), train_m
 
     cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), train_mse)
     cs.add_decoded_state_criterion(
-        "0.1sdtw", MeanSoftDTW(scale=.1), train_sdtw)
+        "0.1sdtw", MeanSoftDTW(scale=.1, use_cuda=True), train_sdtw)
 
-    cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
-    ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
+    # cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
+    # ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
     cs.add_sensorial_criterion(
-        "mse", "next_measurement", torch.nn.MSELoss(), train=(Dimensions.NEXT_MEASUREMENT in sensorial_train_losses))
-    cs.add_sensorial_criterion("sdtw", "next_measurement", MeanSoftDTW())
+        "mse", "measurement", torch.nn.MSELoss(), train=(Dimensions.MEASUREMENT in sensorial_train_losses and train_mse))
+    cs.add_sensorial_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
+        Dimensions.MEASUREMENT in sensorial_train_losses and train_sdtw))
 
     return cs
 
@@ -128,9 +136,9 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
             if dim == Dimensions.STATE_DECODED:
                 dimension_sizes["state_decoded"] = decoded_state_size
                 criterions["state_decoded"] = torch.nn.MSELoss()
-            elif dim == Dimensions.NEXT_MEASUREMENT:
-                dimension_sizes["next_measurement"] = measurement_size
-                criterions["next_measurement"] = torch.nn.MSELoss()
+            elif dim == Dimensions.MEASUREMENT:
+                dimension_sizes["measurement"] = measurement_size
+                criterions["measurement"] = torch.nn.MSELoss()
 
         stages.append(ShortTimeRecaller(dimension_sizes=dimension_sizes,
                                         criterions=criterions,
