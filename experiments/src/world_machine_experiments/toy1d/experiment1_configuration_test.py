@@ -1,3 +1,4 @@
+import hashlib
 import os
 import pickle
 
@@ -128,18 +129,13 @@ if __name__ == "__main__":
                                                                     model = make_model(
                                                                         config, "ParametersModel").model_validate(config)
                                                                     model_json = model.model_dump_json()
-                                                                    variation_hash = hash(
-                                                                        model_json)
+                                                                    variation_hash = int(
+                                                                        hashlib.md5(model_json.encode('utf-8')).hexdigest(), 16)
 
                                                                     configurations["variation"+str(
                                                                         variation_hash)] = config
 
     assert len(configurations) == n_variation
-
-    # keys = list(configurations.keys())
-    # conf2 = {}
-    # for i in range(max_jobs_per_device*n_device):
-    #    conf2[keys[i]] = configurations[keys[i]]
 
     os.makedirs(output_dir, exist_ok=True)
     configurations_path = os.path.join(output_dir, "configurations.bin")

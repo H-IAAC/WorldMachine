@@ -92,6 +92,7 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
     pbar = tqdm.tqdm(total=len(toy1d_parameter_variation),
                      desc="Parameter Variation")
+    n_finish = 0
 
     while len(names) != 0:
         run_name = names.pop()
@@ -104,6 +105,9 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
             future = next(as_completed(futures))
             futures.remove(future)
             pbar.update(1)
+            n_finish += 1
+
+            print(f"{n_finish} finished")
 
             device = future.result()
             done_device_index = devices.index(device)
@@ -135,6 +139,8 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
     for future in as_completed(futures):
         future.result()
         pbar.update(1)
+        n_finish += 1
+        print(f"{n_finish} finished")
 
     pbar.close()
 

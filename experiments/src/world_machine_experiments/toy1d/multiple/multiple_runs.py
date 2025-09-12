@@ -39,19 +39,21 @@ def multiple_toy1d_trainings_info(n_run: int,
 
     d = driver.Builder().with_modules(base, shared).build()
 
-    results = []
+    run_dirs = []
     for i in tqdm.tqdm(range(n_run), unit="run", postfix="multiple_toy1d_training"):
         run_seed = [i, base_seed]
         toy1d_args["seed"] = run_seed
 
         run_dir = os.path.join(output_dir, f"run_{i}")
         toy1d_args["output_dir"] = run_dir
+        run_dirs.append(run_dir)
 
         if not os.path.exists(run_dir):
             os.makedirs(run_dir, exist_ok=True)
 
         run_check = os.path.join(run_dir, "run_check.txt")
         if not os.path.exists(run_check):
+            print(f"Run {i} in {output_dir} starting.")
 
             final_vars = ["toy1d_train_history",
                           "save_toy1d_model",
@@ -70,11 +72,16 @@ def multiple_toy1d_trainings_info(n_run: int,
 
             with open(run_check, "w") as file:
                 file.write(str(time.time()))
-        else:
-            outputs = {}
 
-            outputs["toy1d_train_history"] = load_metrics(
-                run_dir, "toy1d_train_history")
+            del outputs
+        else:
+            print(f"Run {i} already in {output_dir}. Skipping.")
+
+    results = []
+    for run_dir in run_dirs:
+        outputs = {}
+        outputs["toy1d_train_history"] = load_metrics(
+            run_dir, "toy1d_train_history")
 
         results.append(outputs["toy1d_train_history"])
 
