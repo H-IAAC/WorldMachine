@@ -71,8 +71,10 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
     n_thread_per_worker = mp.cpu_count()//n_worker
 
-    executor = ProcessPoolExecutor(
-        n_worker,  initializer=worker_initializer, initargs=(lock, n_thread_per_worker))
+    executor = ProcessPoolExecutor(n_worker,  
+                                   initializer=worker_initializer, 
+                                   initargs=(lock, n_thread_per_worker), 
+                                   max_tasks_per_child=10)
 
     devices = []
     if "device" in toy1d_base_args:
