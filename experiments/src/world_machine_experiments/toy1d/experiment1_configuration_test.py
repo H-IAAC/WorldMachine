@@ -30,7 +30,7 @@ if __name__ == "__main__":
     else:
         devices.append('cpu')
 
-    max_jobs_per_device = 15
+    max_jobs_per_device = 10
     n_worker = n_device * max_jobs_per_device
 
     print("DEVICES", devices)

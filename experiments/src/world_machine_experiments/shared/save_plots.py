@@ -1,6 +1,7 @@
 import os
 
 from hamilton.function_modifiers import datasaver
+from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 
 
@@ -17,5 +18,7 @@ def save_plots(plots: dict[str, Figure], output_dir: str) -> dict:
                     transparent=False,  bbox_inches="tight")
 
         plots_info[name] = {"path": path}
+
+        plt.close(fig)
 
     return plots_info

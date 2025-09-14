@@ -6,6 +6,7 @@ import tqdm
 from hamilton import driver
 from hamilton.function_modifiers import source, value
 from numba import cuda
+import torch
 
 from world_machine.data import WorldMachineDataset
 from world_machine_experiments import shared
@@ -77,6 +78,7 @@ def multiple_toy1d_trainings_info(n_run: int,
         else:
             print(f"Run {i} already in {output_dir}. Skipping.")
 
+    
     results = []
     for run_dir in run_dirs:
         outputs = {}
