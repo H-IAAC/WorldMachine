@@ -72,3 +72,17 @@ def load_multiple_metrics(output_dir: str, metrics_name: str) -> dict[str, dict]
                 metrics[experiment_name] = json.load(file, object_hook=decoder)
 
     return metrics
+
+
+def get_values(metrics, indexes):
+    values = []
+
+    for name in metrics:
+        value = metrics[name]
+
+        for index in indexes:
+            value = value[index]
+
+        values.append(value)
+
+    return np.array(values)
