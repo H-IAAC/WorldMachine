@@ -74,7 +74,7 @@ def load_multiple_metrics(output_dir: str, metrics_name: str) -> dict[str, dict]
     return metrics
 
 
-def get_values(metrics, indexes):
+def get_values(metrics, indexes, to_numpy: bool = True):
     values = []
 
     for name in metrics:
@@ -85,4 +85,7 @@ def get_values(metrics, indexes):
 
         values.append(value)
 
-    return np.array(values)
+    if to_numpy:
+        values = np.array(values)
+
+    return values
