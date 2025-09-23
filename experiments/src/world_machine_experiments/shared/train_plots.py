@@ -98,3 +98,7 @@ def train_plots(train_history: dict[str, np.ndarray],
         figures[name] = fig
 
     return figures
+
+
+def multiple_train_plots(train_history, metrics):
+    ...
