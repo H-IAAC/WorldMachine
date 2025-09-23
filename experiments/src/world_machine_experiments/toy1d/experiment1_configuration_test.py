@@ -81,7 +81,7 @@ if __name__ == "__main__":
                                 for recall_stride in recall_stride_choices:
                                     for recall_n_past in recall_n_past_choices:
 
-                                        recall_n_future_choices = []
+                                        recall_n_future_choices = [0]
                                         if len(short_time_recall) > 0 and recall_n_past > 0:
                                             recall_n_future_choices = [5, 1, 0]
                                         elif len(short_time_recall) > 0:
@@ -136,6 +136,9 @@ if __name__ == "__main__":
                                                                         variation_hash)] = config
 
     assert len(configurations) == n_variation
+
+    print(n_variation)
+    raise ValueError
 
     os.makedirs(output_dir, exist_ok=True)
     configurations_path = os.path.join(output_dir, "configurations.bin")
