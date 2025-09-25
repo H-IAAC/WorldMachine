@@ -144,7 +144,7 @@ class MetricsGenerator:
 
             for stage in self.stages:
                 stage.pre_segment([item], None, batch_size, seq_len, 0,
-                                  device, model._state_size, DatasetPassMode.MODE_EVALUATE)
+                                  device, model._state_size, DatasetPassMode.MODE_EVALUATE, model)
 
             logits, state = self._inference(model,
                                             item,

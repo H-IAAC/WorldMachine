@@ -59,7 +59,7 @@ class ShortTimeRecaller(TrainStage):
 
                     train_criterions[dim_name] = {"loss": weights[i]}
 
-    def pre_segment(self, itens, losses, batch_size, seq_len, epoch_index, device, state_size, mode):
+    def pre_segment(self, itens, losses, batch_size, seq_len, epoch_index, device, state_size, mode, model: WorldMachine):
 
         item = itens[0]
 

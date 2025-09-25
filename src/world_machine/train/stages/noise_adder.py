@@ -22,7 +22,7 @@ class NoiseAdder(TrainStage):
         self.maxs = defaultdict(None, maxs)
 
     def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
-                    seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode) -> None:
+                    seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode, model: WorldMachine) -> None:
 
         if mode == DatasetPassMode.MODE_TRAIN:
             item = itens[0]

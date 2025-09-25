@@ -155,7 +155,7 @@ class Trainer:
                 with profile_range("pre_segment", category="trainer", domain="world_machine"):
                     for stage in self._stages:
                         stage.pre_segment(itens, losses, batch_size,
-                                          seq_len, epoch_index, device, state_size, mode)
+                                          seq_len, epoch_index, device, state_size, mode, model)
 
                 for segment_index, segment in enumerate(itens):
 

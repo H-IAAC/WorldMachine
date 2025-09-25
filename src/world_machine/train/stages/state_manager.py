@@ -28,9 +28,9 @@ class StateManager(TrainStage):
         self._state_save_method = state_save_method
 
     def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
-                    seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode) -> None:
+                    seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode, model: WorldMachine) -> None:
 
-        if epoch_index == 0:
+        if epoch_index == 0 and "state" not in itens[0]["inputs"]:
             for item in itens:
                 seq_len = item["inputs"][next(
                     iter(item["inputs"].keys()))].shape[1]

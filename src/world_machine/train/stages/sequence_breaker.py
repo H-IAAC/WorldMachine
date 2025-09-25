@@ -21,7 +21,7 @@ class SequenceBreaker(TrainStage):
 
     def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
                     seq_len: int, epoch_index: int, device: torch.device,
-                    state_size: int, mode: DatasetPassMode) -> None:
+                    state_size: int, mode: DatasetPassMode, model: WorldMachine) -> None:
 
         if mode == DatasetPassMode.MODE_TRAIN:
             indexes = self.np_generator.choice(np.linspace(
