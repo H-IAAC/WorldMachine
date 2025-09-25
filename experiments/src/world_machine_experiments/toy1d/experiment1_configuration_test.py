@@ -137,9 +137,6 @@ if __name__ == "__main__":
 
     assert len(configurations) == n_variation
 
-    print(n_variation)
-    raise ValueError
-
     os.makedirs(output_dir, exist_ok=True)
     configurations_path = os.path.join(output_dir, "configurations.bin")
     with open(configurations_path, "wb") as file:

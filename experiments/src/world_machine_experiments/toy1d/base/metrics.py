@@ -82,13 +82,19 @@ def save_toy1d_metrics_sample_logits(toy1d_metrics_sample_logits: dict[str, Tens
     return info
 
 
-def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict]) -> dict[str, Figure]:
+def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict], skip_names: list | None = None) -> dict[str, Figure]:
+    if skip_names is None:
+        skip_names = []
+
     time = np.linspace(0, 199, 200, dtype=int)
 
     batch_size = min(toy1d_metrics_sample_logits["normal"].batch_size[0], 32)
 
     figures = {}
     for name in toy1d_metrics_sample_logits["normal"].keys():
+        if name in skip_names:
+            continue
+
         fig, axs = plt.subplots(4, 8, dpi=300, figsize=(16, 8))
         plt.subplots_adjust(left=None, bottom=None, right=None,
                             top=None, wspace=0.05, hspace=0.05)

@@ -77,6 +77,8 @@ class MultiHeadAttention(torch.nn.Module):
         self.register_buffer("attention_bias", torch.tensor([]), False)
         self.attention_bias: torch.Tensor
 
+        self.local_only = False
+
     @profile_range("pre_compute_attention_bias", category="multi_head_attention", domain="world_machine")
     def pre_compute_attention_bias(self, size: int) -> None:
         self._compute_attention_bias(size)
@@ -150,18 +152,21 @@ class MultiHeadAttention(torch.nn.Module):
                 Q, K, V = torch.nn.functional._in_projection_packed(
                     query, key, value, self.input_projection_weights, None)
 
-        # Compute bias
-        with profile_range("prepare_attention_bias", category="multi_head_attention", domain="world_machine"):
-            self._compute_attention_bias(context_size)
-            attention_bias = self.attention_bias[:, :context_size,
-                                                 :context_size]
-
-        # attention bias: [head*batch, context, context]
-
-        if self.fast:
-            E = self._fast_attention(Q, K, V, attention_bias)
+        if self.local_only:
+            E = V
         else:
-            E = self._manual_attention(Q, K, V, attention_bias)
+            # Compute bias
+            with profile_range("prepare_attention_bias", category="multi_head_attention", domain="world_machine"):
+                self._compute_attention_bias(context_size)
+                attention_bias = self.attention_bias[:, :context_size,
+                                                     :context_size]
+
+            # attention bias: [head*batch, context, context]
+
+            if self.fast:
+                E = self._fast_attention(Q, K, V, attention_bias)
+            else:
+                E = self._manual_attention(Q, K, V, attention_bias)
 
         result = E @ self.w0.T
         return result
@@ -208,6 +213,8 @@ class MultiHeadAttention(torch.nn.Module):
                                           self.n_head, self.head_dim).transpose(0, 1)
             V = V.transpose(0, 1).reshape(context_size, batch_size *
                                           self.n_head, self.head_dim).transpose(0, 1)
+
+            attention_bias = attention_bias.repeat(batch_size, 1, 1)
         # Now we have [
         # [batch0word0part0, batch0word1part0],
         # [batch0word0part1, batch0word1part1],
@@ -220,6 +227,7 @@ class MultiHeadAttention(torch.nn.Module):
             scores /= self.dk_root
 
         with profile_range("add_attention_bias", category="multi_head_attention", domain="world_machine"):
+            print(scores.shape, attention_bias.shape)
             scores += attention_bias
 
         probs = torch.softmax(scores, dim=-1)
@@ -236,3 +244,9 @@ class MultiHeadAttention(torch.nn.Module):
         # ]
 
         return E
+
+    def __setstate__(self, state):
+        super().__setstate__(state)
+
+        if "local_only" not in state:
+            self.local_only = False

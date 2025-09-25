@@ -49,6 +49,24 @@ class WorldMachineDataset(Dataset, abc.ABC):
         self._states = None
         self._states_filename = None
 
+        self._persist_states = False
+
+    @property
+    def persist_states(self) -> bool:
+        return self._persist_states
+
+    @persist_states.setter
+    def persist_states(self, value: bool):
+        if self._states_filename is not None:
+            if value and self._states_filename in WorldMachineDataset._states_filenames:
+                WorldMachineDataset._states_filenames.remove(
+                    self._states_filename)
+            elif not value and self._states_filename not in WorldMachineDataset._states_filenames:
+                WorldMachineDataset._states_filenames.append(
+                    self._states_filename)
+
+        self._persist_states = value
+
     def __len__(self) -> int:
         return self._size
 
