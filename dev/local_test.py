@@ -69,7 +69,8 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "local_0": {"local_chance": 0.25}
+        "local_0": {"local_chance": 0.25},
+        "local_1": {"local_chance": 0.25, "n_segment": 2, "fast_forward": True}
     }
 
     aditional_outputs = ["save_toy1d_metrics",

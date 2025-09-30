@@ -13,7 +13,8 @@ from torch.utils.data import DataLoader
 from world_machine.profile import profile_range
 from world_machine.train.criterion_set import CriterionSet
 from world_machine.train.stages import (
-    LossManager, PrepareModel, SimpleOptimizer, TrainStage)
+    LossManager, PrepareModel, SimpleOptimizer, TrainStage,
+    WorldMachineForward)
 from world_machine.world_machine import WorldMachine
 
 from .mode import DatasetPassMode
@@ -46,6 +47,7 @@ class Trainer:
         with_loss_manager = False
         with_prepare_model = False
         with_optimizer = False
+        with_forward = False
         for stage in stages:
             if isinstance(stage, LossManager):
                 with_loss_manager = True
@@ -53,6 +55,8 @@ class Trainer:
                 with_prepare_model = True
             if isinstance(stage, SimpleOptimizer):
                 with_optimizer = True
+            if stage._with_forward:
+                with_forward = True
 
         if not with_loss_manager:
             stages.append(LossManager())
@@ -60,6 +64,8 @@ class Trainer:
             stages.append(PrepareModel())
         if not with_optimizer:
             stages.append(SimpleOptimizer())
+        if not with_forward:
+            stages.append(WorldMachineForward())
 
         for stage in stages:
             stage.np_generator = self._generator_numpy
@@ -166,24 +172,8 @@ class Trainer:
 
                     # Forward
                     with profile_range("forward", category="trainer", domain="world_machine"):
-                        sensorial_data = segment["inputs"]
-
-                        sensorial_masks = None
-                        if "input_masks" in segment:
-                            sensorial_masks = segment["input_masks"]
-
-                        if "state" in segment["inputs"]:
-                            state = segment["inputs"]["state"]
-
-                            logits: TensorDict = model(
-                                state=state, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
-                        else:
-                            state_decoded = segment["inputs"]["state_decoded"]
-
-                            logits: TensorDict = model(
-                                state_decoded=state_decoded, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
-
-                    segment["logits"] = logits
+                        for stage in self._stages:
+                            stage.forward(model, segment)
 
                     with profile_range("post_forward", category="trainer", domain="world_machine"):
                         for stage in reversed(self._stages):

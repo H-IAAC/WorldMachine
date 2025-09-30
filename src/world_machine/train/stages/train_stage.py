@@ -28,7 +28,10 @@ class TrainStage(abc.ABC):
                    "post_segment": instance.post_segment,
                    "optimize": instance.optimize,
                    "post_batch": instance.post_batch,
-                   "post_train": instance.post_train}
+                   "post_train": instance.post_train,
+                   "forward": instance.forward}
+
+        instance.__setattr__("_with_forward", False)
 
         for method_name in methods:
             if method_name in cls.__dict__:
@@ -37,6 +40,9 @@ class TrainStage(abc.ABC):
                     f"{name}_{method_name}", category="train_stage", domain="world_machine")(method)
 
                 instance.__setattr__(method_name, method)
+
+                if method_name == "forward":
+                    instance.__setattr__("_with_forward", True)
 
         return instance
 
@@ -72,6 +78,9 @@ class TrainStage(abc.ABC):
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset,
                      epoch_index: int, criterions: dict[str, dict[str, Module]], mode: DatasetPassMode,
                      device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
+        ...
+
+    def forward(self, model: WorldMachine, segment: TensorDict) -> None:
         ...
 
     def optimize(self, model: WorldMachine, optimizer: Optimizer, batch_index: int, n_batch: int, losses: dict, mode: DatasetPassMode) -> None:

@@ -9,3 +9,4 @@ from .short_time_recaller import ShortTimeRecaller
 from .simple_optimizer import SimpleOptimizer
 from .state_manager import StateManager, StateSaveMethod
 from .train_stage import TrainStage
+from .world_machine_forward import WorldMachineForward

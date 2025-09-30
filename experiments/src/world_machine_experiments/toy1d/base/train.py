@@ -165,7 +165,6 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         stages.append(NoiseAdder(means, stds, mins, maxs))
 
     if local_chance is not None:
-        print("With Local")
         stages.append(LocalSetter(local_chance))
 
     stages.append(LossManager(state_regularizer,
