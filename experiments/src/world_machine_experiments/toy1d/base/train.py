@@ -12,7 +12,7 @@ from torch.utils.data import DataLoader
 from world_machine import WorldMachine
 from world_machine.train import CriterionSet, ParameterScheduler, Trainer
 from world_machine.train.stages import (
-    GradientAccumulator, LossManager, NoiseAdder, SensorialMasker,
+    GradientAccumulator, LocalSetter, LossManager, NoiseAdder, SensorialMasker,
     SequenceBreaker, ShortTimeRecaller, StateManager, StateSaveMethod)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
@@ -66,15 +66,15 @@ def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set(), train_m
     cs = CriterionSet()
 
     cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), train_mse)
-    cs.add_decoded_state_criterion(
-        "0.1sdtw", MeanSoftDTW(scale=.1, use_cuda=True), train_sdtw)
+    # cs.add_decoded_state_criterion(
+    #    "0.1sdtw", MeanSoftDTW(scale=.1, use_cuda=True), train_sdtw)
 
     # cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
     # ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
     cs.add_sensorial_criterion(
         "mse", "measurement", torch.nn.MSELoss(), train=(Dimensions.MEASUREMENT in sensorial_train_losses and train_mse))
-    cs.add_sensorial_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
-        Dimensions.MEASUREMENT in sensorial_train_losses and train_sdtw))
+    # cs.add_sensorial_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
+    #    Dimensions.MEASUREMENT in sensorial_train_losses and train_sdtw))
 
     return cs
 
@@ -107,7 +107,9 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               check_input_masks: bool = False,
                               state_cov_regularizer: float | None = None,
                               state_dimensions: list[int] | None = None,
-                              noise_config: dict[str, dict[str, float]] | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
+                              noise_config: dict[str,
+                                                 dict[str, float]] | None = None,
+                              local_chance: float | None = None) -> dict[str, WorldMachine | dict[str, np.ndarray] | Trainer]:
 
     optimizer = optimizer_class(toy1d_model_untrained.parameters(
     ), lr=learning_rate, weight_decay=weight_decay)
@@ -161,6 +163,10 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
             maxs[name] = 1
 
         stages.append(NoiseAdder(means, stds, mins, maxs))
+
+    if local_chance is not None:
+        print("With Local")
+        stages.append(LocalSetter(local_chance))
 
     stages.append(LossManager(state_regularizer,
                   state_cov_regularizer, multiply_target_masks=False))

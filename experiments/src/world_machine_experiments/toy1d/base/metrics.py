@@ -15,6 +15,7 @@ from world_machine.data import WorldMachineDataLoader
 from world_machine.evaluate import MetricsGenerator
 from world_machine.train import CriterionSet
 from world_machine_experiments.shared import function_variation
+from world_machine_experiments.shared.acronyms import format_name
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.shared.save_plots import save_plots
 
@@ -126,8 +127,8 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict
 
         plt.legend(bbox_to_anchor=(2.5, 4.5), loc='upper right')
 
-        plt.suptitle("Metrics Inference Samples")
-        plt.title(name)
+        plt.suptitle(f"Metrics Inference Samples - {format_name(name)}")
+        # plt.title(name)
 
         figures["metrics_sample_"+name] = fig
 

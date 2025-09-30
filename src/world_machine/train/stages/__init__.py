@@ -1,4 +1,5 @@
 from .gradient_accumulator import GradientAccumulator
+from .local_setter import LocalSetter
 from .loss_manager import LossManager
 from .noise_adder import NoiseAdder
 from .prepare_model import PrepareModel
