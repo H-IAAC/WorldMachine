@@ -99,6 +99,20 @@ class WorldMachine(torch.nn.Module):
             state_dropout = torch.nn.Dropout(state_dropout)
         self._state_dropout = state_dropout
 
+        self._local_mode = False
+
+    @property
+    def local_mode(self) -> bool:
+        return self._local_mode
+
+    @local_mode.setter
+    def local_mode(self, value: bool) -> None:
+        for module in self.modules():
+            if isinstance(module, MultiHeadAttention):
+                module.local_only = value
+
+        self._local_mode = value
+
     @profile_range("pre_compute_attention_bias", category="world_machine", domain="world_machine")
     def pre_compute_attention_bias(self, size: int) -> None:
         for module in self.modules():

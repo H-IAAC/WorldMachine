@@ -57,7 +57,12 @@ class TrainStage(abc.ABC):
         self.np_generator = np_generator
         self.torch_generator = torch_generator
 
-    def pre_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]], device: torch.device):
+    def pre_train(self,
+                  model: WorldMachine,
+                  criterions: dict[str, dict[str, Module]],
+                  train_criterions: dict[str, dict[str, float]],
+                  device: torch.device,
+                  optimizer: Optimizer):
         ...
 
     def pre_batch(self, model: WorldMachine, mode: DatasetPassMode,
@@ -80,7 +85,7 @@ class TrainStage(abc.ABC):
                      device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
         ...
 
-    def forward(self, model: WorldMachine, segment: TensorDict) -> None:
+    def forward(self, model: WorldMachine, segment: TensorDict,  mode: DatasetPassMode) -> None:
         ...
 
     def optimize(self, model: WorldMachine, optimizer: Optimizer, batch_index: int, n_batch: int, losses: dict, mode: DatasetPassMode) -> None:
@@ -89,5 +94,9 @@ class TrainStage(abc.ABC):
     def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
         ...
 
-    def post_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]):
+    def post_train(self,
+                   model: WorldMachine,
+                   criterions: dict[str, dict[str, Module]],
+                   train_criterions: dict[str, dict[str, float]],
+                   optimizer: Optimizer):
         ...

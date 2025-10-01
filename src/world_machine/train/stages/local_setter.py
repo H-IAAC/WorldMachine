@@ -1,4 +1,7 @@
-from world_machine.layers import MultiHeadAttention
+from torch.nn import Module
+from torch.optim import Optimizer
+
+from world_machine import WorldMachine
 
 from .train_stage import TrainStage
 
@@ -10,13 +13,11 @@ class LocalSetter(TrainStage):
         self._local_chance = local_chance
 
     def pre_segment(self, itens, losses, batch_size, seq_len, epoch_index, device, state_size, mode, model):
-
         local = self.np_generator.random() <= self._local_chance
-        for module in model.modules():
-            if isinstance(module, MultiHeadAttention):
-                module.local_only = local
+        model.local_mode = local
 
-    def post_train(self, model, criterions, train_criterions):
-        for module in model.modules():
-            if isinstance(module, MultiHeadAttention):
-                module.local_only = False
+    def post_train(self, model: WorldMachine,
+                   criterions: dict[str, dict[str, Module]],
+                   train_criterions: dict[str, dict[str, float]],
+                   optimizer: Optimizer) -> None:
+        model.local_mode = False
