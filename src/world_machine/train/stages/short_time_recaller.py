@@ -6,7 +6,6 @@ from torch.optim import Optimizer
 
 from world_machine import WorldMachine
 from world_machine.layers import PointwiseFeedforward
-from world_machine.train import DatasetPassMode
 
 from .train_stage import TrainStage
 
@@ -27,7 +26,16 @@ class ShortTimeRecaller(TrainStage):
         self._stride_past = stride_past
         self._stride_future = stride_future
 
-    def pre_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]],  train_criterions: dict[str, dict[str, float]], device: torch.device) -> None:
+        self._original_param_group = []
+
+    def pre_train(self,
+                  model: WorldMachine,
+                  criterions: dict[str, dict[str, Module]],
+                  train_criterions: dict[str, dict[str, float]],
+                  device: torch.device,
+                  optimizer: Optimizer) -> None:
+
+        self._original_param_group = list(optimizer.param_groups)
 
         state_size = model._state_size
 
@@ -51,8 +59,12 @@ class ShortTimeRecaller(TrainStage):
                 for i in range(n):
                     dim_name = f"{name}{i}_{dimension}"
 
-                    model._sensorial_decoders[dim_name] = PointwiseFeedforward(
-                        state_size, state_size*2, output_dim=dimension_size).to(device)
+                    decoder = PointwiseFeedforward(state_size,
+                                                   state_size*2,
+                                                   output_dim=dimension_size).to(device)
+
+                    model._sensorial_decoders[dim_name] = decoder
+                    optimizer.add_param_group({"params": decoder.parameters()})
 
                     criterions[dim_name] = {
                         "loss": self._criterions[dimension]}
@@ -107,7 +119,10 @@ class ShortTimeRecaller(TrainStage):
                     item["targets"][past_dim_name] = past_data
                     item["target_masks"][past_dim_name] = past_mask
 
-    def post_train(self, model: WorldMachine, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
+    def post_train(self, model: WorldMachine,
+                   criterions: dict[str, dict[str, Module]],
+                   train_criterions: dict[str, dict[str, float]],
+                   optimizer: Optimizer) -> None:
         for dimension in self._dimensions:
             for name, n in zip(["past", "future"], [self._n_past, self._n_future]):
                 for i in range(n):
@@ -117,3 +132,6 @@ class ShortTimeRecaller(TrainStage):
 
                     del criterions[dim_name]
                     del train_criterions[dim_name]
+
+        optimizer.state.clear()
+        optimizer.param_groups = self._original_param_group

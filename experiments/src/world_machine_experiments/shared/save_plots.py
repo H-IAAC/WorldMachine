@@ -8,6 +8,8 @@ from matplotlib.figure import Figure
 @datasaver()
 def save_plots(plots: dict[str, Figure], output_dir: str) -> dict:
 
+    os.makedirs(output_dir, exist_ok=True)
+
     plots_info = {}
 
     for name in plots:

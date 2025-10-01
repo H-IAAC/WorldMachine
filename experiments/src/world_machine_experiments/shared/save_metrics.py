@@ -5,6 +5,8 @@ import os
 import numpy as np
 from hamilton.function_modifiers import datasaver
 
+exclude_paths = ["final_results"]
+
 
 def encoder(obj):
     '''
@@ -66,10 +68,13 @@ def load_multiple_metrics(output_dir: str, metrics_name: str) -> dict[str, dict]
     for path in paths:
         if os.path.isdir(path):
             experiment_name = os.path.basename(path)
-            file_path = os.path.join(path, metrics_name+".json")
 
-            with open(file_path, "r", encoding="utf-8") as file:
-                metrics[experiment_name] = json.load(file, object_hook=decoder)
+            if experiment_name not in exclude_paths:
+                file_path = os.path.join(path, metrics_name+".json")
+
+                with open(file_path, "r", encoding="utf-8") as file:
+                    metrics[experiment_name] = json.load(
+                        file, object_hook=decoder)
 
     return metrics
 

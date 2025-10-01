@@ -1,6 +1,7 @@
 from tensordict import TensorDict
 
 from world_machine import WorldMachine
+from world_machine.train import DatasetPassMode
 
 from .train_stage import TrainStage
 
@@ -9,7 +10,7 @@ class WorldMachineForward(TrainStage):
     def __init__(self):
         super().__init__(0)
 
-    def forward(self, model: WorldMachine, segment: TensorDict) -> None:
+    def forward(self, model: WorldMachine, segment: TensorDict, mode: DatasetPassMode) -> None:
         sensorial_data = segment["inputs"]
 
         sensorial_masks = None

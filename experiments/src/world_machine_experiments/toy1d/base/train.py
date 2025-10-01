@@ -66,15 +66,16 @@ def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set(), train_m
     cs = CriterionSet()
 
     cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), train_mse)
-    # cs.add_decoded_state_criterion(
-    #    "0.1sdtw", MeanSoftDTW(scale=.1, use_cuda=True), train_sdtw)
+    cs.add_decoded_state_criterion(
+        "0.1sdtw", MeanSoftDTW(scale=.1, use_cuda=True), train_sdtw)
 
     # cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
     # ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
+
     cs.add_sensorial_criterion(
         "mse", "measurement", torch.nn.MSELoss(), train=(Dimensions.MEASUREMENT in sensorial_train_losses and train_mse))
-    # cs.add_sensorial_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
-    #    Dimensions.MEASUREMENT in sensorial_train_losses and train_sdtw))
+    cs.add_sensorial_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
+        Dimensions.MEASUREMENT in sensorial_train_losses and train_sdtw))
 
     return cs
 

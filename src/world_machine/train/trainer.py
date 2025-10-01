@@ -173,7 +173,7 @@ class Trainer:
                     # Forward
                     with profile_range("forward", category="trainer", domain="world_machine"):
                         for stage in self._stages:
-                            stage.forward(model, segment)
+                            stage.forward(model, segment, mode)
 
                     with profile_range("post_forward", category="trainer", domain="world_machine"):
                         for stage in reversed(self._stages):
@@ -211,7 +211,7 @@ class Trainer:
         with profile_range("pre_train", category="trainer", domain="world_machine"):
             for stage in self._stages:
                 stage.pre_train(wm, self._criterion_set.criterions,
-                                self._criterion_set.train_criterions, device)
+                                self._criterion_set.train_criterions, device, optimizer)
 
         self._epoch_index = 0
 
@@ -298,7 +298,7 @@ class Trainer:
         with profile_range("post_train", category="trainer", domain="world_machine"):
             for stage in reversed(self._stages):
                 stage.post_train(wm, self._criterion_set.criterions,
-                                 self._criterion_set.train_criterions)
+                                 self._criterion_set.train_criterions, optimizer)
 
         return result
 
