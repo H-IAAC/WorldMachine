@@ -1,13 +1,14 @@
 import multiprocessing as mp
+import os
 
 import torch
 from hamilton import driver
-from hamilton_sdk import adapters
-from torch.optim import SGD, AdamW
+from torch.optim import AdamW
 
 from world_machine.train.scheduler import UniformScheduler
 from world_machine_experiments import shared
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d.specific import experiment0
 
 if __name__ == "__main__":
 
@@ -61,13 +62,24 @@ if __name__ == "__main__":
 
                          "save_toy1d_autoregressive_metrics"]
 
-    output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots", "save_toy1d_parameter_variation_mask_sensorial_plots"],
-                                           inputs={"base_seed": 42,
-                                                   "output_dir": output_dir,
-                                                   "n_run": 5,
-                                                   "toy1d_base_args": toy1d_base_args,
-                                                   "n_worker": 6,
-                                                   "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   "aditional_outputs": aditional_outputs
-                                                   }
-                                           )
+    d_parameter_variation.execute(["save_toy1d_parameter_variation_plots", "save_toy1d_parameter_variation_mask_sensorial_plots"],
+                                  inputs={"base_seed": 42,
+                                          "output_dir": output_dir,
+                                          "n_run": 5,
+                                          "toy1d_base_args": toy1d_base_args,
+                                          "n_worker": 6,
+                                          "toy1d_parameter_variation": toy1d_parameter_variation,
+                                          "aditional_outputs": aditional_outputs
+                                          }
+                                  )
+
+    d_experiment0 = driver.Builder().with_modules(experiment0, shared).build()
+    d_experiment0.execute(["save_train_plots",
+                           "save_metrics_box_plots",
+                           "save_metrics_bar_plots",
+                           "save_samples_plots",
+                           "save_state_analysis_plots",
+                           "save_target_state09_correlation_plot"],
+
+                          inputs={"data_dir": output_dir,
+                                  "output_dir": os.path.join(output_dir, "final_results")})
