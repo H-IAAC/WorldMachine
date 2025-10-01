@@ -13,6 +13,8 @@ RUN python -m pip install .
 WORKDIR /world_machine/experiments
 RUN python -m pip install .
 
+RUN  python -m pip cache purge
+
 WORKDIR /
 
 RUN rm -rf /world_machine
