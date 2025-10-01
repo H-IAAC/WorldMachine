@@ -15,6 +15,7 @@ from world_machine.data import WorldMachineDataLoader
 from world_machine.evaluate import MetricsGenerator
 from world_machine.train import CriterionSet
 from world_machine_experiments.shared import function_variation
+from world_machine_experiments.shared.acronyms import format_name
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.shared.save_plots import save_plots
 
@@ -107,17 +108,20 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict
                 axs[row, column].plot(toy1d_metrics_sample_logits["targets"]
                                       [name][i], label="Target", color="black")
 
-            axs[row, column].plot(
-                toy1d_metrics_sample_logits["normal"][name][i], label="Normal", alpha=0.5)
+            axs[row, column].plot(toy1d_metrics_sample_logits["normal"][name][i],
+                                  label="Normal", alpha=0.5, color="tab:blue")
+
+            axs[row, column].plot(time, toy1d_metrics_sample_logits["prediction_local"]
+                                  [name][i], label="Prediction Local", color="tab:purple")
 
             axs[row, column].plot(time[:100], toy1d_metrics_sample_logits["use_state"]
-                                  [name][i], label="Use State")
+                                  [name][i], label="Use State", color="tab:orange")
 
             axs[row, column].plot(time[100:], toy1d_metrics_sample_logits["prediction"]
-                                  [name][i], label="Prediction")
+                                  [name][i], label="Prediction", color="tab:green")
 
             axs[row, column].plot(time[100:], toy1d_metrics_sample_logits["prediction_shallow"]
-                                  [name][i], label="Prediction Shallow")
+                                  [name][i], label="Prediction Shallow", color="tab:red")
 
             axs[row, column].set_xticks([])
             axs[row, column].set_yticks([])
@@ -126,8 +130,8 @@ def toy1d_metrics_sample_plots(toy1d_metrics_sample_logits: dict[str, TensorDict
 
         plt.legend(bbox_to_anchor=(2.5, 4.5), loc='upper right')
 
-        plt.suptitle("Metrics Inference Samples")
-        plt.title(name)
+        plt.suptitle(f"Metrics Inference Samples - {format_name(name)}")
+        # plt.title(name)
 
         figures["metrics_sample_"+name] = fig
 

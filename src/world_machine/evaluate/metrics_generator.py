@@ -83,13 +83,15 @@ class MetricsGenerator:
         return sensorial_masks_masked
 
     @profile_range("metrics_generator_call", category="metrics", domain="world_machine")
-    def __call__(self, model: WorldMachine, dataloader: WorldMachineDataLoader,
+    def __call__(self, model: WorldMachine, dataloader: WorldMachineDataLoader | list[TensorDict],
                  return_logits: bool = False,
                  compute_use_state: bool = True,
                  compute_prediction: bool = True,
                  compute_prediction_shallow: bool = True,
+                 compute_prediction_local: bool = True,
+                 with_gradient: bool = False
                  ):
-        dataset = dataloader.dataset
+        device = next(iter(model.parameters())).device
 
         # Prepare Data
         item = next(iter(dataloader))
@@ -97,9 +99,8 @@ class MetricsGenerator:
         seq_len = item["inputs"][next(
             iter(item["inputs"].keys()))].shape[1]
         sensorial_masks_masked = self._generate_masked_masks(item["inputs"])
+        sensorial_masks_masked = sensorial_masks_masked.to(device)
         del item
-
-        device = next(iter(model.parameters())).device
 
         half_seq_len = seq_len//2
 
@@ -113,6 +114,8 @@ class MetricsGenerator:
             names.append("prediction")
         if compute_prediction_shallow:
             names.append("prediction_shallow")
+        if compute_prediction_local:
+            names.append("prediction_local")
 
         all_losses: dict[str, TensorDict] = {}
         all_logits: dict[str, list[TensorDict]] = {}
@@ -135,6 +138,8 @@ class MetricsGenerator:
                                 device,
                                 None,
                                 self._criterion_set.train_criterions)
+        if with_gradient:
+            torch.set_grad_enabled(True)
 
         for item in tqdm.tqdm(dataloader, desc="Metrics Generation"):
             item = item.to(device)
@@ -158,14 +163,14 @@ class MetricsGenerator:
 
             loss_manager.post_segment([item],
                                       all_losses["normal"],
-                                      dataset,
+                                      None,
                                       0,
                                       self._criterion_set.criterions,
                                       DatasetPassMode.MODE_EVALUATE,
                                       device,
                                       self._criterion_set.train_criterions)
 
-            if compute_use_state or compute_prediction or compute_prediction_shallow:
+            if compute_use_state or compute_prediction or compute_prediction_shallow or compute_prediction_local:
                 item["logits"] = self._inference_previous_coded(model,
                                                                 item,
                                                                 state,
@@ -181,7 +186,7 @@ class MetricsGenerator:
                 for name in itens:
                     loss_manager.post_segment(itens[name],
                                               all_losses[name],
-                                              dataset,
+                                              None,
                                               0,
                                               self._criterion_set.criterions,
                                               DatasetPassMode.MODE_EVALUATE,
@@ -198,17 +203,37 @@ class MetricsGenerator:
                                                                          sensorial_masks_masked,
                                                                          data_start=half_seq_len)
 
-                    item = item[:, half_seq_len:]
-                    item["logits"] = logits_pred_shallow
+                    item_pred_shallow = item[:, half_seq_len:]
+                    item_pred_shallow["logits"] = logits_pred_shallow
 
-                    loss_manager.post_segment([item],
+                    loss_manager.post_segment([item_pred_shallow],
                                               all_losses["prediction_shallow"],
-                                              dataset,
+                                              None,
                                               0,
                                               self._criterion_set.criterions,
                                               DatasetPassMode.MODE_EVALUATE,
                                               device,
                                               self._criterion_set.train_criterions)
+
+                if compute_prediction_local:
+                    model.local_mode = True
+
+                    logits_pred_local = model(state,
+                                              sensorial_data=item["inputs"],
+                                              sensorial_masks=sensorial_masks_masked)
+
+                    item["logits"] = logits_pred_local
+
+                    loss_manager.post_segment([item],
+                                              all_losses["prediction_local"],
+                                              None,
+                                              0,
+                                              self._criterion_set.criterions,
+                                              DatasetPassMode.MODE_EVALUATE,
+                                              device,
+                                              self._criterion_set.train_criterions)
+
+                    model.local_mode = False
 
                 if return_logits:
                     all_logits["use_state"].append(
@@ -219,6 +244,10 @@ class MetricsGenerator:
                     if compute_prediction_shallow:
                         all_logits["prediction_shallow"].append(
                             logits_pred_shallow.cpu())
+
+                    if compute_prediction_local:
+                        all_logits["prediction_local"].append(
+                            logits_pred_local.cpu())
 
         for name in all_losses:
             loss_manager.post_batch(
