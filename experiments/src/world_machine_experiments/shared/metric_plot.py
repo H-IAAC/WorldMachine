@@ -33,7 +33,7 @@ def metrics_bar_with_errorbar(metrics: dict,
             element["std"] = get_values(
                 metrics, ["stds", group, metric_name])[i]
             element["metric_name"] = format_name(group)
-            element[entry_caption_title] = entry_name
+            element[entry_caption_title] = format_name(entry_name)
 
             df_metrics.append(element)
     df_metrics = pd.DataFrame(df_metrics)

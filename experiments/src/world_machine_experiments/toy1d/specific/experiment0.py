@@ -55,7 +55,7 @@ def metrics(data_dir: str) -> dict[str, dict]:
     for name in variations_sorted:
         metrics_sorted[name] = metrics[name]
 
-    return metrics
+    return metrics_sorted
 
 
 def metrics_full(data_dir: str) -> dict[str, dict]:
