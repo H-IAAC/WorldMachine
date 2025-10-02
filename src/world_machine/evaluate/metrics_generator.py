@@ -251,10 +251,10 @@ class MetricsGenerator:
 
         for name in all_losses:
             loss_manager.post_batch(
-                model, all_losses[name], self._criterion_set.criterions, self._criterion_set.train_criterions)
+                model, all_losses[name], self._criterion_set.criterions, self._criterion_set.train_criterions, DatasetPassMode.MODE_EVALUATE)
 
         prepare_model.post_batch(
-            model, all_losses[name], self._criterion_set.criterions, self._criterion_set.train_criterions)
+            model, all_losses[name], self._criterion_set.criterions, self._criterion_set.train_criterions, DatasetPassMode.MODE_EVALUATE)
 
         for name in all_losses:
             for loss_name in all_losses[name]:
