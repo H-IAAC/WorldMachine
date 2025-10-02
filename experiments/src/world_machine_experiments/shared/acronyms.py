@@ -1,10 +1,13 @@
+import re
+
 acronyms = {"MSE", "SDTW"}
 
 
 def format_name(name: str) -> str:
-    name_format = name.replace("_", " ").title()
+    name = name.replace("_", " ").title()
 
     for acro in acronyms:
-        name_format = name_format.replace(acro.capitalize(), acro)
+        expr = re.compile(re.escape(acro), re.IGNORECASE)
+        name = expr.sub(acro, name)
 
-    return name_format
+    return name

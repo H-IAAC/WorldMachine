@@ -98,7 +98,7 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
 
     figures = {}
 
-    metrics = ["optimizer_loss", "state_decoded_mse", "state_decoded_sdtw"]
+    metrics = ["optimizer_loss", "state_decoded_mse", "state_decoded_0.1sdtw"]
 
     for i, metric_name in enumerate(metrics):
         metric_name = metrics[i]
@@ -159,7 +159,7 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
 def metrics_box_plots(metrics_full: dict[str, dict]) -> dict[str, Figure]:
 
     figures = {}
-    for criterion in ["mse", "sdtw"]:
+    for criterion in ["mse", "0.1sdtw"]:
         fig, ax = plt.subplots(dpi=300, figsize=(11, 8))
 
         fig.suptitle("Variation Metrics")
@@ -183,7 +183,7 @@ def metrics_box_plots(metrics_full: dict[str, dict]) -> dict[str, Figure]:
 def metrics_bar_plots(metrics: dict[str, dict]) -> dict[str, Figure]:
 
     figures = {}
-    for criterion in ["mse", "sdtw"]:
+    for criterion in ["mse", "0.1sdtw"]:
         fig, ax = plt.subplots(dpi=300, figsize=(11, 8))
 
         fig.suptitle("Variation Metrics")
