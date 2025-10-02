@@ -121,7 +121,7 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
         metric_label = format_name(metric_name)
         plot_name = f"train_history_{metric_name}"
 
-        fig, axs = plt.subplots(1, 3, dpi=300, figsize=(12, 4))
+        fig, axs = plt.subplots(1, 3, dpi=300, figsize=(16, 4))
         axs: list[Axes]
 
         for j, name in enumerate(train_history):
