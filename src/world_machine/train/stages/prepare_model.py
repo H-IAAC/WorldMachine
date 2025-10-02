@@ -31,7 +31,12 @@ class PrepareModel(TrainStage):
         else:
             raise ValueError(f"Unknown mode: {mode}.")
 
-    def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
+    def post_batch(self,
+                   model: WorldMachine,
+                   losses: dict,
+                   criterions: dict[str, dict[str, Module]],
+                   train_criterions: dict[str, dict[str, float]],
+                   mode: DatasetPassMode) -> None:
         # Return original state
         torch.set_grad_enabled(self.original_grad_state)
 

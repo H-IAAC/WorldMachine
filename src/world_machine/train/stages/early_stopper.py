@@ -3,6 +3,8 @@ import uuid
 
 import torch
 
+from world_machine.train import DatasetPassMode
+
 from .train_stage import TrainStage
 
 
@@ -19,8 +21,8 @@ class EarlyStopper(TrainStage):
 
         torch.save(model.state_dict(), self._file_path)
 
-    def post_batch(self, model, losses, criterions, train_criterions):
-        if losses["optimizer_loss"] < self._best_loss:
+    def post_batch(self, model, losses, criterions, train_criterions, mode):
+        if mode == DatasetPassMode.MODE_EVALUATE and losses["optimizer_loss"] < self._best_loss:
             self._best_loss = losses["optimizer_loss"]
             torch.save(model.state_dict(), self._file_path)
 

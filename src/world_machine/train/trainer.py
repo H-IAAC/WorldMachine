@@ -193,7 +193,7 @@ class Trainer:
             with profile_range("post_batch", category="trainer", domain="world_machine"):
                 for stage in reversed(self._stages):
                     stage.post_batch(model, losses, self._criterion_set.criterions,
-                                     self._criterion_set.train_criterions)
+                                     self._criterion_set.train_criterions, mode)
 
         return losses
 

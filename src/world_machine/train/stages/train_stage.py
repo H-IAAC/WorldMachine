@@ -91,7 +91,12 @@ class TrainStage(abc.ABC):
     def optimize(self, model: WorldMachine, optimizer: Optimizer, batch_index: int, n_batch: int, losses: dict, mode: DatasetPassMode) -> None:
         ...
 
-    def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
+    def post_batch(self,
+                   model: WorldMachine,
+                   losses: dict,
+                   criterions: dict[str, dict[str, Module]],
+                   train_criterions: dict[str, dict[str, float]],
+                   mode: DatasetPassMode) -> None:
         ...
 
     def post_train(self,

@@ -134,7 +134,12 @@ class LossManager(TrainStage):
 
         losses["optimizer_loss"] = optimizer_loss
 
-    def post_batch(self, model: WorldMachine, losses: dict, criterions: dict[str, dict[str, Module]], train_criterions: dict[str, dict[str, float]]) -> None:
+    def post_batch(self,
+                   model: WorldMachine,
+                   losses: dict,
+                   criterions: dict[str, dict[str, Module]],
+                   train_criterions: dict[str, dict[str, float]],
+                   mode: DatasetPassMode) -> None:
         total_loss = losses["epoch"]
 
         for dimension in total_loss:
