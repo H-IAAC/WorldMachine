@@ -28,6 +28,10 @@ class EarlyStopper(TrainStage):
 
     def post_batch(self, model, losses, criterions, train_criterions, mode):
         if mode == DatasetPassMode.MODE_EVALUATE and losses["optimizer_loss"] < self._best_loss:
+            key = "optimizer_loss"
+            print(
+                f"Better model. Saving. Previous best: {losses[key]} | New Best: {self._best_loss}")
+
             self._best_loss = losses["optimizer_loss"]
             torch.save(model.state_dict(), self._file_path)
 
