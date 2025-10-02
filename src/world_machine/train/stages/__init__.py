@@ -1,3 +1,4 @@
+from .early_stopper import EarlyStopper
 from .gradient_accumulator import GradientAccumulator
 from .local_setter import LocalSetter
 from .loss_manager import LossManager

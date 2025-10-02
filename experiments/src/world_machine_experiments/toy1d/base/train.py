@@ -12,8 +12,9 @@ from torch.utils.data import DataLoader
 from world_machine import WorldMachine
 from world_machine.train import CriterionSet, ParameterScheduler, Trainer
 from world_machine.train.stages import (
-    GradientAccumulator, LocalSetter, LossManager, NoiseAdder, SensorialMasker,
-    SequenceBreaker, ShortTimeRecaller, StateManager, StateSaveMethod)
+    EarlyStopper, GradientAccumulator, LocalSetter, LossManager, NoiseAdder,
+    SensorialMasker, SequenceBreaker, ShortTimeRecaller, StateManager,
+    StateSaveMethod)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.toy1d.dimensions import Dimensions
@@ -170,6 +171,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
 
     stages.append(LossManager(state_regularizer,
                   state_cov_regularizer, multiply_target_masks=False))
+
+    stages.append(EarlyStopper())
 
     trainer = Trainer(toy1d_criterion_set, stages, seed)
 

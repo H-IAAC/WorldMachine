@@ -13,7 +13,7 @@ from .train_stage import TrainStage
 class ShortTimeRecaller(TrainStage):
     def __init__(self, dimension_sizes: dict[str, int], criterions: dict[str, Module], n_past: int = 0, n_future: int = 0,
                  stride_past: int = 1, stride_future: int = 1):
-        super().__init__(-1)
+        super().__init__(-2)
 
         self._dimensions = dimension_sizes
         self._criterions = criterions
