@@ -41,15 +41,19 @@ def metrics(data_dir: str) -> dict[str, dict]:
                                                    "toy1d_mask_sensorial_metrics")
 
     for var_name in metrics:
-        metrics[var_name]["means"]["mask_sensorial_100"] = {}
-        metrics[var_name]["stds"]["mask_sensorial_100"] = {}
+        metrics[var_name]["means"]["mask_sensorial@100"] = {}
+        metrics[var_name]["stds"]["mask_sensorial@100"] = {}
 
         for loss_name in mask_sensorial_metrics[var_name]["means"]:
             if loss_name == "mask_sensorial_percentage":
                 continue
 
-            metrics[var_name]["means"]["mask_sensorial_100"][loss_name] = mask_sensorial_metrics[var_name]["means"][loss_name][-1]
-            metrics[var_name]["stds"]["mask_sensorial_100"][loss_name] = mask_sensorial_metrics[var_name]["stds"][loss_name][-1]
+            metrics[var_name]["means"]["mask_sensorial@100"][loss_name] = mask_sensorial_metrics[var_name]["means"][loss_name][-1]
+            metrics[var_name]["stds"]["mask_sensorial@100"][loss_name] = mask_sensorial_metrics[var_name]["stds"][loss_name][-1]
+
+    metrics_sorted = {}
+    for name in variations_sorted:
+        metrics_sorted[name] = metrics[name]
 
     return metrics
 
@@ -60,6 +64,18 @@ def metrics_full(data_dir: str) -> dict[str, dict]:
     for name in variations_sorted:
         metrics_full[name] = load_multiple_metrics(os.path.join(
             data_dir, name), "metrics")
+
+        mask_sensorial_metrics = load_multiple_metrics(
+            os.path.join(data_dir, name), "mask_sensorial_metrics")
+
+        for run_name in metrics_full[name]:
+            metrics_full[name][run_name]["mask_sensorial@100"] = {}
+
+            for loss_name in mask_sensorial_metrics[run_name]:
+                if loss_name == "mask_sensorial_percentage":
+                    continue
+
+                metrics_full[name][run_name]["mask_sensorial@100"][loss_name] = mask_sensorial_metrics[run_name][loss_name][-1]
 
     return metrics_full
 
