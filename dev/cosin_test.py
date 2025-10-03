@@ -1,0 +1,71 @@
+import multiprocessing as mp
+import os
+
+import torch
+from hamilton import driver
+from torch.optim import AdamW
+from world_machine_experiments import shared
+from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d.specific import experiment0
+
+from world_machine.train.scheduler import UniformScheduler
+
+if __name__ == "__main__":
+
+    mp.set_start_method("spawn")
+
+    d_parameter_variation = driver.Builder().with_modules(
+        parameter_variation, shared).build()
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    n_epoch = 100
+    output_dir = "toy1d_experiment0_protocol_test"
+
+    toy1d_base_args = {"sequence_length": 1000,
+                       "n_sequence": 10000,
+                       "context_size": 200,
+                       "batch_size": 32,
+                       "n_epoch": n_epoch,
+
+                       "weight_decay": 5e-5,
+                       "accumulation_steps": 1,
+                       "state_dimensions": [0],
+                       "optimizer_class": AdamW,
+                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
+                       "device": device,
+                       "state_control": "periodic",
+                       "state_activation": "tanh",
+                       "discover_state": True,
+                       "sensorial_train_losses": [Dimensions.MEASUREMENT],
+                       "state_size": 128,
+                       "positional_encoder_type": "alibi",
+                       "n_attention_head": 4,
+                       "learning_rate": 1e-3,
+                       "cosine_annealing": True
+                       }
+
+    toy1d_parameter_variation = {
+        "CompleteProtocol": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 2,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.25
+        },
+    }
+
+    aditional_outputs = ["save_toy1d_metrics",
+                         "save_toy1d_metrics_sample_logits",
+                         "save_toy1d_metrics_sample_plots"]
+
+    d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
+                                  inputs={"base_seed": 42,
+                                          "output_dir": output_dir,
+                                          "n_run": 1,
+                                          "toy1d_base_args": toy1d_base_args,
+                                          "n_worker": 1,
+                                          "toy1d_parameter_variation": toy1d_parameter_variation,
+                                          "aditional_outputs": aditional_outputs
+                                          }
+                                  )

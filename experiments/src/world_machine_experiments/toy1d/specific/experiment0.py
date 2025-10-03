@@ -367,7 +367,7 @@ def state_analysis_plots(samples: dict[str, dict[str, TensorDict]]) -> dict[str,
 
         plt.suptitle(f"State Analysis - {format_name(name)}")
 
-        figures[f"state_analisys_{name}"] = fig
+        figures[f"state_analysis_{name}"] = fig
 
     return figures
 

@@ -24,12 +24,12 @@ class TrainStage(abc.ABC):
                    "pre_batch": instance.pre_batch,
                    "pre_segment": instance.pre_segment,
                    "pre_forward": instance.pre_forward,
+                   "forward": instance.forward,
                    "post_forward": instance.post_forward,
                    "post_segment": instance.post_segment,
                    "optimize": instance.optimize,
                    "post_batch": instance.post_batch,
-                   "post_train": instance.post_train,
-                   "forward": instance.forward}
+                   "post_train": instance.post_train}
 
         instance.__setattr__("_with_forward", False)
 
@@ -77,15 +77,15 @@ class TrainStage(abc.ABC):
     def pre_forward(self, item_index: int,  itens: list[TensorDict], mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
         ...
 
+    def forward(self, model: WorldMachine, segment: TensorDict,  mode: DatasetPassMode) -> None:
+        ...
+
     def post_forward(self, item_index: int,  itens: list[TensorDict], dataset: WorldMachineDataset, losses: dict, mode: DatasetPassMode) -> None:
         ...
 
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset,
                      epoch_index: int, criterions: dict[str, dict[str, Module]], mode: DatasetPassMode,
                      device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
-        ...
-
-    def forward(self, model: WorldMachine, segment: TensorDict,  mode: DatasetPassMode) -> None:
         ...
 
     def optimize(self, model: WorldMachine, optimizer: Optimizer, batch_index: int, n_batch: int, losses: dict, mode: DatasetPassMode) -> None:

@@ -1,5 +1,6 @@
 from .early_stopper import EarlyStopper
 from .gradient_accumulator import GradientAccumulator
+from .lambda_stage import LambdaStage
 from .local_setter import LocalSetter
 from .loss_manager import LossManager
 from .noise_adder import NoiseAdder

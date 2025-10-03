@@ -12,9 +12,9 @@ from torch.utils.data import DataLoader
 from world_machine import WorldMachine
 from world_machine.train import CriterionSet, ParameterScheduler, Trainer
 from world_machine.train.stages import (
-    EarlyStopper, GradientAccumulator, LocalSetter, LossManager, NoiseAdder,
-    SensorialMasker, SequenceBreaker, ShortTimeRecaller, StateManager,
-    StateSaveMethod)
+    EarlyStopper, GradientAccumulator, LambdaStage, LocalSetter, LossManager,
+    NoiseAdder, SensorialMasker, SequenceBreaker, ShortTimeRecaller,
+    StateManager, StateSaveMethod)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
 from world_machine_experiments.toy1d.dimensions import Dimensions
@@ -89,6 +89,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               optimizer_class: Type[Optimizer],
                               learning_rate: float,
                               weight_decay: float,
+                              cosine_annealing: bool = False,
                               device: str = "cpu",
                               accumulation_steps: int = 1,
                               mask_sensorial_data:  float | None | dict[str, float |
@@ -168,6 +169,14 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
 
     if local_chance is not None:
         stages.append(LocalSetter(local_chance))
+
+    if cosine_annealing:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+            optimizer, 10, 2)
+
+        post_batch = lambda *args, **kwargs: scheduler.step()
+
+        stages.append(LambdaStage(0, post_batch=post_batch))
 
     stages.append(LossManager(state_regularizer,
                   state_cov_regularizer, multiply_target_masks=False))
