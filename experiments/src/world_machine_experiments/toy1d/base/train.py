@@ -10,7 +10,8 @@ from torch.optim import Optimizer
 from torch.utils.data import DataLoader
 
 from world_machine import WorldMachine
-from world_machine.train import CriterionSet, ParameterScheduler, Trainer
+from world_machine.train import (
+    CriterionSet, DatasetPassMode, ParameterScheduler, Trainer)
 from world_machine.train.stages import (
     EarlyStopper, GradientAccumulator, LambdaStage, LocalSetter, LossManager,
     NoiseAdder, SensorialMasker, SequenceBreaker, ShortTimeRecaller,
@@ -174,7 +175,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
             optimizer, 10, 2)
 
-        post_batch = lambda *args, **kwargs: scheduler.step()
+        def post_batch(model, losses, criterions, train_criterions, mode): scheduler.step(
+        ) if mode == DatasetPassMode.MODE_TRAIN else None
 
         stages.append(LambdaStage(0, post_batch=post_batch))
 
