@@ -92,7 +92,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               weight_decay: float,
                               cosine_annealing: bool = False,
                               cosine_annealing_T0: int = 10,
-                              cosine_annealing_T_mult: float = 2.0,
+                              cosine_annealing_T_mult: int = 2,
                               device: str = "cpu",
                               accumulation_steps: int = 1,
                               mask_sensorial_data:  float | None | dict[str, float |
