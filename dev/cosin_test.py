@@ -54,13 +54,14 @@ if __name__ == "__main__":
             "local_chance": 0.25
         },
 
-        "CompleteProtocol_mult1.5": {
+        "CompleteProtocol_T010_mult1": {
             "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
             "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
             "n_segment": 2,  "fast_forward": True,
             "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
             "local_chance": 0.25,
-            "cosine_annealing_T_mult": 1.5
+            "cosine_annealing_T_mult": 1,
+            "cosine_annealing_T0": 20
         },
 
         "CompleteProtocol_T020_mult1": {
