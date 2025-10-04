@@ -91,6 +91,8 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               learning_rate: float,
                               weight_decay: float,
                               cosine_annealing: bool = False,
+                              cosine_annealing_T0: int = 10,
+                              cosine_annealing_T_mult: float = 2.0,
                               device: str = "cpu",
                               accumulation_steps: int = 1,
                               mask_sensorial_data:  float | None | dict[str, float |
@@ -173,7 +175,7 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
 
     if cosine_annealing:
         scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
-            optimizer, 10, 2)
+            optimizer, cosine_annealing_T0, cosine_annealing_T_mult)
 
         def post_batch(model, losses, criterions, train_criterions, mode): scheduler.step(
         ) if mode == DatasetPassMode.MODE_TRAIN else None
