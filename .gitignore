@@ -165,5 +165,7 @@ cython_debug/
 
 *.zip
 *.bin
+*.pth
+*.pt
 
 results/
