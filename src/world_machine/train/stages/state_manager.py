@@ -20,17 +20,19 @@ class StateManager(TrainStage):
     def __init__(self,
                  stable_state_epochs: int = 1,
                  check_input_masks: bool = False,
-                 state_save_method: StateSaveMethod = StateSaveMethod.REPLACE):
+                 state_save_method: StateSaveMethod = StateSaveMethod.REPLACE,
+                 reset_in_epoch0: bool = False):
         super().__init__(1)
 
         self._stable_state_epochs = stable_state_epochs
         self._check_input_masks = check_input_masks
         self._state_save_method = state_save_method
+        self._reset_in_epoch0 = reset_in_epoch0
 
     def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
                     seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode, model: WorldMachine) -> None:
 
-        if epoch_index == 0 and "state" not in itens[0]["inputs"]:
+        if (epoch_index == 0 and self._reset_in_epoch0) or "state" not in itens[0]["inputs"]:
             for item in itens:
                 seq_len = item["inputs"][next(
                     iter(item["inputs"].keys()))].shape[1]
