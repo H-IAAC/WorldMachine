@@ -7,6 +7,7 @@ from torch.optim import AdamW
 from world_machine_experiments import shared
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment0
+from world_machine.train.stages import StateSaveMethod
 
 from world_machine.train.scheduler import UniformScheduler
 
@@ -46,7 +47,7 @@ if __name__ == "__main__":
                        }
 
     toy1d_parameter_variation = {
-        "CompleteProtocol": {
+        "CompleteProtocol_T010_mult2": {
             "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
             "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
             "n_segment": 2,  "fast_forward": True,
@@ -61,7 +62,7 @@ if __name__ == "__main__":
             "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
             "local_chance": 0.25,
             "cosine_annealing_T_mult": 1,
-            "cosine_annealing_T0": 20
+            "cosine_annealing_T0": 10
         },
 
         "CompleteProtocol_T020_mult1": {
@@ -75,12 +76,106 @@ if __name__ == "__main__":
         },
 
 
-        "CompleteProtocol_lr5e-4": {
+        "CompleteProtocol_T010_mult2_lr5e-4": {
             "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
             "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
             "n_segment": 2,  "fast_forward": True,
             "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
             "learning_rate": 5e-4
+        },
+
+        "CompleteProtocol_local50": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 2,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.5,
+            "learning_rate": 5e-4,
+            "cosine_annealing": False
+        },
+
+        "CompleteProtocol_T020_mult1_lr1e-2": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 2,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.25,
+            "cosine_annealing_T_mult": 1,
+            "cosine_annealing_T0": 20,
+            "learning_rate": 1e-2,
+        },
+
+        "CompleteProtocol_T020_mult2": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 2,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.25,
+            "cosine_annealing_T_mult": 2,
+            "cosine_annealing_T0": 20
+        },
+
+        "Best_T020_mult1":{
+            "block_configuration": [Dimensions.MEASUREMENT, Dimensions.STATE_INPUT],
+            "n_segment": 1,
+            "fast_forward": False,
+            "stable_state_epochs": 1,
+            "check_input_masks": True,
+            "state_save_method": StateSaveMethod.REPLACE,
+            "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "short_time_recall": {
+                Dimensions.MEASUREMENT
+            },
+            "recall_stride_past": 3,
+            "recall_stride_future": 3,
+            "recall_n_past": 5,
+            "recall_n_future": 5,
+            "train_mse": True,
+            "train_sdtw": False,
+            "noise_config": {
+                "state": {
+                    "mean": 0.0,
+                    "std": 0.1
+                },
+                "measurement": {
+                    "mean": 0.0,
+                    "std": 0.1
+                }
+            },
+            "local_chance": 0.25,
+            "cosine_annealing_T_mult": 1,
+            "cosine_annealing_T0": 20
+        },
+
+        "CompleteProtocol_lr1e-3": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 2,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.25,
+            "learning_rate": 1e-3,
+            "cosine_annealing": False
+        },
+
+        "CompleteProtocol_T025_mult1_8Head": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 2,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.25,
+            "cosine_annealing_T_mult": 1,
+            "cosine_annealing_T0": 25,
+            "n_attention_head": 8
+        },
+
+        "CompleteProtocol_T020_mult1_seg5": {
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "n_segment": 5,  "fast_forward": True,
+            "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
+            "local_chance": 0.25,
+            "cosine_annealing_T_mult": 1,
+            "cosine_annealing_T0": 20
         },
     }
 
