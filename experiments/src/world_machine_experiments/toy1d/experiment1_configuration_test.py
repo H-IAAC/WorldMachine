@@ -44,7 +44,10 @@ if __name__ == "__main__":
                        "context_size": 200,
                        "batch_size": 256,
                        "n_epoch": n_epoch,
-                       "learning_rate": 5e-4,
+                       "learning_rate": 1e-3,
+                       "cosine_annealing": True,
+                       "cosine_annealing_T_mult": 1,
+                       "cosine_annealing_T0": 25,
                        "weight_decay": 5e-5,
                        "accumulation_steps": 1,
                        "state_dimensions": [0],
@@ -104,36 +107,48 @@ if __name__ == "__main__":
                                                                                      {"measurement": {
                                                                                          "mean": 0.0, "std": 0.1}},
                                                                                      {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}}]:
+                                                                    for local_chance in [None, 0.25]:
+                                                                        n_variation += 1
 
-                                                                    n_variation += 1
+                                                                        config = {"n_segment": n_segment,
+                                                                                  "fast_forward": fast_forward,
+                                                                                  "stable_state_epochs": stable_state_epochs,
+                                                                                  "check_input_masks": check_input_masks,
+                                                                                  "state_save_method": state_save_method,
+                                                                                  "mask_sensorial_data": mask_sensorial_data,
+                                                                                  "short_time_recall": short_time_recall,
+                                                                                  "recall_stride_past": recall_stride,
+                                                                                  "recall_stride_future": recall_stride,
+                                                                                  "recall_n_past": recall_n_past,
+                                                                                  "recall_n_future": recall_n_future,
+                                                                                  "positional_encoder_type": positional_encoder_type,
+                                                                                  "block_configuration": block_configuration,
+                                                                                  "state_activation": state_activation,
+                                                                                  "state_regularizer": state_regularizer,
+                                                                                  "train_mse": train_mse,
+                                                                                  "train_sdtw": train_stdw,
+                                                                                  "noise_config": noise_config,
+                                                                                  "local_chance": local_chance,
 
-                                                                    config = {"n_segment": n_segment,
-                                                                              "fast_forward": fast_forward,
-                                                                              "stable_state_epochs": stable_state_epochs,
-                                                                              "check_input_masks": check_input_masks,
-                                                                              "state_save_method": state_save_method,
-                                                                              "mask_sensorial_data": mask_sensorial_data,
-                                                                              "short_time_recall": short_time_recall,
-                                                                              "recall_stride_past": recall_stride,
-                                                                              "recall_stride_future": recall_stride,
-                                                                              "recall_n_past": recall_n_past,
-                                                                              "recall_n_future": recall_n_future,
-                                                                              "positional_encoder_type": positional_encoder_type,
-                                                                              "block_configuration": block_configuration,
-                                                                              "state_activation": state_activation,
-                                                                              "state_regularizer": state_regularizer,
-                                                                              "train_mse": train_mse,
-                                                                              "train_sdtw": train_stdw,
-                                                                              "noise_config": noise_config}
+                                                                                  # Fixed
+                                                                                  "batch_size": 256,
+                                                                                  "learning_rate": 1e-3,
+                                                                                  "cosine_annealing": True,
+                                                                                  "cosine_annealing_T_mult": 1,
+                                                                                  "cosine_annealing_T0": 25,
+                                                                                  "weight_decay": 5e-5,
+                                                                                  "optimizer_class": AdamW,
+                                                                                  "state_size": 128,
+                                                                                  "n_attention_head": 4}
 
-                                                                    model = make_model(
-                                                                        config, "ParametersModel").model_validate(config)
-                                                                    model_json = model.model_dump_json()
-                                                                    variation_hash = int(
-                                                                        hashlib.md5(model_json.encode('utf-8')).hexdigest(), 16)
+                                                                        model = make_model(
+                                                                            config, "ParametersModel").model_validate(config)
+                                                                        model_json = model.model_dump_json()
+                                                                        variation_hash = int(
+                                                                            hashlib.md5(model_json.encode('utf-8')).hexdigest(), 16)
 
-                                                                    configurations["variation"+str(
-                                                                        variation_hash)] = config
+                                                                        configurations["variation"+str(
+                                                                            variation_hash)] = config
 
     assert len(configurations) == n_variation
 
