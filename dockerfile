@@ -5,18 +5,13 @@ RUN apt update \
     && apt install -y git \ 
     &&  apt clean
 
-COPY . /world_machine
-
-WORKDIR /world_machine
-RUN python -m pip install .
-
-WORKDIR /world_machine/experiments
-RUN python -m pip install .
-
-RUN  python -m pip cache purge
+RUN --mount=type=bind,source=.,target=/world_machine,rw \
+    cd /world_machine \
+    && python -m pip install . \
+    && cd /world_machine/experiments \
+    && python -m pip install . \
+    && python -m pip cache purge
 
 WORKDIR /
-
-RUN rm -rf /world_machine
 
 ENTRYPOINT ["/bin/bash"]
