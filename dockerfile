@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:25.06-py3
+FROM nvcr.io/nvidia/pytorch:25.09-py3
 
 RUN apt update \
     && apt install -y tmux \ 

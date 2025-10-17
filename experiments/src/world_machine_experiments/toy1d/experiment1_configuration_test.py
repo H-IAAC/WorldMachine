@@ -1,6 +1,7 @@
 import hashlib
 import os
 import pickle
+import random
 
 import torch
 import torch.multiprocessing as mp
@@ -73,7 +74,7 @@ if __name__ == "__main__":
                                     recall_stride_choices = [3, 1]
 
                                 for recall_stride_past in recall_stride_choices:
-                                    for recall_stride_future in recall_stride_choices:
+                                    for recall_stride_future in [recall_stride_past]:# recall_stride_choices:
                                         for recall_n_past in recall_n_past_choices:
 
                                             recall_n_future_choices = [0]
@@ -144,6 +145,10 @@ if __name__ == "__main__":
                                                                             configurations["variation"+str(
                                                                                 variation_hash)] = config
 
+    items = list(configurations.items())
+    random.shuffle(items)
+    configurations = dict(items)
+
     assert len(configurations) == n_variation
 
     print(f"Running {n_variation} variations")
@@ -155,12 +160,9 @@ if __name__ == "__main__":
 
     toy1d_parameter_variation = configurations
 
-    aditional_outputs = ["save_toy1d_metrics",
-                         "save_toy1d_metrics_sample_logits",
-                         "save_toy1d_metrics_sample_plots",
-                         "save_toy1d_autoregressive_metrics"]
+    aditional_outputs = ["save_toy1d_metrics"]
 
-    output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
+    output = d_parameter_variation.execute(["save_toy1d_parameter_variation_info"],
                                            inputs={"base_seed": 42,
                                                    "output_dir": output_dir,
                                                    "n_run": 1,
@@ -168,6 +170,7 @@ if __name__ == "__main__":
                                                    "n_worker": n_worker,
                                                    "max_jobs_per_device": max_jobs_per_device,
                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   "aditional_outputs": aditional_outputs
+                                                   "aditional_outputs": aditional_outputs,
+                                                   "minimal":True
                                                    }
                                            )

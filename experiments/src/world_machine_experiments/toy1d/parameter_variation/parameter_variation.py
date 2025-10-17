@@ -30,10 +30,15 @@ def worker_initializer(lock, num_threads: int | None = None):
 def toy1d_parameter_variation_worker_func(inputs):
     d = driver.Builder().with_modules(multiple, shared).build()
 
-    outputs = ["save_multiple_toy1d_train_plots",
-               "save_multiple_toy1d_consolidated_train_statistics",
-               "save_multiple_toy1d_parameters",
-               ]
+    if inputs["minimal"]:
+        outputs = ["save_multiple_toy1d_consolidated_train_statistics",
+                    "save_multiple_toy1d_parameters",
+            ]
+    else:
+        outputs = ["save_multiple_toy1d_train_plots",
+                "save_multiple_toy1d_consolidated_train_statistics",
+                "save_multiple_toy1d_parameters",
+                ]
 
     if inputs["aditional_outputs"] is not None:
         if "save_toy1d_mask_sensorial_metrics" in inputs["aditional_outputs"]:
@@ -67,7 +72,8 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                                         base_seed: int,
                                         n_worker: int = 5,
                                         aditional_outputs: list[str] | None = None,
-                                        max_jobs_per_device: int | None = None) -> dict:
+                                        max_jobs_per_device: int | None = None,
+                                        minimal:bool=False) -> dict:
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -135,7 +141,8 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                   "output_dir": run_dir,
                   "n_run": n_run,
                   "toy1d_args": toy1d_args,
-                  "aditional_outputs": aditional_outputs}
+                  "aditional_outputs": aditional_outputs,
+                  "minimal":minimal}
 
         future = executor.submit(toy1d_parameter_variation_worker_func, inputs)
         futures.append(future)
