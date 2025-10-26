@@ -27,7 +27,8 @@ def multiple_toy1d_trainings_info(n_run: int,
                                   base_seed: int,
                                   output_dir: str,
                                   toy1d_args: dict[str, Any],
-                                  aditional_outputs: list[str] | None = None) -> list[dict]:
+                                  aditional_outputs: list[str] | None = None,
+                                  minimal:bool=False) -> list[dict]:
 
     if aditional_outputs is None:
         aditional_outputs = []
@@ -56,7 +57,14 @@ def multiple_toy1d_trainings_info(n_run: int,
         if not os.path.exists(run_check):
             print(f"Run {i} in {output_dir} starting.")
 
-            final_vars = ["toy1d_train_history",
+            if minimal:
+                final_vars = ["toy1d_train_history",
+                          "save_toy1d_model",
+                          "save_toy1d_train_history",
+                          "toy1d_datasets"]
+            
+            else:
+                final_vars = ["toy1d_train_history",
                           "save_toy1d_model",
                           "save_toy1d_train_history",
                           "save_toy1d_train_plots",
