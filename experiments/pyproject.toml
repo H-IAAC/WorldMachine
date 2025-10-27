@@ -26,6 +26,7 @@ dependencies = [
     "scipy",
     "pysdtw",
     "seaborn",
+    "networkx[default]",
 ]
 
 [project.readme]
