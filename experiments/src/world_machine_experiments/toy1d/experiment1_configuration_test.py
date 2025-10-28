@@ -14,8 +14,10 @@ from world_machine_experiments import shared
 from world_machine_experiments.shared.save_parameters import make_model
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 
+
 if __name__ == "__main__":
 
+    
     mp.set_start_method("spawn")
 
     d_parameter_variation = driver.Builder().with_modules(
@@ -74,7 +76,7 @@ if __name__ == "__main__":
                                     recall_stride_choices = [3, 1]
 
                                 for recall_stride_past in recall_stride_choices:
-                                    for recall_stride_future in [recall_stride_past]:# recall_stride_choices:
+                                    for recall_stride_future in [recall_stride_past]: #recall_stride_choices:
                                         for recall_n_past in recall_n_past_choices:
 
                                             recall_n_future_choices = [0]
@@ -162,15 +164,21 @@ if __name__ == "__main__":
 
     aditional_outputs = ["save_toy1d_metrics"]
 
-    output = d_parameter_variation.execute(["save_toy1d_parameter_variation_info"],
-                                           inputs={"base_seed": 42,
-                                                   "output_dir": output_dir,
-                                                   "n_run": 1,
-                                                   "toy1d_base_args": toy1d_base_args,
-                                                   "n_worker": n_worker,
-                                                   "max_jobs_per_device": max_jobs_per_device,
-                                                   "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                   "aditional_outputs": aditional_outputs,
-                                                   "minimal":True
-                                                   }
-                                           )
+    try:
+        output = d_parameter_variation.execute(["save_toy1d_parameter_variation_info"],
+                                            inputs={"base_seed": 42,
+                                                    "output_dir": output_dir,
+                                                    "n_run": 1,
+                                                    "toy1d_base_args": toy1d_base_args,
+                                                    "n_worker": n_worker,
+                                                    "max_jobs_per_device": max_jobs_per_device,
+                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
+                                                    "aditional_outputs": aditional_outputs,
+                                                    "minimal":True
+                                                    }
+                                            )
+    except Exception as e:
+        print("ERROR")
+        print(e)
+
+    print("END")
