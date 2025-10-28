@@ -63,6 +63,20 @@ def toy1d_parameter_variation_worker_func(inputs):
     return None
 
 
+def safe_future_result(future:Future, executor:ProcessPoolExecutor) -> Any:
+    try:
+        return future.result()
+    except Exception as e:
+        print("ERROR job exception. Stopping executor.")
+
+        for p in executor._processes.values():
+            p.terminate()
+        executor.shutdown(wait=False, cancel_futures=True)
+        
+        raise e
+
+
+
 @extract_fields({"experiment_paths": dict[str, str], "base_dir": str})
 @datasaver()
 def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
@@ -80,11 +94,14 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
     lock = mp.RLock()
 
     n_thread_per_worker = mp.cpu_count()//n_worker
+    mp.Pool()
 
+    ctx = mp.get_context('spawn')
     executor = ProcessPoolExecutor(n_worker,
+                                   mp_context=ctx,
                                    initializer=worker_initializer,
                                    initargs=(lock, n_thread_per_worker),
-                                   max_tasks_per_child=5)
+                                   max_tasks_per_child=None)#5)
 
     devices = []
     if "device" in toy1d_base_args:
@@ -121,7 +138,7 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
             print(f"{n_finish} finished")
 
-            device = future.result()
+            device = safe_future_result(future, executor)
             done_device_index = devices.index(device)
             jobs_per_device[done_device_index] -= 1
 
@@ -149,11 +166,16 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
 
         jobs_per_device[device_index] += 1
 
+
     for future in as_completed(futures):
-        future.result()
+        safe_future_result(future, executor)
         pbar.update(1)
         n_finish += 1
         print(f"{n_finish} finished")
+
+        
+
+    executor.shutdown(wait=True, cancel_futures=False)
 
     pbar.close()
 
