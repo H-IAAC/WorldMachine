@@ -3,6 +3,7 @@ import json
 import os
 
 import numpy as np
+import pandas as pd
 from hamilton.function_modifiers import datasaver
 
 exclude_paths = ["final_results"]
@@ -42,13 +43,16 @@ def decoder(obj: dict):
 
 
 @datasaver()
-def save_metrics(metrics: dict, output_dir: str, metrics_name: str) -> dict:
+def save_metrics(metrics: dict | pd.DataFrame, output_dir: str, metrics_name: str) -> dict:
     os.makedirs(output_dir, exist_ok=True)
 
     file_path = os.path.join(output_dir, metrics_name+".json")
 
     with open(file_path, "w", encoding="utf-8") as file:
-        json.dump(metrics, file, default=encoder)
+        if isinstance(metrics, pd.DataFrame):
+            file.write(metrics.T.to_json())
+        else:
+            json.dump(metrics, file, default=encoder)
 
     return {"path": file_path}
 

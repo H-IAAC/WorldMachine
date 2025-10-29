@@ -13,11 +13,10 @@ from world_machine.train.stages import StateSaveMethod
 from world_machine_experiments import shared
 from world_machine_experiments.shared.save_parameters import make_model
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
-
+from world_machine_experiments.toy1d.specific import experiment1
 
 if __name__ == "__main__":
 
-    
     mp.set_start_method("spawn")
 
     d_parameter_variation = driver.Builder().with_modules(
@@ -76,7 +75,8 @@ if __name__ == "__main__":
                                     recall_stride_choices = [3, 1]
 
                                 for recall_stride_past in recall_stride_choices:
-                                    for recall_stride_future in [recall_stride_past]: #recall_stride_choices:
+                                    # recall_stride_choices:
+                                    for recall_stride_future in [recall_stride_past]:
                                         for recall_n_past in recall_n_past_choices:
 
                                             recall_n_future_choices = [0]
@@ -166,19 +166,44 @@ if __name__ == "__main__":
 
     try:
         output = d_parameter_variation.execute(["save_toy1d_parameter_variation_info"],
-                                            inputs={"base_seed": 42,
-                                                    "output_dir": output_dir,
-                                                    "n_run": 1,
-                                                    "toy1d_base_args": toy1d_base_args,
-                                                    "n_worker": n_worker,
-                                                    "max_jobs_per_device": max_jobs_per_device,
-                                                    "toy1d_parameter_variation": toy1d_parameter_variation,
-                                                    "aditional_outputs": aditional_outputs,
-                                                    "minimal":True
-                                                    }
-                                            )
+                                               inputs={"base_seed": 42,
+                                                       "output_dir": output_dir,
+                                                       "n_run": 1,
+                                                       "toy1d_base_args": toy1d_base_args,
+                                                       "n_worker": n_worker,
+                                                       "max_jobs_per_device": max_jobs_per_device,
+                                                       "toy1d_parameter_variation": toy1d_parameter_variation,
+                                                       "aditional_outputs": aditional_outputs,
+                                                       "minimal": True
+                                                       }
+                                               )
     except Exception as e:
         print("ERROR")
         print(e)
 
     print("END")
+
+    d_experiment1 = driver.Builder().with_modules(experiment1, shared).build()
+    d_experiment1.execute([
+        "save_masked_percentage",
+        "save_task_distribution_plots",
+        "save_tasks_correlation",
+        "save_tasks_correlation_plots",
+        "save_divergence_probability",
+        "save_filtered_divergence_probability",
+        "save_divergence_probability_plots",
+        "save_filtered_divergence_probability_plots",
+        "save_impact_test_df",
+        "save_impact_test_full_df",
+        "save_joint_impact",
+        "save_joint_impact_plots",
+        "save_filtered_marginal_impact",
+        "save_filtered_marginal_impact_plots",
+        "save_task_impact_plots",
+        "save_duration_impact_plots",
+        "save_best_configurations",
+        "save_best_models",
+        "save_best_models_metrics_table",],
+
+        inputs={"data_dir": output_dir,
+                "output_dir": os.path.join(output_dir, "final_results")})
