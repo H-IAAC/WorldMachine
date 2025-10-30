@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -121,7 +122,7 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
         metric_label = format_name(metric_name)
         plot_name = f"train_history_{metric_name}"
 
-        fig, axs = plt.subplots(1, 3, dpi=300, figsize=(16, 4))
+        fig, axs = plt.subplots(1, 3, dpi=600)
         axs: list[Axes]
 
         for j, name in enumerate(train_history):
@@ -144,9 +145,11 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
 
             axs[j].set_xlabel("Epochs")
 
+            plt.sca(axs[j])
             if j == 0:
-
                 axs[j].set_ylabel(metric_label)
+
+            plt.grid(True, "both", "y")
 
             if i != 2:
                 axs[j].set_yscale("log")
@@ -161,11 +164,15 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
             maximum = max(maximum, ax.get_ylim()[1])
             minimum = min(minimum, ax.get_ylim()[0])
 
-        for ax in axs:
+        for i, ax in enumerate(axs):
             ax.set_ylim(minimum, maximum)
 
+            if i != 0:
+                with warnings.catch_warnings(action="ignore"):
+                    ax.set_yticklabels([""]*len(ax.get_yticklabels()))
+
         plt.suptitle(f"Model Train - {metric_label}")
-        plt.legend(bbox_to_anchor=(1.375, 1), borderaxespad=0)
+        plt.legend(bbox_to_anchor=(1.375, 0.98), borderaxespad=0)
 
         figures[plot_name] = fig
 
@@ -176,7 +183,7 @@ def metrics_box_plots(metrics_full: dict[str, dict]) -> dict[str, Figure]:
 
     figures = {}
     for criterion in ["mse", "0.1sdtw"]:
-        fig, ax = plt.subplots(dpi=300, figsize=(11, 8))
+        fig, ax = plt.subplots(dpi=600)
 
         fig.suptitle("Variation Metrics")
         ax.set_title(format_name(criterion))
@@ -187,8 +194,25 @@ def metrics_box_plots(metrics_full: dict[str, dict]) -> dict[str, Figure]:
 
         ax.set_yscale("log")
 
-        ax.get_legend().remove()
-        ax.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
+        handles, labels = ax.get_legend_handles_labels()
+        for i in range(len(labels)):
+            labels[i] = labels[i].replace(" ", "\n")
+            labels[i] = labels[i].replace("@", "\n@")
+        ax.legend(handles, labels,
+                  bbox_to_anchor=(0.25, 0.98), borderaxespad=0)
+
+        xticks = plt.xticks()
+        labels = xticks[1]
+        for i in range(len(labels)):
+            labels[i] = labels[i].get_text().replace(" ", "\n")
+
+        xticks[0][-1] += 0.25
+        plt.xticks(xticks[0], labels)
+
+        ylim = plt.ylim()
+        for i in range(len(labels)-1):
+            plt.vlines(i+0.5, ylim[0], ylim[1], "black", linewidth=0.5)
+        plt.ylim(ylim)
 
         plot_name = f"metrics_box_plot_{criterion}"
         figures[plot_name] = fig
@@ -222,11 +246,13 @@ def metrics_bar_plots(metrics: dict[str, dict]) -> dict[str, Figure]:
 def sample_plots(samples: dict[str, dict[str, TensorDict]]) -> dict[str, Figure]:
     time = np.linspace(0, 199, 200, dtype=int)
 
+    linewidth = 0.75
+
     indexes = [0, 1, 2, 9, 4, 8, 10, 11, 12]
 
     variation_names = list(samples.keys())
 
-    fig, axs = plt.subplots(3, 5, dpi=300, figsize=(16, 8))
+    fig, axs = plt.subplots(3, 5, dpi=600, figsize=(8, 4))
     plt.subplots_adjust(left=None, bottom=None, right=None,
                         top=None, wspace=0.05, hspace=0.05)
 
@@ -236,22 +262,31 @@ def sample_plots(samples: dict[str, dict[str, TensorDict]]) -> dict[str, Figure]
             row = index // 5
             column = index % 5
 
-            axs[row, column].plot(samples[variation_names[j]]["targets"]
-                                  ["state_decoded"][indexes[i]], label="Target", color="black")
-            axs[row, column].plot(
-                samples[variation_names[j]]["normal"]["state_decoded"][indexes[i]], label="Normal", color="tab:blue")
+            axs[row, column].plot(samples[variation_names[j]]["targets"]["state_decoded"][indexes[i]],
+                                  label="Target", color="black", linewidth=linewidth)
 
-            axs[row, column].plot(time, samples[variation_names[j]]["prediction_local"]
-                                  ["state_decoded"][indexes[i]], label="Prediction Local", color="tab:purple")
+            axs[row, column].plot(samples[variation_names[j]]["normal"]["state_decoded"][indexes[i]],
+                                  label="Normal", color="tab:blue", linewidth=linewidth)
 
-            axs[row, column].plot(time[:100], samples[variation_names[j]]
-                                  ["use_state"]["state_decoded"][indexes[i]], label="Use State",  color="tab:orange")
+            axs[row, column].plot(time,
+                                  samples[variation_names[j]
+                                          ]["prediction_local"]["state_decoded"][indexes[i]],
+                                  label="Prediction Local", color="tab:purple", linewidth=linewidth)
 
-            axs[row, column].plot(time[100:], samples[variation_names[j]]["prediction"]
-                                  ["state_decoded"][indexes[i]], label="Prediction", color="tab:green")
+            axs[row, column].plot(time[:100],
+                                  samples[variation_names[j]
+                                          ]["use_state"]["state_decoded"][indexes[i]],
+                                  label="Use State",  color="tab:orange", linewidth=linewidth)
 
-            axs[row, column].plot(time[100:], samples[variation_names[j]]["prediction_shallow"]
-                                  ["state_decoded"][indexes[i]], label="Prediction Shallow", color="tab:red")
+            axs[row, column].plot(time[100:],
+                                  samples[variation_names[j]
+                                          ]["prediction"]["state_decoded"][indexes[i]],
+                                  label="Prediction", color="tab:green", linewidth=linewidth)
+
+            axs[row, column].plot(time[100:],
+                                  samples[variation_names[j]
+                                          ]["prediction_shallow"]["state_decoded"][indexes[i]],
+                                  label="Prediction Shallow", color="tab:red", linewidth=linewidth)
 
             axs[row, column].set_xticks([])
             axs[row, column].set_yticks([])
@@ -261,19 +296,27 @@ def sample_plots(samples: dict[str, dict[str, TensorDict]]) -> dict[str, Figure]
             index += 1
 
     for i, name in enumerate(variation_names):
-        name = format_name(name)
+        name = format_name(name).replace(" ", "\n")
         axs[i, 0].set_ylabel(name)
-        axs[i, 4].set_ylabel(name)
+        # axs[i, 4].set_ylabel(name)
 
-    for i in range(3):
-        axs[i, 4].yaxis.set_label_position("right")
-        axs[i, 4].yaxis.tick_right()
+    # for i in range(3):
+    #    axs[i, 4].yaxis.set_label_position("right")
+    #    axs[i, 4].yaxis.tick_right()
 
     for i in range(5):
-        axs[0, i].set_title(str(i))
+        # axs[0, i].set_title(str(i))
         axs[2, i].set_xlabel(str(i))
 
-    plt.legend(bbox_to_anchor=(1.9, 3.1), loc='upper right')
+    ax = plt.gca()
+    handles, labels = ax.get_legend_handles_labels()
+    for i in range(len(labels)):
+        labels[i] = labels[i].replace(" ", "\n")
+        labels[i] = labels[i].replace("@", "\n@")
+    ax.legend(handles, labels,
+              bbox_to_anchor=(2.1, 3.1), loc='upper right')
+
+    # plt.legend(bbox_to_anchor=(1.9, 3.1), loc='upper right')
 
     plt.suptitle("Inference Samples")
 
