@@ -1,0 +1,22 @@
+{
+    "title": "World Machine Docker Image",
+    "license": "",
+    "keywords": [
+        "docker image",
+        "mesh:D001185",
+        "euroscivoc:297"
+    ],
+    "description": "<p>World Machine is a research project that aims to explore and implement computational world models.</p><p>This record contains an exportation of the Docker image <strong>{image.name}:{image.tag}</strong>. The Docker image can be used to utilize the World Machine, as well as to run created research experiments.</p><h1>Usage</h1><p>The image can be imported using the command <code>docker load</code> with the image file:</p><blockquote><pre><code>docker load -i image.tar.gz</code></pre></blockquote><p>or with the&nbsp;<code>donodo</code> command available at <a href=\"https://github.com/pauleve/donodo\" data-mce-href=\"https://github.com/pauleve/donodo\">https://github.com/pauleve/donodo</a> (<a href=\"https://archive.softwareheritage.org/swh:1:dir:3c23b84c86526b41333c09093e56593028e3873b\" data-mce-href=\"https://archive.softwareheritage.org/swh:1:dir:3c23b84c86526b41333c09093e56593028e3873b\">swh:1:dir:3c23b84c86526b41333c09093e56593028e3873b</a>):</p><blockquote><pre><code>pip install -U donododonodo pull [DOI]</code></pre></blockquote><p>or downloaded direct from <a href=\"https://hub.docker.com/repository/docker/eltoncn/world-machine/general\" data-mce-href=\"https://hub.docker.com/repository/docker/eltoncn/world-machine/general\">Docker Hub</a>:</p><blockquote><pre><code>docker pull eltoncn/world-machine:0.1</code></pre></blockquote><p><br data-mce-bogus=\"1\"></p><p>The image entry-point is a bash terminal. Enter the terminal using:</p><blockquote><p><code>docker attach &lt;container-name&gt;</code></p></blockquote>",
+    "authors": [
+        {
+            "name": "Cardoso do Nascimento, Elton",
+            "affiliation": "Universidade Estadual de Campinas (UNICAMP)",
+            "orcid": "0009-0005-0480-6970"
+        },
+        {
+            "name": "Costa, Paula",
+            "affiliation": "Universidade Estadual de Campinas (UNICAMP)",
+            "orcid": "0000-0002-1534-5744"
+        }
+    ]
+}
