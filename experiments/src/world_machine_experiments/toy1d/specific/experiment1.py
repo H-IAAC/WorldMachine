@@ -63,7 +63,7 @@ parameters = function_variation({"output_dir": source("data_dir"),
                                 "parameters")(load_multiple_metrics)
 
 train_history = function_variation({"output_dir": source("data_dir"),
-                                    "metrics_name": value("train_history")},
+                                    "metrics_name": value("toy1d_train_history")},
                                    "train_history")(load_multiple_metrics)
 
 
@@ -130,7 +130,6 @@ def variations_df(metrics: dict[str, dict],
                 item[f"{m_1}_{criterion}"] = metrics[name]["means"][m_2][f"state_decoded_{criterion}"]
 
         item["duration"] = train_history[name]["means"]["duration"].sum()
-        item["parameters"] = parameters[name]
 
         variations_data.append(item)
 
@@ -158,7 +157,7 @@ def variable_co_occurrence_graph(variations_df: pd.DataFrame) -> nx.Graph:
     return G
 
 
-def variable_disjoint_graph(variable_co_occurrence_graph:  nx.Graph):
+def variable_disjoint_graph(variable_co_occurrence_graph:  nx.Graph) -> nx.Graph:
     return nx.complement(variable_co_occurrence_graph)
 
 
@@ -189,7 +188,7 @@ def _get_disjoint_vars(variable: str,
 
 
 def masked_percentage(variations_df: pd.DataFrame) -> float:
-    return variations_df["mask"].sum()/variations_df
+    return variations_df["mask"].sum()/len(variations_df)
 
 
 @datasaver()
@@ -218,7 +217,7 @@ def task_distribution_plots(variations_df: pd.DataFrame) -> dict[str, Figure]:
             if variations_df["mask"].iloc[i]:
                 for task in task_names:
                     item = {}
-                    item["task"] = format_name(metric).replace(" ", "\n")
+                    item["task"] = format_name(task).replace(" ", "\n")
                     item["value"] = variations_df[f"{task}_{metric}"].iloc[i]
 
                     items.append(item)
@@ -301,6 +300,8 @@ def tasks_correlation_plots(tasks_correlation: dict[str, dict]) -> dict[str, Fig
                             ha="center", va="center", color="black")
 
             xtick_labels = format_name(task_names)
+            for i in range(len(xtick_labels)):
+                xtick_labels[i] = xtick_labels[i].replace(" ", "\n")
 
             plt.xticks(range(5), xtick_labels)
             plt.yticks(range(5), xtick_labels)
@@ -368,7 +369,7 @@ def filtered_divergence_probability(variations_df: pd.DataFrame) -> dict:
                     var_mask, np.bitwise_not(variations_df[iv]))
 
             n_ndiverge = variations_df[var_mask]["mask"].sum()
-            n = len(variations_df[var_mask]).item()
+            n = len(variations_df[var_mask])
             prob = 1 - (n_ndiverge/n)
 
             diverge_prob2[v] = prob
@@ -563,7 +564,7 @@ def impact_test_dfs(variations_df: pd.DataFrame,
 
     for var in variable_names:
 
-        for task in metric_names+["duration"]:
+        for task in task_names+["duration"]:
 
             if task != "duration":
                 result = _impact_test(variations_df,
@@ -628,14 +629,14 @@ def joint_impact(variations_df: pd.DataFrame,
                 if disjoint:
                     continue
 
-                p_value, impact, _ = _joint_impact_test(
+                test_result = _joint_impact_test(
                     variations_df, disjoint_groups, var1, var2, f"{task}_mse")
 
-                joint_impact[i, j] = impact
-                joint_impact[j, i] = impact
+                joint_impact[i, j] = test_result["impact"]
+                joint_impact[j, i] = test_result["impact"]
 
-                joint_impact_pvalue[i, j] = p_value
-                joint_impact_pvalue[j, i] = p_value
+                joint_impact_pvalue[i, j] = test_result["pvalue"]
+                joint_impact_pvalue[j, i] = test_result["pvalue"]
 
         for i, var in enumerate(variable_names):
             joint_impact[i, i] = impact_test_df[np.bitwise_and(
@@ -656,14 +657,14 @@ save_joint_impact = function_variation({
 
 
 def disjoint_mask(disjoint_groups: list[set[str]]) -> np.ndarray:
-    result = np.zeros_like(joint_impact)
+    result = np.zeros((n_variable, n_variable))
 
     for dg in disjoint_groups:
         dg = list(dg)
         for i in range(len(dg)):
             for j in range(i+1, len(dg)):
-                var_i = variable_names.index(dg[i])
-                var_j = variable_names.index(dg[j])
+                var_i = np.argwhere(variable_names == dg[i]).item()
+                var_j = np.argwhere(variable_names == dg[j]).item()
 
                 result[var_i, var_j] = 1
                 result[var_j, var_i] = 1
@@ -672,19 +673,29 @@ def disjoint_mask(disjoint_groups: list[set[str]]) -> np.ndarray:
 
 
 def joint_impact_plots(joint_impact: dict,
-                       disjoint_mask: np.ndarray):
+                       disjoint_mask: np.ndarray) -> dict[str, Figure]:
 
     figures = {}
     for task in task_names:
+        if task in ["prediction_shallow", "prediction"]:
+            scale = 1e3
+            scale_exponent = 3
+        elif task in ["normal"]:
+            scale = 1e5
+            scale_exponent = 5
+        else:
+            scale = 1e4
+            scale_exponent = 4
+
         fig = plt.figure(dpi=600)
 
-        impact = joint_impact["task"]["impact"]
-        p_value = joint_impact["task"]["p_value"]
+        impact = joint_impact[task]["impact"]
+        p_value = joint_impact[task]["p_value"]
 
         range_limit = 2*np.std(impact)
 
-        ji_img = plt.imshow(1000*impact,  cmap="bwr", vmin=-
-                            1000*range_limit, vmax=1000*range_limit)
+        ji_img = plt.imshow(scale*impact,  cmap="bwr", vmin=-
+                            scale*range_limit, vmax=scale*range_limit)
         plt.colorbar(ji_img, pad=0.08, fraction=0.042)
 
         plt.imshow(0.5*np.ones_like(impact), alpha=(p_value >=
@@ -718,17 +729,14 @@ def joint_impact_plots(joint_impact: dict,
         for i in range(n_variable):
             for j in range(i, n_variable):
                 if p_value[i, j] < 0.05 and not disjoint_mask[i, j]:
-                    text = str(np.around(impact[i, j], decimals=3))
-                    text = re.sub('0(?=[.])', '', text)
-                    text = text[-2:]  # text[:2]+"\n"+text[2:]
-                    text = str(int(np.sign(joint_impact[i, j]))*int(text))
+                    text = str(int(np.around(scale*impact[i, j])))
 
                     fontsize = 10
                     if len(text) > 2:
                         fontsize = 8
 
                     color = "black"
-                    if abs(int(text)) > 15:
+                    if abs(scale*impact[i, j]) > (3/4)*scale*range_limit:
                         color = "white"
 
                     ax.text(j, i,
@@ -738,7 +746,7 @@ def joint_impact_plots(joint_impact: dict,
         plt.xlabel("Variable")
         plt.ylabel("Variable")
         plt.title("Variables Individual and Synergetic Impact\n" +
-                  format_name(task)+" MSE " + r"$Impact\times1E-3$")
+                  format_name(task)+" MSE " + r"$Impact\times1E-$"+f"{scale_exponent}")
 
         pvalue_patch = mpatches.Patch(
             color='gray', label="No Statistical Relevance (p ≥ 0.05)")
@@ -766,9 +774,9 @@ def filtered_marginal_impact(joint_impact: dict,
     for task in task_names:
         joint_impact_filtered = joint_impact[task]["impact"].copy()
         joint_impact_filtered[joint_impact[task]["p_value"] >= 0.05] = 0
-        joint_impact_filtered[disjoint_mask] = 0
+        joint_impact_filtered[disjoint_mask.astype(bool)] = 0
 
-        joint_impact_filtered = joint_impact_filtered[variables_mask][:variables_mask]
+        joint_impact_filtered = joint_impact_filtered[variables_mask][:, variables_mask]
         marginal_impact = joint_impact_filtered.sum(axis=0)
 
         result[task] = dict(
@@ -791,7 +799,9 @@ def filtered_marginal_impact_plots(filtered_marginal_impact: dict,
     figures = {}
     for task in task_names:
         individual_impact = joint_impact[task]["impact"].copy()
-        individual_impact[individual_impact[task]["p_value"] >= 0.05] = 0
+        p_value = joint_impact[task]["p_value"]
+
+        individual_impact[p_value >= 0.05] = 0
         individual_impact = individual_impact.diagonal()
         individual_impact = individual_impact[variables_mask]
 
@@ -924,11 +934,8 @@ def task_impact_plots(impact_test_df: pd.DataFrame,
     plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0)
 
     handles, labels = axs[0].get_legend_handles_labels()
-
     for i in range(len(labels)):
-        if labels[i] in format_name(task_names):
-            labels[i] = labels[i].replace(" ", "\n")
-
+        labels[i] = labels[i].replace(" ", "\n")
     axs[0].legend(handles, labels, bbox_to_anchor=(1.01, 1), borderaxespad=0)
 
     plt.title("Variable Impact on Tasks")
@@ -994,11 +1001,14 @@ def duration_impact_plots(impact_test_df: pd.DataFrame,
     ax = plt.gca()
     ax.tick_params(axis='x', length=0)
 
+    handles, labels = ax.get_legend_handles_labels()
+    for i in range(len(labels)):
+        labels[i] = labels[i].replace(" ", "\n")
+    ax.legend(handles, labels, bbox_to_anchor=(1.01, 1), borderaxespad=0)
+
     plt.title("Variable Impact on Duration")
     plt.ylabel("Time Impact [s] (Negative is Better)")
     plt.xlabel("Variable")
-
-    plt.legend(bbox_to_anchor=(1.01, 1), borderaxespad=0)
 
     return {"variable_impact_on_duration": fig}
 
@@ -1044,34 +1054,6 @@ def _get_best_theoretical_configuration(task: str,
     return final_vars
 
 
-def best_configurations(impact_test_df: pd.DataFrame,
-                        variable_disjoint_graph: nx.Graph,
-                        disjoint_groups: list[set[str]]) -> dict:
-    best_configurations = {}
-    best_configurations["theoretical"] = {}
-    best_configurations["empirical"] = {}
-
-    for task in task_names:
-        best_configurations["theoretical"][task] = _get_best_theoretical_configuration(task,
-                                                                                       impact_test_df,
-                                                                                       variable_disjoint_graph,
-                                                                                       disjoint_groups)
-
-        empirical_mask = impact_test_df[impact_test_df["task"]
-                                        == task][variable_names]
-        empirical_mask = empirical_mask.iloc[0].to_numpy().astype(bool)
-
-        best_configurations["empirical"][task] = variable_names[empirical_mask]
-
-    return best_configurations
-
-
-save_best_configurations = function_variation({
-    "metrics": source("best_configurations"),
-    "metrics_name": value("best_configurations")},
-    "save_best_configurations")(save_metrics)
-
-
 def best_models_df(variations_df: pd.DataFrame) -> pd.DataFrame:
     best_rows = {}
     for task in task_names:
@@ -1092,8 +1074,37 @@ def best_models_df(variations_df: pd.DataFrame) -> pd.DataFrame:
 
 save_best_models = function_variation({
     "metrics": source("best_models_df"),
-    "metrics_name": value("best_models_df")},
+    "metrics_name": value("best_models")},
     "save_best_models")(save_metrics)
+
+
+def best_configurations(impact_test_df: pd.DataFrame,
+                        best_models_df: pd.DataFrame,
+                        variable_disjoint_graph: nx.Graph,
+                        disjoint_groups: list[set[str]]) -> dict:
+    best_configurations = {}
+    best_configurations["theoretical"] = {}
+    best_configurations["empirical"] = {}
+
+    for task in task_names:
+        best_configurations["theoretical"][task] = _get_best_theoretical_configuration(task,
+                                                                                       impact_test_df,
+                                                                                       variable_disjoint_graph,
+                                                                                       disjoint_groups)
+
+        empirical_mask = best_models_df[best_models_df["task"]
+                                        == task][variable_names]
+        empirical_mask = empirical_mask.iloc[0].to_numpy().astype(bool)
+
+        best_configurations["empirical"][task] = variable_names[empirical_mask]
+
+    return best_configurations
+
+
+save_best_configurations = function_variation({
+    "metrics": source("best_configurations"),
+    "metrics_name": value("best_configurations")},
+    "save_best_configurations")(save_metrics)
 
 
 def best_models_metrics_table(variations_df: pd.DataFrame,
@@ -1113,6 +1124,8 @@ def best_models_metrics_table(variations_df: pd.DataFrame,
     df_best_table = df_best_table[["task"] +
                                   task_names_mse].rename(columns=columns_map)
 
+    df_best_table["Type"] = "Empirical"
+
     for task in best_configurations["theoretical"]:
         config_mask = np.ones(len(variations_df))
 
@@ -1127,7 +1140,7 @@ def best_models_metrics_table(variations_df: pd.DataFrame,
 
         item = {"Type": "Theoretical",
                 "Best in": format_name(task)}
-        for t in metric_names:
+        for t in task_names:
             item[format_name(t)] = config_row[f"{t}_mse"].item()
 
         df_best_table = pd.concat([df_best_table, pd.DataFrame([item])])
@@ -1142,7 +1155,7 @@ def save_best_models_metrics_table(best_models_metrics_table: str,
                                    output_dir: str) -> dict:
 
     os.makedirs(output_dir, exist_ok=True)
-    file_path = os.path.join(output_dir, "best_models_metrics"+".json")
+    file_path = os.path.join(output_dir, "best_models_metrics"+".md")
 
     with open(file_path, "w", encoding="utf-8") as file:
         file.write(best_models_metrics_table)

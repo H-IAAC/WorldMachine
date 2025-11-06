@@ -16,6 +16,7 @@ from world_machine_experiments.toy1d import Dimensions, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment1
 
 if __name__ == "__main__":
+    output_dir = "toy1d_experiment1_configuration_test"
 
     mp.set_start_method("spawn")
 
@@ -31,6 +32,7 @@ if __name__ == "__main__":
 
     else:
         devices.append('cpu')
+        n_device = 1
 
     max_jobs_per_device = 12
     n_worker = n_device * max_jobs_per_device
@@ -38,7 +40,6 @@ if __name__ == "__main__":
     print("DEVICES", devices)
     print(f"nDevice: {n_device} | nWorker: {n_worker}")
 
-    output_dir = "toy1d_experiment1_configuration_test"
     n_epoch = 100
 
     toy1d_base_args = {"sequence_length": 1000,
@@ -69,25 +70,30 @@ if __name__ == "__main__":
                             for short_time_recall in [{Dimensions.MEASUREMENT}, set()]:
 
                                 recall_n_past_choices = [0]
-                                recall_stride_choices = [0]
                                 if len(short_time_recall) > 0:
                                     recall_n_past_choices = [5, 1, 0]
-                                    recall_stride_choices = [3, 1]
 
-                                for recall_stride_past in recall_stride_choices:
-                                    # recall_stride_choices:
-                                    for recall_stride_future in [recall_stride_past]:
-                                        for recall_n_past in recall_n_past_choices:
+                                for recall_n_past in recall_n_past_choices:
 
-                                            recall_n_future_choices = [0]
-                                            if len(short_time_recall) > 0 and recall_n_past > 0:
-                                                recall_n_future_choices = [
-                                                    5, 1, 0]
-                                            elif len(short_time_recall) > 0:
-                                                recall_n_future_choices = [
-                                                    5, 1]
+                                    recall_n_future_choices = [0]
+                                    if len(short_time_recall) > 0 and recall_n_past > 0:
+                                        recall_n_future_choices = [5, 1, 0]
+                                    elif len(short_time_recall) > 0:
+                                        recall_n_future_choices = [5, 1]
 
-                                            for recall_n_future in recall_n_future_choices:
+                                    for recall_n_future in recall_n_future_choices:
+
+                                        recall_stride_past_choices = [0]
+                                        if recall_n_past > 0:
+                                            recall_stride_past_choices = [3, 1]
+
+                                        recall_stride_future_choices = [0]
+                                        if recall_n_future > 0:
+                                            recall_stride_future_choices = [
+                                                3, 1]
+
+                                        for recall_stride_past in recall_stride_past_choices:
+                                            for recall_stride_future in recall_stride_future_choices:
                                                 for positional_encoder_type in ["alibi"]:
                                                     for block_configuration in [[Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
                                                                                 [Dimensions.MEASUREMENT, Dimensions.STATE_INPUT]]:
@@ -179,9 +185,9 @@ if __name__ == "__main__":
                                                )
     except Exception as e:
         print("ERROR")
-        print(e)
+        raise e
 
-    print("END")
+    print("Running Analysis")
 
     d_experiment1 = driver.Builder().with_modules(experiment1, shared).build()
     d_experiment1.execute([
@@ -203,7 +209,10 @@ if __name__ == "__main__":
         "save_duration_impact_plots",
         "save_best_configurations",
         "save_best_models",
-        "save_best_models_metrics_table",],
+        "save_best_models_metrics_table",
+    ],
 
         inputs={"data_dir": output_dir,
                 "output_dir": os.path.join(output_dir, "final_results")})
+
+    print("END")

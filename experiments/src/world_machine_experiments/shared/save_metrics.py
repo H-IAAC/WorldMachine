@@ -28,6 +28,8 @@ def encoder(obj):
         return float(obj)
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
+    elif isinstance(obj, set):
+        return list(obj)
 
     return obj.__dict__
 
