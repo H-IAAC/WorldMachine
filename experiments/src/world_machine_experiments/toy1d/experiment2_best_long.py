@@ -6,9 +6,10 @@ from hamilton import driver
 from torch.optim import AdamW
 
 from world_machine.train.scheduler import UniformScheduler
-from world_machine_experiments import shared
-from world_machine_experiments.toy1d import Dimensions, parameter_variation
 from world_machine.train.stages import StateSaveMethod
+from world_machine_experiments import shared
+from world_machine_experiments.shared.pipeline import save_pipeline
+from world_machine_experiments.toy1d import Dimensions, parameter_variation
 
 if __name__ == "__main__":
 
@@ -98,7 +99,11 @@ if __name__ == "__main__":
                          "save_toy1d_metrics_sample_logits",
                          "save_toy1d_metrics_sample_plots",]
 
-    d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],
+    final_vars = ["save_toy1d_parameter_variation_plots"]
+    save_pipeline(d_parameter_variation, final_vars,
+                  "model_train_pipeline", output_dir)
+
+    d_parameter_variation.execute(final_vars,
                                   inputs={"base_seed": 42,
                                           "output_dir": output_dir,
                                           "n_run": 1,

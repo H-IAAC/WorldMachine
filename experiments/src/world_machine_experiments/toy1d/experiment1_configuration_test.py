@@ -11,6 +11,7 @@ from torch.optim import AdamW
 from world_machine.train.scheduler import UniformScheduler
 from world_machine.train.stages import StateSaveMethod
 from world_machine_experiments import shared
+from world_machine_experiments.shared.pipeline import save_pipeline
 from world_machine_experiments.shared.save_parameters import make_model
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment1
@@ -170,8 +171,11 @@ if __name__ == "__main__":
 
     aditional_outputs = ["save_toy1d_metrics"]
 
+    final_vars = ["save_toy1d_parameter_variation_info"]
+    save_pipeline(d_parameter_variation, final_vars,
+                  "model_train_pipeline", output_dir)
     try:
-        output = d_parameter_variation.execute(["save_toy1d_parameter_variation_info"],
+        output = d_parameter_variation.execute(final_vars,
                                                inputs={"base_seed": 42,
                                                        "output_dir": output_dir,
                                                        "n_run": 1,
@@ -190,29 +194,33 @@ if __name__ == "__main__":
     print("Running Analysis")
 
     d_experiment1 = driver.Builder().with_modules(experiment1, shared).build()
-    d_experiment1.execute([
-        "save_masked_percentage",
-        "save_task_distribution_plots",
-        "save_tasks_correlation",
-        "save_tasks_correlation_plots",
-        "save_divergence_probability",
-        "save_filtered_divergence_probability",
-        "save_divergence_probability_plots",
-        "save_filtered_divergence_probability_plots",
-        "save_impact_test_df",
-        "save_impact_test_full_df",
-        "save_joint_impact",
-        "save_joint_impact_plots",
-        "save_filtered_marginal_impact",
-        "save_filtered_marginal_impact_plots",
-        "save_task_impact_plots",
-        "save_duration_impact_plots",
-        "save_best_configurations",
-        "save_best_models",
-        "save_best_models_metrics_table",
-    ],
 
-        inputs={"data_dir": output_dir,
-                "output_dir": os.path.join(output_dir, "final_results")})
+    final_vars = ["save_masked_percentage",
+                  "save_task_distribution_plots",
+                  "save_tasks_correlation",
+                  "save_tasks_correlation_plots",
+                  "save_divergence_probability",
+                  "save_filtered_divergence_probability",
+                  "save_divergence_probability_plots",
+                  "save_filtered_divergence_probability_plots",
+                  "save_impact_test_df",
+                  "save_impact_test_full_df",
+                  "save_joint_impact",
+                  "save_joint_impact_plots",
+                  "save_filtered_marginal_impact",
+                  "save_filtered_marginal_impact_plots",
+                  "save_task_impact_plots",
+                  "save_duration_impact_plots",
+                  "save_best_configurations",
+                  "save_best_models",
+                  "save_best_models_metrics_table",
+                  ]
+    save_pipeline(d_experiment1, final_vars,
+                  "experiment_pipeline", output_dir)
+
+    d_experiment1.execute(final_vars,
+
+                          inputs={"data_dir": output_dir,
+                                  "output_dir": os.path.join(output_dir, "final_results")})
 
     print("END")
