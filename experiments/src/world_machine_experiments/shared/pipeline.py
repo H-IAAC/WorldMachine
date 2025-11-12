@@ -7,7 +7,8 @@ from hamilton.driver import Driver
 def save_pipeline(driver: Driver,
                   final_vars: list,
                   file_name: str,
-                  output_dir: str) -> None:
+                  output_dir: str,
+                  include_dot: bool = False) -> None:
 
     file_path = os.path.join(output_dir, file_name+".dot")
 
@@ -20,7 +21,10 @@ def save_pipeline(driver: Driver,
     graph = load_graph(file_name, output_dir)
     clear_input_types(graph)
 
-    save_graph(graph, file_name, output_dir)
+    save_graph(graph, file_name, output_dir, include_dot)
+
+    if not include_dot:
+        os.remove(os.path.join(output_dir, file_name+".dot"))
 
 
 def load_graph(file_name: str, output_dir: str) -> pydot.Dot:
