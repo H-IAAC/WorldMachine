@@ -27,6 +27,7 @@ dependencies = [
     "pysdtw",
     "seaborn",
     "networkx[default]",
+    "pydot",
 ]
 
 [project.readme]

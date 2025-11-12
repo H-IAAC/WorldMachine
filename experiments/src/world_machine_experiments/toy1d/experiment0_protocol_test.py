@@ -7,6 +7,7 @@ from torch.optim import AdamW
 
 from world_machine.train.scheduler import UniformScheduler
 from world_machine_experiments import shared
+from world_machine_experiments.shared.pipeline import save_pipeline
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment0
 
@@ -68,7 +69,12 @@ if __name__ == "__main__":
 
                          "save_toy1d_autoregressive_metrics"]
 
-    d_parameter_variation.execute(["save_toy1d_parameter_variation_plots", "save_toy1d_parameter_variation_mask_sensorial_plots"],
+    outputs = ["save_toy1d_parameter_variation_plots",
+               "save_toy1d_parameter_variation_mask_sensorial_plots"]
+
+    save_pipeline(d_parameter_variation, outputs,
+                  "model_train_pipeline", output_dir)
+    d_parameter_variation.execute(outputs,
                                   inputs={"base_seed": 42,
                                           "output_dir": output_dir,
                                           "n_run": 15,
@@ -80,6 +86,8 @@ if __name__ == "__main__":
                                   )
 
     d_experiment0 = driver.Builder().with_modules(experiment0, shared).build()
+
+    save_pipeline(d_experiment0, outputs, "experiment_pipeline", output_dir)
     d_experiment0.execute(["save_train_plots",
                            "save_metrics_box_plots",
                            "save_metrics_bar_plots",

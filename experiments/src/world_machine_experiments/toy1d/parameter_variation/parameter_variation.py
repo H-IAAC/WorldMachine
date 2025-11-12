@@ -15,6 +15,7 @@ from world_machine_experiments import shared
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.parameter_variation_plots import (
     parameter_variation_plots)
+from world_machine_experiments.shared.pipeline import save_pipeline
 from world_machine_experiments.shared.save_metrics import load_multiple_metrics
 from world_machine_experiments.shared.save_plots import save_plots
 from world_machine_experiments.toy1d import multiple
@@ -32,13 +33,13 @@ def toy1d_parameter_variation_worker_func(inputs):
 
     if inputs["minimal"]:
         outputs = ["save_multiple_toy1d_consolidated_train_statistics",
-                    "save_multiple_toy1d_parameters",
-            ]
+                   "save_multiple_toy1d_parameters",
+                   ]
     else:
         outputs = ["save_multiple_toy1d_train_plots",
-                "save_multiple_toy1d_consolidated_train_statistics",
-                "save_multiple_toy1d_parameters",
-                ]
+                   "save_multiple_toy1d_consolidated_train_statistics",
+                   "save_multiple_toy1d_parameters",
+                   ]
 
     if inputs["aditional_outputs"] is not None:
         if "save_toy1d_mask_sensorial_metrics" in inputs["aditional_outputs"]:
@@ -52,6 +53,9 @@ def toy1d_parameter_variation_worker_func(inputs):
             outputs.append(
                 "save_multiple_toy1d_consolidated_autoregressive_metrics")
 
+    save_pipeline(d, outputs, "pipeline",
+                  inputs["output_dir"])
+
     d.execute(outputs,
               inputs=inputs)
 
@@ -63,7 +67,7 @@ def toy1d_parameter_variation_worker_func(inputs):
     return None
 
 
-def safe_future_result(future:Future, executor:ProcessPoolExecutor) -> Any:
+def safe_future_result(future: Future, executor: ProcessPoolExecutor) -> Any:
     try:
         return future.result()
     except Exception as e:
@@ -72,9 +76,8 @@ def safe_future_result(future:Future, executor:ProcessPoolExecutor) -> Any:
         for p in executor._processes.values():
             p.terminate()
         executor.shutdown(wait=False, cancel_futures=True)
-        
-        raise e
 
+        raise e
 
 
 @extract_fields({"experiment_paths": dict[str, str], "base_dir": str})
@@ -87,7 +90,7 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                                         n_worker: int = 5,
                                         aditional_outputs: list[str] | None = None,
                                         max_jobs_per_device: int | None = None,
-                                        minimal:bool=False) -> dict:
+                                        minimal: bool = False) -> dict:
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -101,7 +104,7 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                                    mp_context=ctx,
                                    initializer=worker_initializer,
                                    initargs=(lock, n_thread_per_worker),
-                                   max_tasks_per_child=None)#5)
+                                   max_tasks_per_child=None)  # 5)
 
     devices = []
     if "device" in toy1d_base_args:
@@ -159,21 +162,18 @@ def save_toy1d_parameter_variation_info(toy1d_base_args: dict[str, Any],
                   "n_run": n_run,
                   "toy1d_args": toy1d_args,
                   "aditional_outputs": aditional_outputs,
-                  "minimal":minimal}
+                  "minimal": minimal}
 
         future = executor.submit(toy1d_parameter_variation_worker_func, inputs)
         futures.append(future)
 
         jobs_per_device[device_index] += 1
 
-
     for future in as_completed(futures):
         safe_future_result(future, executor)
         pbar.update(1)
         n_finish += 1
         print(f"{n_finish} finished")
-
-        
 
     executor.shutdown(wait=True, cancel_futures=False)
 

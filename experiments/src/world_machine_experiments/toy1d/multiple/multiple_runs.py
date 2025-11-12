@@ -2,17 +2,18 @@ import os
 import time
 from typing import Any
 
+import torch
 import tqdm
 from hamilton import driver
 from hamilton.function_modifiers import source, value
 from numba import cuda
-import torch
 
 from world_machine.data import WorldMachineDataset
 from world_machine_experiments import shared
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.load_multiple_metrics import (
     load_multiple_metrics)
+from world_machine_experiments.shared.pipeline import save_pipeline
 from world_machine_experiments.shared.save_metrics import (
     load_metrics, save_metrics)
 from world_machine_experiments.shared.save_parameters import save_parameters
@@ -28,7 +29,7 @@ def multiple_toy1d_trainings_info(n_run: int,
                                   output_dir: str,
                                   toy1d_args: dict[str, Any],
                                   aditional_outputs: list[str] | None = None,
-                                  minimal:bool=False) -> list[dict]:
+                                  minimal: bool = False) -> list[dict]:
 
     if aditional_outputs is None:
         aditional_outputs = []
@@ -53,25 +54,27 @@ def multiple_toy1d_trainings_info(n_run: int,
         if not os.path.exists(run_dir):
             os.makedirs(run_dir, exist_ok=True)
 
-        run_check = os.path.join(run_dir, "run_check.txt")
-        if not os.path.exists(run_check):
-            print(f"Run {i} in {output_dir} starting.")
-
-            if minimal:
-                final_vars = ["toy1d_train_history",
+        if minimal:
+            final_vars = ["toy1d_train_history",
                           "save_toy1d_model",
                           "save_toy1d_train_history",
                           "toy1d_datasets"]
-            
-            else:
-                final_vars = ["toy1d_train_history",
+
+        else:
+            final_vars = ["toy1d_train_history",
                           "save_toy1d_model",
                           "save_toy1d_train_history",
                           "save_toy1d_train_plots",
                           "save_toy1d_prediction_plots",
                           "toy1d_datasets"]
 
-            final_vars += aditional_outputs
+        final_vars += aditional_outputs
+
+        save_pipeline(d, outputs, "pipeline", run_dir)
+
+        run_check = os.path.join(run_dir, "run_check.txt")
+        if not os.path.exists(run_check):
+            print(f"Run {i} in {output_dir} starting.")
 
             outputs = d.execute(final_vars, inputs=toy1d_args)
 
@@ -86,7 +89,6 @@ def multiple_toy1d_trainings_info(n_run: int,
         else:
             print(f"Run {i} already in {output_dir}. Skipping.")
 
-    
     results = []
     for run_dir in run_dirs:
         outputs = {}
