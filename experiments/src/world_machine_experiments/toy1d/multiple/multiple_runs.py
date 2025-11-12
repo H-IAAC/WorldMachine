@@ -70,7 +70,7 @@ def multiple_toy1d_trainings_info(n_run: int,
 
         final_vars += aditional_outputs
 
-        save_pipeline(d, outputs, "pipeline", run_dir)
+        save_pipeline(d, final_vars, "pipeline", run_dir)
 
         run_check = os.path.join(run_dir, "run_check.txt")
         if not os.path.exists(run_check):

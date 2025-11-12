@@ -28,6 +28,7 @@ dependencies = [
     "seaborn",
     "networkx[default]",
     "pydot",
+    "graphviz",
 ]
 
 [project.readme]

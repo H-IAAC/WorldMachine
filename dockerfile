@@ -3,6 +3,7 @@ FROM nvcr.io/nvidia/pytorch:25.09-py3
 RUN apt update \
     && apt install -y tmux \ 
     && apt install -y git \ 
+    && apt install -y graphviz \
     &&  apt clean
 
 RUN --mount=type=bind,source=.,target=/world_machine,rw \

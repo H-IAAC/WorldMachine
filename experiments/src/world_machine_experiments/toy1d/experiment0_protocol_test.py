@@ -87,13 +87,13 @@ if __name__ == "__main__":
 
     d_experiment0 = driver.Builder().with_modules(experiment0, shared).build()
 
+    outputs = ["save_train_plots",
+               "save_metrics_box_plots",
+               "save_metrics_bar_plots",
+               "save_samples_plots",
+               "save_state_analysis_plots",
+               "save_target_state09_correlation_plot"]
     save_pipeline(d_experiment0, outputs, "experiment_pipeline", output_dir)
-    d_experiment0.execute(["save_train_plots",
-                           "save_metrics_box_plots",
-                           "save_metrics_bar_plots",
-                           "save_samples_plots",
-                           "save_state_analysis_plots",
-                           "save_target_state09_correlation_plot"],
-
+    d_experiment0.execute(outputs,
                           inputs={"data_dir": output_dir,
                                   "output_dir": os.path.join(output_dir, "final_results")})
