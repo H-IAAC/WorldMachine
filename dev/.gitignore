@@ -8,3 +8,5 @@
 *.npz
 *.memmap
 *.txt
+*.dot
+*.svg
