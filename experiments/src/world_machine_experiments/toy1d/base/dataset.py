@@ -1,6 +1,9 @@
+import os
+import pickle
+
 import numpy as np
 import torch
-from tensordict import TensorDict
+from hamilton.function_modifiers import datasaver
 
 from world_machine.data import WorldMachineDataset
 
@@ -65,3 +68,16 @@ def toy1d_datasets(toy1d_data_splitted: dict[str, dict[str, np.ndarray]], contex
                                       return_state_dimensions=state_dimensions)
 
     return datasets
+
+
+@datasaver()
+def save_toy1d_datasets(toy1d_datasets: dict[str, Toy1dDataset],
+                        output_dir: str) -> dict:
+    os.makedirs(output_dir, exist_ok=True)
+
+    file_path = os.path.join(output_dir, "toy1d_datasets.pkl")
+
+    with open(file_path, "wb") as file:
+        pickle.dump(toy1d_datasets, file, protocol=5)
+
+    return {"path": file_path}

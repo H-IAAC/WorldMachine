@@ -15,24 +15,21 @@ class WorldMachineDataset(Dataset, abc.ABC):
     _states_filenames = deque()
 
     def __new__(cls, *args, **kwargs):
-        instance = super().__new__(cls)
+        if not getattr(cls, "_profile_wrapped", False):
+            name = cls.__name__
 
-        name = cls.__name__
+            method_names = ["load_data", "get_dimension_item",
+                            "get_dimension_mask", "dispose_data"]
+            for method_name in method_names:
+                if method_name in cls.__dict__:
+                    method = getattr(cls, method_name)
+                    wrapped = profile_range(
+                        f"{name}_{method_name}", category="wm_dataset", domain="world_machine")(method)
+                    setattr(cls, method_name, wrapped)
 
-        methods = {"load_data": instance.load_data,
-                   "get_dimension_item": instance.get_dimension_item,
-                   "get_dimension_mask": instance.get_dimension_mask,
-                   "dispose_data": instance.dispose_data}
+            cls._profile_wrapped = True
 
-        for method_name in methods:
-            if method_name in cls.__dict__:
-                method = methods[method_name]
-                method = profile_range(
-                    f"{name}_{method_name}", category="wm_dataset", domain="world_machine")(method)
-
-                instance.__setattr__(method_name, method)
-
-        return instance
+        return super().__new__(cls)
 
     def __init__(self, sensorial_dimensions: list[str], size: int,
                  has_state_decoded: bool = False,
