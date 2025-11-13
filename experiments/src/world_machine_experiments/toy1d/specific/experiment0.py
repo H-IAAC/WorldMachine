@@ -1,6 +1,7 @@
 import os
 import re
 import warnings
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,12 +22,20 @@ from world_machine_experiments.shared.save_metrics import (
     load_metrics, load_multiple_metrics)
 from world_machine_experiments.shared.save_plots import save_plots
 
-variations_sorted = ["Base", "SensorialMask", "CompleteProtocol"]
+variations_sorted = ["Base", "SensoryMask", "CompleteProtocol"]
+
+
+def _update_sensorial(x: dict[str, Any]) -> None:
+    if "SensorialMask" in x:
+        x["SensoryMask"] = x["SensorialMask"]
+        del x["SensorialMask"]
 
 
 def train_history(data_dir: str) -> dict[str, dict]:
     train_history_interm = load_multiple_metrics(
         data_dir, "toy1d_train_history")
+
+    _update_sensorial(train_history_interm)
 
     result = {}
     for name in variations_sorted:
@@ -40,6 +49,9 @@ def metrics(data_dir: str) -> dict[str, dict]:
                                     "toy1d_metrics")
     mask_sensorial_metrics = load_multiple_metrics(data_dir,
                                                    "toy1d_mask_sensorial_metrics")
+
+    _update_sensorial(metrics)
+    _update_sensorial(mask_sensorial_metrics)
 
     for var_name in metrics:
         metrics[var_name]["means"]["mask_sensorial@100"] = {}
@@ -69,6 +81,9 @@ def metrics_full(data_dir: str) -> dict[str, dict]:
         mask_sensorial_metrics = load_multiple_metrics(
             os.path.join(data_dir, name), "mask_sensorial_metrics")
 
+        _update_sensorial(metrics_full)
+        _update_sensorial(mask_sensorial_metrics)
+
         for run_name in metrics_full[name]:
             metrics_full[name][run_name]["mask_sensorial@100"] = {}
 
@@ -90,6 +105,10 @@ def samples(data_dir: str) -> dict[str, dict[str, TensorDict]]:
         base_path = os.path.join(
             data_dir, variation, "run_4", "metrics_logits")
 
+        if (variation == "SensoryMask") and (not os.path.isdir(base_path)):
+            base_path = os.path.join(
+                data_dir, "SensorialMask", "run_4", "metrics_logits")
+
         for name in ["normal", "use_state", "prediction_local", "prediction", "prediction_shallow", "targets"]:
             path = os.path.join(base_path, name)
             samples[variation][name] = TensorDict.load(path)
@@ -99,7 +118,7 @@ def samples(data_dir: str) -> dict[str, dict[str, TensorDict]]:
 
 color_map = {
     "Base": "#60BF60",
-    "SensorialMasker": "#D36767",
+    "SensoryMask": "#D36767",
     "CompleteProtocol": "#6060BF"
 }
 
@@ -139,9 +158,9 @@ def train_plots(train_history: dict[str, dict]) -> dict[str, Figure]:
             stds = train_history[name]["stds"][f"{metric_name}_val"]
 
             axs[j].plot(epochs, means, "o-", label="Validation",
-                        color=color_map["SensorialMasker"])
+                        color=color_map["SensoryMask"])
             axs[j].fill_between(epochs, means-stds, means+stds,
-                                color=color_map["SensorialMasker"], alpha=.2)
+                                color=color_map["SensoryMask"], alpha=.2)
 
             axs[j].set_xlabel("Epochs")
 
