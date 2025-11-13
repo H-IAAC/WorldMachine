@@ -1,6 +1,6 @@
 import re
 
-acronyms = {"MSE", "SDTW"}
+acronyms = {"MSE", "SDTW", "LR"}
 
 
 def camel_case_split(identifier):

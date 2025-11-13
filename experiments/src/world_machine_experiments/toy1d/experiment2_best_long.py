@@ -10,6 +10,7 @@ from world_machine.train.stages import StateSaveMethod
 from world_machine_experiments import shared
 from world_machine_experiments.shared.pipeline import save_pipeline
 from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d.specific import experiment2
 
 if __name__ == "__main__":
 
@@ -46,7 +47,6 @@ if __name__ == "__main__":
                        "accumulation_steps": 1,
                        "state_dimensions": [0],
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
                        "device": devices,
                        "state_control": "periodic",
                        "state_activation": "tanh",
@@ -114,3 +114,17 @@ if __name__ == "__main__":
                                           "aditional_outputs": aditional_outputs
                                           }
                                   )
+
+    d_experiment2 = driver.Builder().with_modules(experiment2, shared).build()
+
+    final_vars = ["save_toy1d_samples_plots",
+                  "save_prediction_shallow_samples_plots",
+                  "save_variation_performance_plots"
+                  ]
+    save_pipeline(d_experiment2, final_vars,
+                  "experiment_pipeline", output_dir)
+
+    d_experiment2.execute(final_vars,
+
+                          inputs={"data_dir": output_dir,
+                                  "output_dir": os.path.join(output_dir, "final_results")})

@@ -13,7 +13,8 @@ def metrics_bar_with_errorbar(metrics: dict,
                               entry_caption_title: str,
                               palette: list | None = None,
                               errorbar_legend: str | None = None,
-                              ax: Axes | None = None) -> None:
+                              ax: Axes | None = None,
+                              errorbar: bool = True) -> None:
 
     if ax is None:
         ax = plt.gca()
@@ -37,25 +38,26 @@ def metrics_bar_with_errorbar(metrics: dict,
 
             df_metrics.append(element)
     df_metrics = pd.DataFrame(df_metrics)
-
     sns.barplot(df_metrics, x="metric_name", y="mean",
                 hue=entry_caption_title, palette=palette, ax=ax)
 
-    width = 1/(3+0.75)
+    if errorbar:
 
-    entry_names = df_metrics[entry_caption_title].unique()
+        width = 1/(3+0.75)
 
-    for i, name in enumerate(group_names):
-        x_pos = i-(width*(len(entry_names)//2))
-        for _, entry_name in enumerate(entry_names):
-            entry = df_metrics[np.bitwise_and(
-                df_metrics["metric_name"] == format_name(name), df_metrics[entry_caption_title] == entry_name)]
+        entry_names = df_metrics[entry_caption_title].unique()
 
-            ax.errorbar(x_pos, entry["mean"], entry["std"], color="black",
-                        ecolor="black", capsize=5, label=errorbar_legend)
-            x_pos += width
+        for i, name in enumerate(group_names):
+            x_pos = i-(width*(len(entry_names)//2))
+            for _, entry_name in enumerate(entry_names):
+                entry = df_metrics[np.bitwise_and(
+                    df_metrics["metric_name"] == format_name(name), df_metrics[entry_caption_title] == entry_name)]
 
-            errorbar_legend = None
+                ax.errorbar(x_pos, entry["mean"], entry["std"], color="black",
+                            ecolor="black", capsize=5, label=errorbar_legend)
+                x_pos += width
+
+                errorbar_legend = None
 
     plt.xlabel("Metric")
     plt.legend()
