@@ -75,14 +75,15 @@ def metrics_full(data_dir: str) -> dict[str, dict]:
     metrics_full = {}
 
     for name in variations_sorted:
-        metrics_full[name] = load_multiple_metrics(os.path.join(
-            data_dir, name), "metrics")
+
+        path = os.path.join(data_dir, name)
+        if (name == "SensoryMask") and (not os.path.isdir(path)):
+            path = os.path.join(data_dir, "SensorialMask")
+
+        metrics_full[name] = load_multiple_metrics(path, "metrics")
 
         mask_sensorial_metrics = load_multiple_metrics(
-            os.path.join(data_dir, name), "mask_sensorial_metrics")
-
-        _update_sensorial(metrics_full)
-        _update_sensorial(mask_sensorial_metrics)
+            path, "mask_sensorial_metrics")
 
         for run_name in metrics_full[name]:
             metrics_full[name][run_name]["mask_sensorial@100"] = {}
