@@ -1,7 +1,7 @@
 import enum
 
 
-class Dimensions(enum.Enum):
+class Channels(enum.Enum):
     STATE = 0
     STATE_CONTROL = 1
     MEASUREMENT = 2

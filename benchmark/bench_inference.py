@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
         for _ in range(2):
             model.inference(
-                state, sensorial_data=item["inputs"], sensorial_masks=item["input_masks"])
+                state, sensory_data=item["inputs"], sensory_masks=item["input_masks"])
 
             torch.cuda.synchronize()
 

@@ -4,7 +4,7 @@ from hamilton_sdk import adapters
 from torch.optim import Adam, AdamW
 from world_machine_experiments import shared, toy1d
 from world_machine_experiments.toy1d import (
-    Dimensions, base, multiple, parameter_variation)
+    Channels, base, multiple, parameter_variation)
 
 if __name__ == "__main__":
     tracker = adapters.HamiltonTracker(
@@ -28,13 +28,13 @@ if __name__ == "__main__":
                        "weight_decay": 5e-4,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.STATE],
+                       "block_configuration": [Channels.STATE],
                        "device": device,
                        }
 
     toy1d_parameter_variation = {
-        "S": {"block_configuration": [Dimensions.STATE]},
-        "M": {"block_configuration": [Dimensions.MEASUREMENT]},
+        "S": {"block_configuration": [Channels.STATE]},
+        "M": {"block_configuration": [Channels.MEASUREMENT]},
     }
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],

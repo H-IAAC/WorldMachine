@@ -4,7 +4,7 @@ from hamilton_sdk import adapters
 from torch.optim import Adam, AdamW
 from world_machine_experiments import shared, toy1d
 from world_machine_experiments.toy1d import (
-    Dimensions, base, multiple, parameter_variation)
+    Channels, base, multiple, parameter_variation)
 
 if __name__ == "__main__":
     tracker = adapters.HamiltonTracker(
@@ -28,20 +28,20 @@ if __name__ == "__main__":
                        "weight_decay": 5e-4,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.STATE],
+                       "block_configuration": [Channels.STATE],
                        "device": device,
                        }
 
     toy1d_parameter_variation = {
-        "S": {"block_configuration": [Dimensions.STATE]},
-        "M": {"block_configuration": [Dimensions.MEASUREMENT]},
-        "C": {"block_configuration": [Dimensions.STATE_CONTROL]},
-        "SS": {"block_configuration": [Dimensions.STATE, Dimensions.STATE]},
-        "MM": {"block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT]},
-        "SM": {"block_configuration": [Dimensions.STATE, Dimensions.MEASUREMENT]},
-        "MS": {"block_configuration": [Dimensions.MEASUREMENT, Dimensions.STATE]},
-        "CC": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE_CONTROL]},
-        "CS": {"block_configuration": [Dimensions.STATE_CONTROL, Dimensions.STATE]},
+        "S": {"block_configuration": [Channels.STATE]},
+        "M": {"block_configuration": [Channels.MEASUREMENT]},
+        "C": {"block_configuration": [Channels.STATE_CONTROL]},
+        "SS": {"block_configuration": [Channels.STATE, Channels.STATE]},
+        "MM": {"block_configuration": [Channels.MEASUREMENT, Channels.MEASUREMENT]},
+        "SM": {"block_configuration": [Channels.STATE, Channels.MEASUREMENT]},
+        "MS": {"block_configuration": [Channels.MEASUREMENT, Channels.STATE]},
+        "CC": {"block_configuration": [Channels.STATE_CONTROL, Channels.STATE_CONTROL]},
+        "CS": {"block_configuration": [Channels.STATE_CONTROL, Channels.STATE]},
     }
 
     output = d_parameter_variation.execute(["save_toy1d_parameter_variation_plots"],

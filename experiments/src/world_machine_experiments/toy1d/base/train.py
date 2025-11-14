@@ -14,11 +14,11 @@ from world_machine.train import (
     CriterionSet, DatasetPassMode, ParameterScheduler, Trainer)
 from world_machine.train.stages import (
     EarlyStopper, GradientAccumulator, LambdaStage, LocalSetter, LossManager,
-    NoiseAdder, SensorialMasker, SequenceBreaker, ShortTimeRecaller,
+    NoiseAdder, SensoryMasker, SequenceBreaker, ShortTimeRecaller,
     StateManager, StateSaveMethod)
 from world_machine_experiments.shared import function_variation
 from world_machine_experiments.shared.save_metrics import save_metrics
-from world_machine_experiments.toy1d.dimensions import Dimensions
+from world_machine_experiments.toy1d.channels import Channels
 
 
 class MSELossOnlyFirst(torch.nn.Module):
@@ -64,20 +64,17 @@ class MeanSoftDTW(torch.nn.Module):
         return loss
 
 
-def toy1d_criterion_set(sensorial_train_losses: set[Dimensions] = set(), train_mse: bool = True, train_sdtw: bool = False) -> CriterionSet:
+def toy1d_criterion_set(sensory_train_losses: set[Channels] = set(), train_mse: bool = True, train_sdtw: bool = False) -> CriterionSet:
     cs = CriterionSet()
 
     cs.add_decoded_state_criterion("mse", torch.nn.MSELoss(), train_mse)
     cs.add_decoded_state_criterion(
         "0.1sdtw", MeanSoftDTW(scale=.1, use_cuda=True), train_sdtw)
 
-    # cs.add_sensorial_criterion("mse", "state_control", torch.nn.MSELoss(
-    # ), train=(Dimensions.STATE_CONTROL in sensorial_train_losses))
-
-    cs.add_sensorial_criterion(
-        "mse", "measurement", torch.nn.MSELoss(), train=(Dimensions.MEASUREMENT in sensorial_train_losses and train_mse))
-    cs.add_sensorial_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
-        Dimensions.MEASUREMENT in sensorial_train_losses and train_sdtw))
+    cs.add_sensory_criterion(
+        "mse", "measurement", torch.nn.MSELoss(), train=(Channels.MEASUREMENT in sensory_train_losses and train_mse))
+    cs.add_sensory_criterion("0.1sdtw", "measurement", MeanSoftDTW(scale=.1, use_cuda=True), train=(
+        Channels.MEASUREMENT in sensory_train_losses and train_sdtw))
 
     return cs
 
@@ -95,15 +92,15 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
                               cosine_annealing_T_mult: int = 2,
                               device: str = "cpu",
                               accumulation_steps: int = 1,
-                              mask_sensorial_data:  float | None | dict[str, float |
-                                                                        ParameterScheduler] | ParameterScheduler = None,
+                              mask_sensory_data:  float | None | dict[str, float |
+                                                                      ParameterScheduler] | ParameterScheduler = None,
                               discover_state: bool = False,
                               state_save_method: StateSaveMethod = StateSaveMethod.REPLACE,
                               stable_state_epochs: int = 1,
                               seed: int | list[int] = 0,
                               n_segment: int = 1,
                               fast_forward: bool = False,
-                              short_time_recall: set[Dimensions] = set(),
+                              short_time_recall: set[Channels] = set(),
                               recall_n_past: int = 2,
                               recall_n_future: int = 2,
                               recall_stride_past: int = 1,
@@ -129,26 +126,26 @@ def toy1d_model_training_info(toy1d_model_untrained: WorldMachine,
 
     if accumulation_steps != 1:
         stages.append(GradientAccumulator(accumulation_steps))
-    if mask_sensorial_data != None:
-        stages.append(SensorialMasker(mask_sensorial_data))
+    if mask_sensory_data != None:
+        stages.append(SensoryMasker(mask_sensory_data))
     if discover_state:
         stages.append(StateManager(stable_state_epochs,
                       check_input_masks, state_save_method))
     if n_segment != 1:
         stages.append(SequenceBreaker(n_segment, fast_forward))
     if len(short_time_recall) != 0:
-        dimension_sizes = {}
+        channel_sizes = {}
         criterions = {}
 
-        for dim in short_time_recall:
-            if dim == Dimensions.STATE_DECODED:
-                dimension_sizes["state_decoded"] = decoded_state_size
+        for channel in short_time_recall:
+            if channel == Channels.STATE_DECODED:
+                channel_sizes["state_decoded"] = decoded_state_size
                 criterions["state_decoded"] = torch.nn.MSELoss()
-            elif dim == Dimensions.MEASUREMENT:
-                dimension_sizes["measurement"] = measurement_size
+            elif channel == Channels.MEASUREMENT:
+                channel_sizes["measurement"] = measurement_size
                 criterions["measurement"] = torch.nn.MSELoss()
 
-        stages.append(ShortTimeRecaller(dimension_sizes=dimension_sizes,
+        stages.append(ShortTimeRecaller(channel_sizes=channel_sizes,
                                         criterions=criterions,
                                         n_past=recall_n_past,
                                         n_future=recall_n_future,

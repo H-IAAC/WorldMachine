@@ -6,14 +6,14 @@ from .world_machine import WorldMachine
 
 class WorldMachineBuilder:
     def __init__(self, state_size: int, max_context_size: int, positional_encoder_type: str | None = "sine",
-                 learn_sensorial_mask: bool = False):
+                 learn_sensory_mask: bool = False):
         self._state_size = state_size
         self._max_context_size = max_context_size
         self._positional_encoder_type = positional_encoder_type
 
-        self._sensorial_dimensions: dict[str, int] = {}
-        self._sensorial_encoders: dict[str, torch.nn.Module] = {}
-        self._sensorial_decoders: dict[str, torch.nn.Module] = {}
+        self._sensory_channels: dict[str, int] = {}
+        self._sensory_encoders: dict[str, torch.nn.Module] = {}
+        self._sensory_decoders: dict[str, torch.nn.Module] = {}
 
         self._blocks: list[BlockContainer] = []
 
@@ -25,7 +25,7 @@ class WorldMachineBuilder:
         self.remove_positional_encoding = False
         self._state_activation: str | None = "tanh"
 
-        self._learn_sensorial_mask = learn_sensorial_mask
+        self._learn_sensory_mask = learn_sensory_mask
 
         self._state_dropout: float | None = None
 
@@ -74,30 +74,30 @@ class WorldMachineBuilder:
             self._state_dropout = value
 
     @property
-    def learn_sensorial_mask(self) -> bool:
-        return self._learn_sensorial_mask
+    def learn_sensory_mask(self) -> bool:
+        return self._learn_sensory_mask
 
-    def add_sensorial_dimension(self, dimension_name: str, dimension_size: int,
-                                encoder: torch.nn.Module | None = None,
-                                decoder: torch.nn.Module | None = None, detach_decoder: bool = False):
+    def add_sensory_channel(self, channel_name: str, channel_size: int,
+                            encoder: torch.nn.Module | None = None,
+                            decoder: torch.nn.Module | None = None, detach_decoder: bool = False):
 
-        assert dimension_name != "state"
+        assert channel_name != "state"
 
-        self._sensorial_dimensions[dimension_name] = dimension_size
+        self._sensory_channels[channel_name] = channel_size
 
         if encoder is not None:
-            self._sensorial_encoders[dimension_name] = encoder
+            self._sensory_encoders[channel_name] = encoder
         if decoder is not None:
-            self._sensorial_decoders[dimension_name] = decoder
+            self._sensory_decoders[channel_name] = decoder
 
         if detach_decoder:
-            self._detach_decoder.add(dimension_name)
+            self._detach_decoder.add(channel_name)
 
-    def add_block(self, count: int = 1, sensorial_dimension: str = "",
+    def add_block(self, count: int = 1, sensory_channel: str = "",
                   dropout_rate: float = 0.1, hidden_size_multiplier: int = 4,
                   n_attention_head: int = 1):
         for _ in range(count):
-            if sensorial_dimension == "":
+            if sensory_channel == "":
                 block = TransformDecoderBlock(self._state_size,
                                               hidden_size_multiplier*self._state_size,
                                               n_attention_head,
@@ -105,27 +105,27 @@ class WorldMachineBuilder:
                                               is_causal=True,
                                               positional_encoder_type=self._positional_encoder_type)
             else:
-                if sensorial_dimension == "state":
-                    dimension_size = self._state_size
+                if sensory_channel == "state":
+                    channel_size = self._state_size
                 else:
-                    dimension_size = self._sensorial_dimensions[sensorial_dimension]
+                    channel_size = self._sensory_channels[sensory_channel]
 
                 block = AdaLNZeroBlock(self._state_size,
-                                       dimension_size,
+                                       channel_size,
                                        hidden_size_multiplier*self._state_size,
                                        n_attention_head,
                                        positional_encoder_type=self._positional_encoder_type,
-                                       learn_sensorial_mask=self._learn_sensorial_mask)
+                                       learn_sensory_mask=self._learn_sensory_mask)
 
             self._blocks.append(BlockContainer(
-                block, sensorial_dimension=sensorial_dimension))
+                block, sensory_channel=sensory_channel))
 
     def build(self) -> WorldMachine:
         wm = WorldMachine(self._state_size,
                           self._max_context_size,
                           torch.nn.ModuleList(self._blocks),
-                          torch.nn.ModuleDict(self._sensorial_encoders),
-                          torch.nn.ModuleDict(self._sensorial_decoders),
+                          torch.nn.ModuleDict(self._sensory_encoders),
+                          torch.nn.ModuleDict(self._sensory_decoders),
                           self._state_encoder,
                           self._state_decoder,
                           self._detach_decoder,

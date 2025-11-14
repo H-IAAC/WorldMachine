@@ -25,17 +25,9 @@ from world_machine_experiments.shared.save_plots import save_plots
 variations_sorted = ["Base", "SensoryMask", "CompleteProtocol"]
 
 
-def _update_sensorial(x: dict[str, Any]) -> None:
-    if "SensorialMask" in x:
-        x["SensoryMask"] = x["SensorialMask"]
-        del x["SensorialMask"]
-
-
 def train_history(data_dir: str) -> dict[str, dict]:
     train_history_interm = load_multiple_metrics(
         data_dir, "toy1d_train_history")
-
-    _update_sensorial(train_history_interm)
 
     result = {}
     for name in variations_sorted:
@@ -47,22 +39,19 @@ def train_history(data_dir: str) -> dict[str, dict]:
 def metrics(data_dir: str) -> dict[str, dict]:
     metrics = load_multiple_metrics(data_dir,
                                     "toy1d_metrics")
-    mask_sensorial_metrics = load_multiple_metrics(data_dir,
-                                                   "toy1d_mask_sensorial_metrics")
-
-    _update_sensorial(metrics)
-    _update_sensorial(mask_sensorial_metrics)
+    mask_sensory_metrics = load_multiple_metrics(data_dir,
+                                                 "toy1d_mask_sensory_metrics")
 
     for var_name in metrics:
-        metrics[var_name]["means"]["mask_sensorial@100"] = {}
-        metrics[var_name]["stds"]["mask_sensorial@100"] = {}
+        metrics[var_name]["means"]["mask_sensory@100"] = {}
+        metrics[var_name]["stds"]["mask_sensory@100"] = {}
 
-        for loss_name in mask_sensorial_metrics[var_name]["means"]:
-            if loss_name == "mask_sensorial_percentage":
+        for loss_name in mask_sensory_metrics[var_name]["means"]:
+            if loss_name == "mask_sensory_percentage":
                 continue
 
-            metrics[var_name]["means"]["mask_sensorial@100"][loss_name] = mask_sensorial_metrics[var_name]["means"][loss_name][-1]
-            metrics[var_name]["stds"]["mask_sensorial@100"][loss_name] = mask_sensorial_metrics[var_name]["stds"][loss_name][-1]
+            metrics[var_name]["means"]["mask_sensory@100"][loss_name] = mask_sensory_metrics[var_name]["means"][loss_name][-1]
+            metrics[var_name]["stds"]["mask_sensory@100"][loss_name] = mask_sensory_metrics[var_name]["stds"][loss_name][-1]
 
     metrics_sorted = {}
     for name in variations_sorted:
@@ -75,24 +64,19 @@ def metrics_full(data_dir: str) -> dict[str, dict]:
     metrics_full = {}
 
     for name in variations_sorted:
-
-        path = os.path.join(data_dir, name)
-        if (name == "SensoryMask") and (not os.path.isdir(path)):
-            path = os.path.join(data_dir, "SensorialMask")
-
         metrics_full[name] = load_multiple_metrics(path, "metrics")
 
-        mask_sensorial_metrics = load_multiple_metrics(
-            path, "mask_sensorial_metrics")
+        mask_sensory_metrics = load_multiple_metrics(
+            path, "mask_sensory_metrics")
 
         for run_name in metrics_full[name]:
-            metrics_full[name][run_name]["mask_sensorial@100"] = {}
+            metrics_full[name][run_name]["mask_sensory@100"] = {}
 
-            for loss_name in mask_sensorial_metrics[run_name]:
-                if loss_name == "mask_sensorial_percentage":
+            for loss_name in mask_sensory_metrics[run_name]:
+                if loss_name == "mask_sensory_percentage":
                     continue
 
-                metrics_full[name][run_name]["mask_sensorial@100"][loss_name] = mask_sensorial_metrics[run_name][loss_name][-1]
+                metrics_full[name][run_name]["mask_sensory@100"][loss_name] = mask_sensory_metrics[run_name][loss_name][-1]
 
     return metrics_full
 
@@ -105,10 +89,6 @@ def samples(data_dir: str) -> dict[str, dict[str, TensorDict]]:
 
         base_path = os.path.join(
             data_dir, variation, "run_4", "metrics_logits")
-
-        if (variation == "SensoryMask") and (not os.path.isdir(base_path)):
-            base_path = os.path.join(
-                data_dir, "SensorialMask", "run_4", "metrics_logits")
 
         for name in ["normal", "use_state", "prediction_local", "prediction", "prediction_shallow", "targets"]:
             path = os.path.join(base_path, name)

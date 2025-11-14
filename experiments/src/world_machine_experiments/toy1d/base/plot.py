@@ -24,7 +24,7 @@ def toy1d_prediction_plots(toy1d_model_trained: WorldMachine, toy1d_dataloaders:
 
         with torch.no_grad():
             logits: torch.Tensor = toy1d_model_trained(
-                state_decoded=inputs["state_decoded"], sensorial_data=inputs)
+                state_decoded=inputs["state_decoded"], sensory_data=inputs)
 
         logits = logits.cpu().numpy()
 

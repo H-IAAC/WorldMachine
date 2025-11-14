@@ -7,8 +7,8 @@ from world_machine.train import CriterionSet
 def get_metrics_generator() -> MetricsGenerator:
     cs = CriterionSet()
 
-    cs.add_sensorial_criterion("mse", "dim0", MSELoss(), True)
-    cs.add_sensorial_criterion("mse", "dim1", MSELoss(), True)
+    cs.add_sensory_criterion("mse", "channel0", MSELoss(), True)
+    cs.add_sensory_criterion("mse", "channel1", MSELoss(), True)
 
     mg = MetricsGenerator(cs)
 

@@ -21,7 +21,7 @@ from world_machine_experiments.shared.save_plots import save_plots
 from world_machine_experiments.shared.statistics import consolidated_metrics
 from world_machine_experiments.shared.train_plots import train_plots
 from world_machine_experiments.toy1d import base
-from world_machine_experiments.toy1d.base import toy1d_masks_sensorial_plots
+from world_machine_experiments.toy1d.base import toy1d_masks_sensory_plots
 
 
 def multiple_toy1d_trainings_info(n_run: int,
@@ -139,28 +139,28 @@ save_multiple_toy1d_consolidated_metrics = function_variation({
     "metrics_name": value("toy1d_metrics")},
     "save_multiple_toy1d_consolidated_metrics")(save_metrics)
 
-# MASK SENSORIAL
+# MASK SENSORY
 
-multiple_toy1d_mask_sensorial_metrics = function_variation({
-    "metrics_name": value("mask_sensorial_metrics")},
-    "multiple_toy1d_mask_sensorial_metrics")(load_multiple_metrics)
+multiple_toy1d_mask_sensory_metrics = function_variation({
+    "metrics_name": value("mask_sensory_metrics")},
+    "multiple_toy1d_mask_sensory_metrics")(load_multiple_metrics)
 
-multiple_toy1d_consolidated_mask_sensorial_metrics = function_variation(
-    {"metrics": source("multiple_toy1d_mask_sensorial_metrics")},
-    "multiple_toy1d_consolidated_mask_sensorial_metrics")(consolidated_metrics)
+multiple_toy1d_consolidated_mask_sensory_metrics = function_variation(
+    {"metrics": source("multiple_toy1d_mask_sensory_metrics")},
+    "multiple_toy1d_consolidated_mask_sensory_metrics")(consolidated_metrics)
 
-save_multiple_toy1d_consolidated_mask_sensorial_metrics = function_variation(
-    {"metrics": source("multiple_toy1d_consolidated_mask_sensorial_metrics"),
-     "metrics_name": value("toy1d_mask_sensorial_metrics")},
-    "save_multiple_toy1d_consolidated_mask_sensorial_metrics")(save_metrics)
+save_multiple_toy1d_consolidated_mask_sensory_metrics = function_variation(
+    {"metrics": source("multiple_toy1d_consolidated_mask_sensory_metrics"),
+     "metrics_name": value("toy1d_mask_sensory_metrics")},
+    "save_multiple_toy1d_consolidated_mask_sensory_metrics")(save_metrics)
 
-multiple_toy1d_consolidated_mask_sensorial_plots = function_variation({
-    "toy1d_mask_sensorial_metrics": source("multiple_toy1d_consolidated_mask_sensorial_metrics")},
-    "multiple_toy1d_consolidated_mask_sensorial_plots")(toy1d_masks_sensorial_plots)
+multiple_toy1d_consolidated_mask_sensory_plots = function_variation({
+    "toy1d_mask_sensory_metrics": source("multiple_toy1d_consolidated_mask_sensory_metrics")},
+    "multiple_toy1d_consolidated_mask_sensory_plots")(toy1d_masks_sensory_plots)
 
-save_multiple_toy1d_consolidated_mask_sensorial_plots = function_variation({
-    "plots": source("multiple_toy1d_consolidated_mask_sensorial_plots")},
-    "save_multiple_toy1d_consolidated_mask_sensorial_plots")(save_plots)
+save_multiple_toy1d_consolidated_mask_sensory_plots = function_variation({
+    "plots": source("multiple_toy1d_consolidated_mask_sensory_plots")},
+    "save_multiple_toy1d_consolidated_mask_sensory_plots")(save_plots)
 
 # AUTOREGRESSIVE
 

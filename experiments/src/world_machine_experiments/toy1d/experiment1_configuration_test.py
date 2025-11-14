@@ -13,7 +13,7 @@ from world_machine.train.stages import StateSaveMethod
 from world_machine_experiments import shared
 from world_machine_experiments.shared.pipeline import save_pipeline
 from world_machine_experiments.shared.save_parameters import make_model
-from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d import Channels, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment1
 
 if __name__ == "__main__":
@@ -53,7 +53,7 @@ if __name__ == "__main__":
                        "device": devices,
                        "state_control": "periodic",
                        "discover_state": True,
-                       "sensorial_train_losses": [Dimensions.MEASUREMENT],
+                       "sensory_train_losses": [Channels.MEASUREMENT],
                        }
 
     n_variation = 0
@@ -67,8 +67,8 @@ if __name__ == "__main__":
             for stable_state_epochs in [1]:
                 for check_input_masks in [True, False]:
                     for state_save_method in [StateSaveMethod.MEAN, StateSaveMethod.REPLACE]:
-                        for mask_sensorial_data in [UniformScheduler(0, 1, n_epoch)]:
-                            for short_time_recall in [{Dimensions.MEASUREMENT}, set()]:
+                        for mask_sensory_data in [UniformScheduler(0, 1, n_epoch)]:
+                            for short_time_recall in [{Channels.MEASUREMENT}, set()]:
 
                                 recall_n_past_choices = [0]
                                 if len(short_time_recall) > 0:
@@ -96,8 +96,8 @@ if __name__ == "__main__":
                                         for recall_stride_past in recall_stride_past_choices:
                                             for recall_stride_future in recall_stride_future_choices:
                                                 for positional_encoder_type in ["alibi"]:
-                                                    for block_configuration in [[Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
-                                                                                [Dimensions.MEASUREMENT, Dimensions.STATE_INPUT]]:
+                                                    for block_configuration in [[Channels.MEASUREMENT, Channels.MEASUREMENT],
+                                                                                [Channels.MEASUREMENT, Channels.STATE_INPUT]]:
                                                         for state_activation in ["tanh", None]:
                                                             state_regularizer = None
                                                             if state_activation is None:
@@ -119,7 +119,7 @@ if __name__ == "__main__":
                                                                                       "stable_state_epochs": stable_state_epochs,
                                                                                       "check_input_masks": check_input_masks,
                                                                                       "state_save_method": state_save_method,
-                                                                                      "mask_sensorial_data": mask_sensorial_data,
+                                                                                      "mask_sensory_data": mask_sensory_data,
                                                                                       "short_time_recall": short_time_recall,
                                                                                       "recall_stride_past": recall_stride_past,
                                                                                       "recall_stride_future": recall_stride_future,

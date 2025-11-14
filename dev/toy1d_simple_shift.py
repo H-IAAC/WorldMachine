@@ -4,7 +4,7 @@ from hamilton_sdk import adapters
 from torch.optim import Adam, AdamW
 from world_machine_experiments import shared, toy1d
 from world_machine_experiments.toy1d import (
-    Dimensions, base, multiple, parameter_variation)
+    Channels, base, multiple, parameter_variation)
 
 if __name__ == "__main__":
     tracker = adapters.HamiltonTracker(

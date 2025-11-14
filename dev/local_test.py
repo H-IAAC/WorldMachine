@@ -5,7 +5,7 @@ from hamilton import driver
 from hamilton_sdk import adapters
 from torch.optim import SGD, AdamW
 from world_machine_experiments import shared
-from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d import Channels, parameter_variation
 
 from world_machine.train.scheduler import UniformScheduler
 from world_machine.train.stages import StateSaveMethod
@@ -32,12 +32,12 @@ if __name__ == "__main__":
                        "accumulation_steps": 1,
                        "state_dimensions": [0],
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.STATE_INPUT],
+                       "block_configuration": [Channels.MEASUREMENT, Channels.STATE_INPUT],
                        "device": device,
                        "state_control": "periodic",
                        "state_activation": "tanh",
                        "discover_state": True,
-                       "sensorial_train_losses": [Dimensions.MEASUREMENT],
+                       "sensorial_train_losses": [Channels.MEASUREMENT],
                        "state_size": 128,
                        "positional_encoder_type": "alibi",
                        "n_attention_head": 4,
@@ -48,7 +48,7 @@ if __name__ == "__main__":
                        "state_save_method": StateSaveMethod.REPLACE,
                        "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
                        "short_time_recall": {
-                           Dimensions.MEASUREMENT
+                           Channels.MEASUREMENT
                        },
                        "recall_stride_past": 3,
                        "recall_stride_future": 3,

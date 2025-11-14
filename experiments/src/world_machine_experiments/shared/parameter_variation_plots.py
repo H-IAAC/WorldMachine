@@ -20,7 +20,7 @@ def parameter_variation_plots(train_history: dict,
     for name in all_names:
         names.add(name.removesuffix("_train").removesuffix("_val"))
 
-    for name in ["duration", "mask_sensorial_percentage"]:
+    for name in ["duration", "mask_sensory_percentage"]:
         if name in names:
             names.remove(name)
 

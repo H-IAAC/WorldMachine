@@ -5,9 +5,11 @@ from collections import deque
 
 import torch
 from tensordict import MemoryMappedTensor, TensorDict
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 
+from world_machine.current_version import CURRENT_COMPATIBILITY_VERSION
 from world_machine.profile import profile_range
+from world_machine.version_upgrader import upgrade
 
 
 class WorldMachineDataset(Dataset, abc.ABC):
@@ -18,8 +20,8 @@ class WorldMachineDataset(Dataset, abc.ABC):
         if not getattr(cls, "_profile_wrapped", False):
             name = cls.__name__
 
-            method_names = ["load_data", "get_dimension_item",
-                            "get_dimension_mask", "dispose_data"]
+            method_names = ["load_data", "get_channel_item",
+                            "get_channel_mask", "dispose_data"]
             for method_name in method_names:
                 if method_name in cls.__dict__:
                     method = getattr(cls, method_name)
@@ -31,13 +33,15 @@ class WorldMachineDataset(Dataset, abc.ABC):
 
         return super().__new__(cls)
 
-    def __init__(self, sensorial_dimensions: list[str], size: int,
+    def __init__(self, sensory_channels: list[str], size: int,
                  has_state_decoded: bool = False,
                  has_masks: bool = False,
                  map_state_to_disk: bool = True):
         super().__init__()
 
-        self._sensorial_dimensions = sensorial_dimensions
+        self._compatibility_version = CURRENT_COMPATIBILITY_VERSION
+
+        self._sensory_channels = sensory_channels
         self._size = size
         self._has_state_decoded = has_state_decoded
         self._has_masks = has_masks
@@ -71,10 +75,10 @@ class WorldMachineDataset(Dataset, abc.ABC):
         ...
 
     @abc.abstractmethod
-    def get_dimension_item(self, dimension: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def get_channel_item(self, channel: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         ...
 
-    def get_dimension_mask(self, dimension: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def get_channel_mask(self, channel: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         ...
 
     @profile_range("__getitem__", category="wm_dataset", domain="world_machine")
@@ -83,12 +87,12 @@ class WorldMachineDataset(Dataset, abc.ABC):
             {"inputs": TensorDict(), "targets": TensorDict(), "index": index}, batch_size=[])
 
         self.load_data(index)
-        for dimension in self._sensorial_dimensions:
-            item["inputs"][dimension], item["targets"][dimension] = self.get_dimension_item(
-                dimension, index)
+        for channel in self._sensory_channels:
+            item["inputs"][channel], item["targets"][channel] = self.get_channel_item(
+                channel, index)
 
         if self._has_state_decoded:
-            item["inputs"]["state_decoded"], item["targets"]["state_decoded"] = self.get_dimension_item(
+            item["inputs"]["state_decoded"], item["targets"]["state_decoded"] = self.get_channel_item(
                 "state_decoded", index)
 
         if self._states != None:
@@ -103,13 +107,13 @@ class WorldMachineDataset(Dataset, abc.ABC):
             item["input_masks"] = TensorDict()
             item["target_masks"] = TensorDict()
 
-            for dimension in self._sensorial_dimensions:
-                (item["input_masks"][dimension],
-                 item["target_masks"][dimension]) = self.get_dimension_mask(dimension, index)
+            for channel in self._sensory_channels:
+                (item["input_masks"][channel],
+                 item["target_masks"][channel]) = self.get_channel_mask(channel, index)
 
             if self._has_state_decoded:
                 (item["input_masks"]["state_decoded"],
-                 item["target_masks"]["state_decoded"]) = self.get_dimension_mask("state_decoded", index)
+                 item["target_masks"]["state_decoded"]) = self.get_channel_mask("state_decoded", index)
 
             item["input_masks"].batch_size = [seq_len]
             item["target_masks"].batch_size = [seq_len]
@@ -175,6 +179,10 @@ class WorldMachineDataset(Dataset, abc.ABC):
     def _delete_files(cls) -> None:
         for filename in cls._states_filenames:
             cls.delete_file(filename)
+
+    def __setstate__(self, state):
+        upgrade(state)
+        return super().__setstate__(state)
 
 
 atexit.register(WorldMachineDataset._delete_files)

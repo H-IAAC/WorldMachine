@@ -146,8 +146,4 @@ def toy1d_data_splitted(toy1d_data: dict[str, np.ndarray]) -> dict[str, dict[str
 
 
 def resize(sequence):
-    # min = torch.min(sequence, dim=1)[0]
-    # max = torch.max(sequence, dim=1)[0]
-    # return (sequence-min.unsqueeze(1))/((max-min).unsqueeze(1))
-
     return sequence

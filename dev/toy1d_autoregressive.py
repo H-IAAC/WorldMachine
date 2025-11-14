@@ -5,7 +5,7 @@ from hamilton import driver
 from hamilton_sdk import adapters
 from torch.optim import AdamW
 from world_machine_experiments import shared
-from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d import Channels, parameter_variation
 
 from world_machine.train.scheduler import LinearScheduler
 
@@ -36,7 +36,7 @@ if __name__ == "__main__":
                        "weight_decay": 5e-4,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
+                       "block_configuration": [Channels.MEASUREMENT, Channels.MEASUREMENT],
                        "device": device,
                        "state_control": False,
                        "discover_state": True,

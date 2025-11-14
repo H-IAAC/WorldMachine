@@ -11,21 +11,21 @@ class WorldMachineForward(TrainStage):
         super().__init__(0)
 
     def forward(self, model: WorldMachine, segment: TensorDict, mode: DatasetPassMode) -> None:
-        sensorial_data = segment["inputs"]
+        sensory_data = segment["inputs"]
 
-        sensorial_masks = None
+        sensory_masks = None
         if "input_masks" in segment:
-            sensorial_masks = segment["input_masks"]
+            sensory_masks = segment["input_masks"]
 
         if "state" in segment["inputs"]:
             state = segment["inputs"]["state"]
 
             logits: TensorDict = model(
-                state=state, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
+                state=state, sensory_data=sensory_data, sensory_masks=sensory_masks)
         else:
             state_decoded = segment["inputs"]["state_decoded"]
 
             logits: TensorDict = model(
-                state_decoded=state_decoded, sensorial_data=sensorial_data, sensorial_masks=sensorial_masks)
+                state_decoded=state_decoded, sensory_data=sensory_data, sensory_masks=sensory_masks)
 
         segment["logits"] = logits

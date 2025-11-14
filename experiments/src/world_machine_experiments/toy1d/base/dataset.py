@@ -28,7 +28,7 @@ class Toy1dDataset(WorldMachineDataset):
             has_state_decoded=True,
             has_masks=False)
 
-    def get_dimension_item(self, dimension: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def get_channel_item(self, channel: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
         item_index = index // self._items_in_sequence
         item_seq_index = index % self._items_in_sequence
 
@@ -39,20 +39,20 @@ class Toy1dDataset(WorldMachineDataset):
 
         for i in range(2):
             item.append(torch.Tensor(
-                self._data[dimension][item_index, start+i:end+i]))
+                self._data[channel][item_index, start+i:end+i]))
 
-            if self._return_dimensions is not None and dimension == "state_decoded":
+            if self._return_dimensions is not None and channel == "state_decoded":
                 item[i] = item[i][:, self._return_dimensions]
 
-            data_raw = self._data[dimension][item_index,
-                                             start:end+1][:, 0]
+            data_raw = self._data[channel][item_index,
+                                           start:end+1][:, 0]
             s_max = data_raw.max()
             s_min = data_raw.min()
 
             item[i] = (item[i]-s_min)/(s_max-s_min)
             item[i] = (2*item[i])-1
 
-            if dimension == "measurement":
+            if channel == "measurement":
                 item[i] = np.tanh(item[i])
 
         return item

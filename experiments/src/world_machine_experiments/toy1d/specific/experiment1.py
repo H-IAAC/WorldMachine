@@ -20,7 +20,7 @@ from world_machine_experiments.shared.acronyms import format_name
 from world_machine_experiments.shared.save_metrics import (
     get_values, load_multiple_metrics, save_metrics)
 from world_machine_experiments.shared.save_plots import save_plots
-from world_machine_experiments.toy1d.dimensions import Dimensions
+from world_machine_experiments.toy1d.channels import Channels
 
 plt.rcParams["mathtext.default"] = "regular"
 
@@ -95,7 +95,7 @@ def _add_variables(df: pd.DataFrame) -> None:
 
     df["AC_1"] = pd.isnull(df["state_activation"])  # nopep8
 
-    df["MD_1"] = df["block_configuration"].map(lambda x: np.all(x == [Dimensions.MEASUREMENT.value, Dimensions.STATE_INPUT.value]))  # nopep8
+    df["MD_1"] = df["block_configuration"].map(lambda x: np.all(x == [Channels.MEASUREMENT.value, Channels.STATE_INPUT.value]))  # nopep8
 
     df["NA_1"] = df["noise_config"].map(lambda x: x is not None and "state" in x)  # nopep8
     df["NA_2"] = df["noise_config"].map(lambda x: x is not None and "measurement" in x)  # nopep8

@@ -82,17 +82,17 @@ class Trainer:
         if train:
             self._criterion_set.train_criterions["state_decoded"][name] = weight
 
-    def add_sensorial_criterion(self, name: str, sensorial_dimension: str, criterion: Module, train: bool = False,
-                                weight: float = 1.0) -> None:
-        if sensorial_dimension not in self._criterion_set.criterions:
-            self._criterion_set.criterions[sensorial_dimension] = {}
-        if sensorial_dimension not in self._criterion_set.train_criterions:
-            self._criterion_set.train_criterions[sensorial_dimension] = {}
+    def add_sensory_criterion(self, name: str, sensory_channel: str, criterion: Module, train: bool = False,
+                              weight: float = 1.0) -> None:
+        if sensory_channel not in self._criterion_set.criterions:
+            self._criterion_set.criterions[sensory_channel] = {}
+        if sensory_channel not in self._criterion_set.train_criterions:
+            self._criterion_set.train_criterions[sensory_channel] = {}
 
-        self._criterion_set.criterions[sensorial_dimension][name] = criterion
+        self._criterion_set.criterions[sensory_channel][name] = criterion
 
         if train:
-            self._criterion_set.train_criterions[sensorial_dimension][name] = weight
+            self._criterion_set.train_criterions[sensory_channel][name] = weight
 
     def __call__(self, wm: WorldMachine,
                  dataloaders: dict[str, DataLoader],
@@ -217,11 +217,11 @@ class Trainer:
 
         hist: dict[str, np.ndarray | dict[str, np.ndarray]
                    | dict[str, dict[str, np.ndarray]]] = {}
-        for dimension in self._criterion_set.criterions:
-            hist[dimension] = {}
-            for criterion_name in self._criterion_set.criterions[dimension]:
-                hist[dimension][criterion_name] = {"train": np.empty(n_epoch),
-                                                   "val": np.empty(n_epoch)}
+        for channel in self._criterion_set.criterions:
+            hist[channel] = {}
+            for criterion_name in self._criterion_set.criterions[channel]:
+                hist[channel][criterion_name] = {"train": np.empty(n_epoch),
+                                                 "val": np.empty(n_epoch)}
 
         hist["optimizer_loss"] = {"train": np.empty(n_epoch),
                                   "val": np.empty(n_epoch)}
@@ -256,16 +256,16 @@ class Trainer:
             # Save history and log
             log: dict[str, float] = {}
 
-            for dimension in self._criterion_set.criterions:
-                for criterion_name in self._criterion_set.criterions[dimension]:
-                    hist[dimension][criterion_name]["train"][epoch] = loss_train[f"{dimension}_{criterion_name}"].item(
+            for channel in self._criterion_set.criterions:
+                for criterion_name in self._criterion_set.criterions[channel]:
+                    hist[channel][criterion_name]["train"][epoch] = loss_train[f"{channel}_{criterion_name}"].item(
                     )
-                    hist[dimension][criterion_name]["val"][epoch] = loss_val[f"{dimension}_{criterion_name}"].item(
+                    hist[channel][criterion_name]["val"][epoch] = loss_val[f"{channel}_{criterion_name}"].item(
                     )
 
-                    log[f"loss_train_{dimension}_{criterion_name}"] = loss_train[f"{dimension}_{criterion_name}"].item(
+                    log[f"loss_train_{channel}_{criterion_name}"] = loss_train[f"{channel}_{criterion_name}"].item(
                     )
-                    log[f"loss_val_{dimension}_{criterion_name}"] = loss_val[f"{dimension}_{criterion_name}"].item(
+                    log[f"loss_val_{channel}_{criterion_name}"] = loss_val[f"{channel}_{criterion_name}"].item(
                     )
 
             hist["optimizer_loss"]["train"][epoch] = loss_train["optimizer_loss"].item()
@@ -290,10 +290,10 @@ class Trainer:
             result["optimizer_loss_train"] = hist["optimizer_loss"]["train"]
             result["optimizer_loss_val"] = hist["optimizer_loss"]["val"]
             result["duration"] = hist["duration"]
-            for dimension in self._criterion_set.criterions:
-                for criterion_name in self._criterion_set.criterions[dimension]:
-                    result[f"{dimension}_{criterion_name}_train"] = hist[dimension][criterion_name]["train"]
-                    result[f"{dimension}_{criterion_name}_val"] = hist[dimension][criterion_name]["val"]
+            for channel in self._criterion_set.criterions:
+                for criterion_name in self._criterion_set.criterions[channel]:
+                    result[f"{channel}_{criterion_name}_train"] = hist[channel][criterion_name]["train"]
+                    result[f"{channel}_{criterion_name}_val"] = hist[channel][criterion_name]["val"]
 
         with profile_range("post_train", category="trainer", domain="world_machine"):
             for stage in reversed(self._stages):

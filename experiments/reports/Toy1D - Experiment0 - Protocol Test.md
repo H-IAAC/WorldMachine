@@ -34,7 +34,7 @@ World Machine is a research project that explores the creation of computational 
 
 It's also the proposed architecture and protocol of this project. The architecture is a transform-based model, that operates in "latent world states", vectors that encode the state of the world model at each instant. At each step, the model predicts the next latent world state using the previous one, conditioned on sensorial data.
 
-The core of the model consists of transform blocks. These can be of type "State" for blocks that process only the latent state without sensorial data, "\<sensorial Data Dimension Name\>" for blocks that use a sensorialsensorial dimension, and "<State Input>" for blocks that use the state itself at the beginning of the time step as sensorial input.
+The core of the model consists of transform blocks. These can be of type "State" for blocks that process only the latent state without sensorial data, "Sensorial Data Channel Name" for blocks that use a sensorial channel, and "State Input" for blocks that use the state itself at the beginning of the time step as sensorial input.
 
 ### State Discovery
 
@@ -155,7 +155,7 @@ Protocol parameters (when used):
 - Short Time Recall
   - N (past and future): 5
   - Recall stride (past and future): 3
-  - Dimensions: Measurement and external state
+  - Channels: Measurement and external state
 - Local Mode
   - Chance: 25%
 - Noise Addition
@@ -243,9 +243,9 @@ The experimental results are briefly presented in this section. Note that a more
 
 Linking the observations of the results to the stated hypotheses and objectives:
 
-Hyphotese/Goal|Observations|Conclusion
--|-|-
-H1: The proposed architecture is trainable, using the state discovery method and generating a model capable of coherently predicting sequences|O1.1, O1.2, O1.3, O2.3, O3.1|True. The model is trainable and is capable of coherent predict sequences.
-H2: The proposed protocol generates different models, with different performance in the designed tasks|O1.3, O2.2, O2.5, O3.2, O3.3|True. The protocol steps generate differences in model training and predictions.
-G1: To observe the tasks differences|O2.1, O2.4, O2.5, O2.6, O3.1, O3.2, O3.4|Tasks have different performance, both objectively and qualitatively, with some being more difficult than others. Sometimes, an improvement in one task can lead to a worsening in another.
-G2: To observe the quality of the model predictions| O3.1, O3.2, O3.3, O3.4|The model manages to generate coherent predictions, but still fails in several cases.
+| Hyphotese/Goal                                                                                                                                 | Observations                             | Conclusion                                                                                                                                                                                  |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1: The proposed architecture is trainable, using the state discovery method and generating a model capable of coherently predicting sequences | O1.1, O1.2, O1.3, O2.3, O3.1             | True. The model is trainable and is capable of coherent predict sequences.                                                                                                                  |
+| H2: The proposed protocol generates different models, with different performance in the designed tasks                                         | O1.3, O2.2, O2.5, O3.2, O3.3             | True. The protocol steps generate differences in model training and predictions.                                                                                                            |
+| G1: To observe the tasks differences                                                                                                           | O2.1, O2.4, O2.5, O2.6, O3.1, O3.2, O3.4 | Tasks have different performance, both objectively and qualitatively, with some being more difficult than others. Sometimes, an improvement in one task can lead to a worsening in another. |
+| G2: To observe the quality of the model predictions                                                                                            | O3.1, O3.2, O3.3, O3.4                   | The model manages to generate coherent predictions, but still fails in several cases.                                                                                                       |

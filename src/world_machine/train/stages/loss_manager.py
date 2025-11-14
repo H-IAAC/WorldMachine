@@ -33,10 +33,10 @@ class LossManager(TrainStage):
                   criterions: dict[str, dict[str, Module]], optimizer: Optimizer,
                   device: torch.device, losses: dict, train_criterions: dict[str, dict[str, float]]) -> None:
         total_loss: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
-        for dimension in criterions:
-            total_loss[dimension] = {}
-            for criterion_name in criterions[dimension]:
-                total_loss[dimension][criterion_name] = torch.tensor(
+        for channel in criterions:
+            total_loss[channel] = {}
+            for criterion_name in criterions[channel]:
+                total_loss[channel][criterion_name] = torch.tensor(
                     0, dtype=torch.float32, device=device)
 
         total_loss["optimizer_loss"] = torch.tensor(
@@ -61,37 +61,39 @@ class LossManager(TrainStage):
         total_loss = losses["epoch"]
 
         item_losses: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
-        for dimension in criterions:
-            if len(criterions[dimension]) == 0:
+        for channel in criterions:
+            if len(criterions[channel]) == 0:
                 continue
 
-            logits_dim = logits[dimension]
-            targets_dim = targets[dimension]
+            logits_channel = logits[channel]
+            targets_channel = targets[channel]
 
             mask_factor = 1.0
 
             if (targets_masks is not None and
-                    dimension in targets_masks):
+                    channel in targets_masks):
 
                 if self._multiply_target_masks:
-                    logits_dim *= targets_masks[dimension].unsqueeze(2)
-                    targets_dim *= targets_masks[dimension].unsqueeze(2)
+                    logits_channel *= targets_masks[channel].unsqueeze(2)
+                    targets_channel *= targets_masks[channel].unsqueeze(2)
 
                     mask_factor = (
-                        targets_masks[dimension].numel() / targets_masks[dimension].sum())
+                        targets_masks[channel].numel() / targets_masks[channel].sum())
                 else:
-                    logits_dim = logits_dim[:, targets_masks[dimension][0]]
-                    targets_dim = targets_dim[:, targets_masks[dimension][0]]
+                    logits_channel = logits_channel[:,
+                                                    targets_masks[channel][0]]
+                    targets_channel = targets_channel[:,
+                                                      targets_masks[channel][0]]
 
-            item_losses[dimension] = {}
-            for criterion_name in criterions[dimension]:
-                if criterion_name not in train_criterions[dimension]:
+            item_losses[channel] = {}
+            for criterion_name in criterions[channel]:
+                if criterion_name not in train_criterions[channel]:
                     torch.set_grad_enabled(False)
 
-                item_losses[dimension][criterion_name] = criterions[dimension][criterion_name](
-                    logits_dim, targets_dim) * mask_factor
+                item_losses[channel][criterion_name] = criterions[channel][criterion_name](
+                    logits_channel, targets_channel) * mask_factor
 
-                total_loss[dimension][criterion_name] += item_losses[dimension][criterion_name] * \
+                total_loss[channel][criterion_name] += item_losses[channel][criterion_name] * \
                     targets.size(0)
 
                 torch.set_grad_enabled(
@@ -101,12 +103,12 @@ class LossManager(TrainStage):
             0, dtype=torch.float32, device=device)
         total_weight = 0
 
-        for dimension in train_criterions:
-            for criterion_name in train_criterions[dimension]:
-                optimizer_loss += item_losses[dimension][criterion_name] * \
-                    train_criterions[dimension][criterion_name]
+        for channel in train_criterions:
+            for criterion_name in train_criterions[channel]:
+                optimizer_loss += item_losses[channel][criterion_name] * \
+                    train_criterions[channel][criterion_name]
 
-                total_weight += train_criterions[dimension][criterion_name]
+                total_weight += train_criterions[channel][criterion_name]
 
         optimizer_loss /= total_weight
 
@@ -142,23 +144,23 @@ class LossManager(TrainStage):
                    mode: DatasetPassMode) -> None:
         total_loss = losses["epoch"]
 
-        for dimension in total_loss:
-            if dimension == "optimizer_loss":
-                total_loss[dimension] /= self.n
-                total_loss[dimension] = total_loss[dimension].detach()
+        for channel in total_loss:
+            if channel == "optimizer_loss":
+                total_loss[channel] /= self.n
+                total_loss[channel] = total_loss[channel].detach()
             else:
-                for criterion_name in total_loss[dimension]:
-                    total_loss[dimension][criterion_name] /= self.n
-                    total_loss[dimension][criterion_name] = total_loss[dimension][criterion_name].detach(
+                for criterion_name in total_loss[channel]:
+                    total_loss[channel][criterion_name] /= self.n
+                    total_loss[channel][criterion_name] = total_loss[channel][criterion_name].detach(
                     )
 
         result = {}
-        for dimension in total_loss:
-            if dimension == "optimizer_loss":
-                result[dimension] = total_loss[dimension]
+        for channel in total_loss:
+            if channel == "optimizer_loss":
+                result[channel] = total_loss[channel]
             else:
-                for criterion_name in total_loss[dimension]:
-                    result[f"{dimension}_{criterion_name}"] = total_loss[dimension][criterion_name]
+                for criterion_name in total_loss[channel]:
+                    result[f"{channel}_{criterion_name}"] = total_loss[channel][criterion_name]
 
         losses.clear()
         losses.update(result)

@@ -4,7 +4,7 @@ from hamilton_sdk import adapters
 from torch.optim import Adam, AdamW
 from world_machine_experiments import shared, toy1d
 from world_machine_experiments.toy1d import (
-    Dimensions, base, multiple, parameter_variation)
+    Channels, base, multiple, parameter_variation)
 
 from world_machine.train import UniformScheduler
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
                        "weight_decay": 5e-4,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.MEASUREMENT],
+                       "block_configuration": [Channels.MEASUREMENT],
                        "device": device,
                        }
 

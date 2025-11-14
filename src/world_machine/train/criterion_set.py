@@ -18,14 +18,14 @@ class CriterionSet:
         if train:
             self.train_criterions["state_decoded"][name] = weight
 
-    def add_sensorial_criterion(self, name: str, sensorial_dimension: str, criterion: Module, train: bool = False,
-                                weight: float = 1.0) -> None:
-        if sensorial_dimension not in self.criterions:
-            self.criterions[sensorial_dimension] = {}
-        if sensorial_dimension not in self.train_criterions:
-            self.train_criterions[sensorial_dimension] = {}
+    def add_sensory_criterion(self, name: str, sensory_channel: str, criterion: Module, train: bool = False,
+                              weight: float = 1.0) -> None:
+        if sensory_channel not in self.criterions:
+            self.criterions[sensory_channel] = {}
+        if sensory_channel not in self.train_criterions:
+            self.train_criterions[sensory_channel] = {}
 
-        self.criterions[sensorial_dimension][name] = criterion
+        self.criterions[sensory_channel][name] = criterion
 
         if train:
-            self.train_criterions[sensorial_dimension][name] = weight
+            self.train_criterions[sensory_channel][name] = weight

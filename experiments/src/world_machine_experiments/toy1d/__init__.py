@@ -1,1 +1,1 @@
-from .dimensions import Dimensions
+from .channels import Channels

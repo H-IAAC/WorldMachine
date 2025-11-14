@@ -67,8 +67,8 @@ class StateManager(TrainStage):
                 mask = torch.zeros((batch_size, seq_len),
                                    dtype=bool, device=device)
 
-                for dim in input_masks.keys():
-                    mask = torch.bitwise_or(mask, input_masks[dim])
+                for channel in input_masks.keys():
+                    mask = torch.bitwise_or(mask, input_masks[channel])
 
                 state_current[torch.bitwise_not(
                     mask)] = state_input[torch.bitwise_not(mask)]

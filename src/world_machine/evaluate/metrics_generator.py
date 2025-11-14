@@ -48,10 +48,10 @@ class MetricsGenerator:
                                   model: WorldMachine,
                                   item: TensorDict,
                                   state: torch.Tensor,
-                                  sensorial_masks: TensorDict | None = None,
+                                  sensory_masks: TensorDict | None = None,
                                   inference_start: int = 0,
                                   data_start: int = 0,
-                                  replace_sensorial_data: bool = True) -> TensorDict:
+                                  replace_sensory_data: bool = True) -> TensorDict:
 
         device = next(iter(model.parameters())).device
 
@@ -59,9 +59,9 @@ class MetricsGenerator:
 
         logits = model.inference(state[:, data_start:],
                                  inputs[:, data_start:],
-                                 sensorial_masks[:, data_start:],
+                                 sensory_masks[:, data_start:],
                                  start=inference_start,
-                                 replace_sensorial_data=replace_sensorial_data)
+                                 replace_sensory_data=replace_sensory_data)
 
         return logits
 
@@ -72,15 +72,15 @@ class MetricsGenerator:
             iter(inputs.keys()))].shape[1]
         device = inputs.device
 
-        sensorial_masks_masked = TensorDict(
+        sensory_masks_masked = TensorDict(
             device=device, batch_size=[batch_size, seq_len])
 
-        sensorial_data: TensorDict = inputs
-        for name in sensorial_data.keys():
-            sensorial_masks_masked[name] = torch.zeros(
+        sensory_data: TensorDict = inputs
+        for name in sensory_data.keys():
+            sensory_masks_masked[name] = torch.zeros(
                 (batch_size, seq_len), dtype=bool, device=device)
 
-        return sensorial_masks_masked
+        return sensory_masks_masked
 
     @profile_range("metrics_generator_call", category="metrics", domain="world_machine")
     def __call__(self, model: WorldMachine, dataloader: WorldMachineDataLoader | list[TensorDict],
@@ -98,8 +98,8 @@ class MetricsGenerator:
         batch_size = item["inputs"].batch_size[0]
         seq_len = item["inputs"][next(
             iter(item["inputs"].keys()))].shape[1]
-        sensorial_masks_masked = self._generate_masked_masks(item["inputs"])
-        sensorial_masks_masked = sensorial_masks_masked.to(device)
+        sensory_masks_masked = self._generate_masked_masks(item["inputs"])
+        sensory_masks_masked = sensory_masks_masked.to(device)
         del item
 
         half_seq_len = seq_len//2
@@ -174,7 +174,7 @@ class MetricsGenerator:
                 item["logits"] = self._inference_previous_coded(model,
                                                                 item,
                                                                 state,
-                                                                sensorial_masks_masked,
+                                                                sensory_masks_masked,
                                                                 inference_start=half_seq_len)
 
                 itens: dict[str, list[TensorDict]] = {}
@@ -200,7 +200,7 @@ class MetricsGenerator:
                     logits_pred_shallow = self._inference_previous_coded(model,
                                                                          item,
                                                                          state,
-                                                                         sensorial_masks_masked,
+                                                                         sensory_masks_masked,
                                                                          data_start=half_seq_len)
 
                     item_pred_shallow = item[:, half_seq_len:]
@@ -219,8 +219,8 @@ class MetricsGenerator:
                     model.local_mode = True
 
                     logits_pred_local = model(state,
-                                              sensorial_data=item["inputs"],
-                                              sensorial_masks=sensorial_masks_masked)
+                                              sensory_data=item["inputs"],
+                                              sensory_masks=sensory_masks_masked)
 
                     item["logits"] = logits_pred_local
 

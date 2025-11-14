@@ -3,9 +3,9 @@ from .autoregressive import (
 from .data import toy1d_data, toy1d_data_splitted
 from .dataloader import toy1d_dataloaders
 from .dataset import save_toy1d_datasets, toy1d_datasets
-from .mask_sensorial import (
-    save_toy1d_mask_sensorial_metrics, save_toy1d_mask_sensorial_plot,
-    toy1d_mask_sensorial_metrics, toy1d_masks_sensorial_plots)
+from .mask_sensory import (
+    save_toy1d_mask_sensory_metrics, save_toy1d_mask_sensory_plot,
+    toy1d_mask_sensory_metrics, toy1d_masks_sensory_plots)
 from .metrics import (
     save_toy1d_metrics, save_toy1d_metrics_sample_logits,
     save_toy1d_metrics_sample_plots, toy1d_metrics,

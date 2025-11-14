@@ -5,7 +5,7 @@ from hamilton import driver
 from hamilton_sdk import adapters
 from torch.optim import SGD, AdamW
 from world_machine_experiments import shared
-from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d import Channels, parameter_variation
 
 from world_machine.train.scheduler import ChoiceScheduler, UniformScheduler
 
@@ -50,7 +50,7 @@ if __name__ == "__main__":
                        "weight_decay": 5e-5,
                        "accumulation_steps": 1,
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
+                       "block_configuration": [Channels.MEASUREMENT, Channels.MEASUREMENT],
                        "device": device,
                        "state_control": "periodic",
                        "positional_encoder_type": "learnable_alibi",
@@ -150,7 +150,7 @@ if __name__ == "__main__":
 
         # "H0x_SS128_Sine_Head4": {"n_attention_head": 4, "positional_encoder_type": "sine", "state_size": 128, "discover_state": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.measurement]},
         # "Break1_M0-100_FF_H0x_SS128_Sine_SCheckSensorial_Head4_STR5F5PStride3F3P-MD": {"recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": set([Dimensions.measurement, Dimensions.STATE_DECODED]), "recall_n_past": 5, "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "sine", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.measurement]},
-        "TESTE": {"recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": set([Dimensions.MEASUREMENT, Dimensions.STATE_DECODED]), "recall_n_past": 5, "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "sine", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Dimensions.MEASUREMENT]},
+        "TESTE": {"recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": set([Channels.MEASUREMENT, Channels.STATE_DECODED]), "recall_n_past": 5, "recall_n_future": 5, "n_attention_head": 4, "check_input_masks": True, "positional_encoder_type": "sine", "state_size": 128, "discover_state": True, "n_segment": 2, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch), "fast_forward": True, "measurement_shift": 0, "sensorial_train_losses": [Channels.MEASUREMENT]},
     }
 
     aditional_outputs = ["save_toy1d_autoregressive_state_plots",

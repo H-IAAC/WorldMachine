@@ -2,29 +2,29 @@ from torch.nn import MSELoss
 
 from world_machine.train import CriterionSet, Trainer
 from world_machine.train.stages import (
-    LossManager, SensorialMasker, SequenceBreaker, ShortTimeRecaller,
+    LossManager, SensoryMasker, SequenceBreaker, ShortTimeRecaller,
     StateManager)
 
 
 def get_trainer() -> Trainer:
     cs = CriterionSet()
 
-    cs.add_sensorial_criterion("mse", "dim0", MSELoss(), True)
-    cs.add_sensorial_criterion("mse", "dim1", MSELoss(), True)
+    cs.add_sensory_criterion("mse", "channel0", MSELoss(), True)
+    cs.add_sensory_criterion("mse", "channel1", MSELoss(), True)
 
     stages = []
-    stages.append(SensorialMasker(0.5))
+    stages.append(SensoryMasker(0.5))
     stages.append(StateManager(1, True))
     stages.append(SequenceBreaker(2, True))
 
-    dimension_sizes = {}
+    channel_sizes = {}
     criterions = {}
 
-    for dim in ["dim0", "dim1"]:
-        dimension_sizes[dim] = 3
-        criterions[dim] = MSELoss()
+    for channel in ["channel0", "channel1"]:
+        channel_sizes[channel] = 3
+        criterions[channel] = MSELoss()
 
-    stages.append(ShortTimeRecaller(dimension_sizes=dimension_sizes,
+    stages.append(ShortTimeRecaller(channel_sizes=channel_sizes,
                                     criterions=criterions,
                                     n_past=2,
                                     n_future=2,

@@ -8,7 +8,7 @@ from torch.optim import AdamW
 from world_machine.train.scheduler import UniformScheduler
 from world_machine_experiments import shared
 from world_machine_experiments.shared.pipeline import save_pipeline
-from world_machine_experiments.toy1d import Dimensions, parameter_variation
+from world_machine_experiments.toy1d import Channels, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment0
 
 if __name__ == "__main__":
@@ -36,12 +36,12 @@ if __name__ == "__main__":
                        "accumulation_steps": 1,
                        "state_dimensions": [0],
                        "optimizer_class": AdamW,
-                       "block_configuration": [Dimensions.MEASUREMENT, Dimensions.MEASUREMENT],
+                       "block_configuration": [Channels.MEASUREMENT, Channels.MEASUREMENT],
                        "device": device,
                        "state_control": "periodic",
                        "state_activation": "tanh",
                        "discover_state": True,
-                       "sensorial_train_losses": [Dimensions.MEASUREMENT],
+                       "sensory_train_losses": [Channels.MEASUREMENT],
                        "state_size": 128,
                        "positional_encoder_type": "alibi",
                        "n_attention_head": 4
@@ -49,11 +49,11 @@ if __name__ == "__main__":
 
     toy1d_parameter_variation = {
         "Base": {},
-        "SensorialMask": {"mask_sensorial_data": UniformScheduler(0, 1, n_epoch)},
+        "SensoryMask": {"mask_sensory_data": UniformScheduler(0, 1, n_epoch)},
 
         "CompleteProtocol": {
-            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Dimensions.MEASUREMENT, Dimensions.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
-            "check_input_masks": True, "mask_sensorial_data": UniformScheduler(0, 1, n_epoch),
+            "recall_stride_past": 3, "recall_stride_future": 3, "short_time_recall": {Channels.MEASUREMENT, Channels.STATE_DECODED}, "recall_n_past": 5, "recall_n_future": 5,
+            "check_input_masks": True, "mask_sensory_data": UniformScheduler(0, 1, n_epoch),
             "n_segment": 2,  "fast_forward": True,
             "noise_config": {"state": {"mean": 0.0, "std": 0.1}, "measurement": {"mean": 0.0, "std": 0.1}},
             "local_chance": 0.25
@@ -64,13 +64,13 @@ if __name__ == "__main__":
                          "save_toy1d_metrics_sample_logits",
                          "save_toy1d_metrics_sample_plots",
 
-                         "save_toy1d_mask_sensorial_plot",
-                         "save_toy1d_mask_sensorial_metrics",
+                         "save_toy1d_mask_sensory_plot",
+                         "save_toy1d_mask_sensory_metrics",
 
                          "save_toy1d_autoregressive_metrics"]
 
     outputs = ["save_toy1d_parameter_variation_plots",
-               "save_toy1d_parameter_variation_mask_sensorial_plots"]
+               "save_toy1d_parameter_variation_mask_sensory_plots"]
 
     save_pipeline(d_parameter_variation, outputs,
                   "model_train_pipeline", output_dir)

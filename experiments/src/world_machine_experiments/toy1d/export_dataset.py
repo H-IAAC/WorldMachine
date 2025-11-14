@@ -8,8 +8,7 @@ from torch.optim import AdamW
 from world_machine.train.scheduler import UniformScheduler
 from world_machine_experiments import shared
 from world_machine_experiments.shared.pipeline import save_pipeline
-from world_machine_experiments.toy1d import (
-    Dimensions, base, parameter_variation)
+from world_machine_experiments.toy1d import Channels, base, parameter_variation
 from world_machine_experiments.toy1d.specific import experiment0
 
 if __name__ == "__main__":

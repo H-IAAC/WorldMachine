@@ -5,7 +5,7 @@ from .local_setter import LocalSetter
 from .loss_manager import LossManager
 from .noise_adder import NoiseAdder
 from .prepare_model import PrepareModel
-from .sensorial_masker import SensorialMasker
+from .sensory_masker import SensoryMasker
 from .sequence_breaker import SequenceBreaker
 from .short_time_recaller import ShortTimeRecaller
 from .simple_optimizer import SimpleOptimizer
