@@ -20,21 +20,21 @@ This section briefly presents the newly introduced concepts necessary to underst
 
 A deeper understanding can be obtained through the publications of this project.
 
-### World Model, Computational World Model, State and Sensorial Data.
+### World Model, Computational World Model, State and Sensory Data.
 
 A world model is the cognitive process that models the world in which the agent is inserted, and allows for predictions.
 
-A computational world model is the computational system that makes predictions about the current and future state of a "world" based on the sensorial data it receives, but inferring the internal structure of that world.
+A computational world model is the computational system that makes predictions about the current and future state of a "world" based on the sensory data it receives, but inferring the internal structure of that world.
 
-In this process, the "sensorial data" is everything that the agent can observe of the external world, and the "state" is the internal model the agent creates to make sense and make predictions about this sensorial data. The "state" of the world model does not correspond to the real state of the external world.
+In this process, the "sensory data" is everything that the agent can observe of the external world, and the "state" is the internal model the agent creates to make sense and make predictions about this sensory data. The "state" of the world model does not correspond to the real state of the external world.
 
 ### World Machine
 
 World Machine is a research project that explores the creation of computational world models.
 
-It's also the proposed architecture and protocol of this project. The architecture is a transform-based model, that operates in "latent world states", vectors that encode the state of the world model at each instant. At each step, the model predicts the next latent world state using the previous one, conditioned on sensorial data.
+It's also the proposed architecture and protocol of this project. The architecture is a transform-based model, that operates in "latent world states", vectors that encode the state of the world model at each instant. At each step, the model predicts the next latent world state using the previous one, conditioned on sensory data.
 
-The core of the model consists of transform blocks. These can be of type "State" for blocks that process only the latent state without sensorial data, "Sensorial Data Channel Name" for blocks that use a sensorial channel, and "State Input" for blocks that use the state itself at the beginning of the time step as sensorial input.
+The core of the model consists of transform blocks. These can be of type "State" for blocks that process only the latent state without sensory data, "Sensory Data Channel Name" for blocks that use a sensory channel, and "State Input" for blocks that use the state itself at the beginning of the time step as sensory input.
 
 ### State Discovery
 
@@ -48,7 +48,7 @@ This process is called "state discovery".
 
 Several steps of a training protocol were developed for the World Machine training.
 
-One of them, "sensorial masking," involves masking sensorial data during training, hiding a random amount of data at each step.
+One of them, "sensory masking," involves masking sensory data during training, hiding a random amount of data at each step.
 
 Understanding in depth how other steps of the protocol work is not necessary to understand this experiment
 
@@ -57,11 +57,11 @@ Understanding in depth how other steps of the protocol work is not necessary to 
 To assess the capabilities of the World Machine, these tasks were established, to be carried out after training in the validation dataset:
 
 - Normal: normal autoregressive model inference
-- Use state: inference on previously encoded states, without sensorial data.
-- Prediction: inference of future states, using several previous encoded states, without sensorial data.
-- Prediction Shallow: inference of future states, using only one previous encoded state, without sensorial data.
-- Prediction Local: inference of next immediate state, using only one previous encoded state, without sensorial data.
-- MaskSensorial@x: autoregressive model inference with x% sensorial masking
+- Use state: inference on previously encoded states, without sensory data.
+- Prediction: inference of future states, using several previous encoded states, without sensory data.
+- Prediction Shallow: inference of future states, using only one previous encoded state, without sensory data.
+- Prediction Local: inference of next immediate state, using only one previous encoded state, without sensory data.
+- MaskSensory@x: autoregressive model inference with x% sensory masking
 
 ### Toy1D Dataset
 
@@ -79,7 +79,7 @@ $$\Delta t=1$$
 
 The initial $x_0$ of each series is random, and $\vec{u}_i$ is a random square+impulse wave sum. The data is also clipped to avoid excessively high values Finally, it is also normalized.
 
-The sensorial data is the measurement $\vec{s}_i = \tanh(H \vec{x}_i)$, where H is an random 2x2 matrix.
+The sensory data is the measurement $\vec{s}_i = \tanh(H \vec{x}_i)$, where H is an random 2x2 matrix.
 
 In every use, only the position ($\vec{x}_i^0$) data is used. 
 
@@ -104,10 +104,10 @@ Since the dataset is stochastic, different data can be generated by controlling 
 We train different model configurations. Each configuration may vary in the number of protocol steps used:
 
 - Base: only state discovery.
-- Sensorial Mask: state discovery and sensorial masking.
-- Complete Protocol: all steps developed so far, state discovery, sensorial masking, sequence breaker, state-check sensorial, fast forward, short time recall, noise adding and local mode.
+- Sensory Mask: state discovery and sensory masking.
+- Complete Protocol: all steps developed so far, state discovery, sensory masking, sequence breaker, state-check sensory, fast forward, short time recall, noise adding and local mode.
 
-The training loss is the sensorial loss sum of the MSE of the external state $\vec{x}_0^0$ (also called "state decoded") and MSE of the measurement $\vec{s}_i$.
+The training loss is the sensory loss sum of the MSE of the external state $\vec{x}_0^0$ (also called "state decoded") and MSE of the measurement $\vec{s}_i$.
 
 The evaluation metrics are computed with a early saved model in the epoch of minimum validation optimizer loss. But, the training continue until the last epoch for the training metrics generation.
 
@@ -115,7 +115,7 @@ The evaluation metrics are computed with a early saved model in the epoch of min
 
 At each run, the dataset, model initial parameters and and random values ​​generated and used by each protocol step are randomized.
 
-The randomization occurs with a given seed, that is equal for each run in each variation. So "Base-Run 0" uses the same random generator as "Sensorial Mask". Since the values ​​depend on the order they are generated, we guarantee that at least the datasets generated for each run are the same between variations. 
+The randomization occurs with a given seed, that is equal for each run in each variation. So "Base-Run 0" uses the same random generator as "Sensory Mask". Since the values ​​depend on the order they are generated, we guarantee that at least the datasets generated for each run are the same between variations. 
 
 ### Sample size
 
@@ -140,14 +140,14 @@ Common model parameters:
 - Positional encoder type: Alibi
 - Attention heads: 4
 - Block configuration: Measurement -> Measurement
-- Sensorial encoders and decoders: point-wise feedforwards
+- Sensory encoders and decoders: point-wise feedforwards
 
 Protocol parameters (when used):
 
 - State Discovery
   - Check input masks: True
   - Save state method: replace
-- Sensorial Masking
+- Sensory Masking
   - Uniform distribution masking rate between 0 and 1
 - Sequence Breaker
   - N segment: 2
@@ -223,8 +223,8 @@ The experimental results are briefly presented in this section. Note that a more
 <img src="toy1d_experiment0/metrics_box_plot_mse.png" max-height=400 /> <img src="toy1d_experiment0/metrics_box_plot_0.1sdtw.png" max-height=400 />
 
 - O2.1: All models perform better in the normal task
-- O2.2: The Base model cannot perform other tasks, which involve masking sensorial data, adequately, since it was not trained in the absence of sensorial data.
-- O2.3: No model just guesses predictions in the absence of sensorial data, since the metrics are always lower than in MaskSensorial@100 (100% masking of sensorial data $\to$ generates random sequence)
+- O2.2: The Base model cannot perform other tasks, which involve masking sensory data, adequately, since it was not trained in the absence of sensory data.
+- O2.3: No model just guesses predictions in the absence of sensory data, since the metrics are always lower than in MaskSensory@100 (100% masking of sensory data $\to$ generates random sequence)
 - O2.4: Shallow prediction is the most complex task to perform. No model can perform it well.
 - O2.5: Using the full protocol results in worsening of the Normal and Use State tasks, but also results in significant improvements in Prediction Shallow and Prediction Local.
 - O2.6: Using multiple pre-coded states (Use State) is considerably easier than using just one state (Local Prediction). The model may be using the trend of the states to predict the sequence.
