@@ -64,6 +64,8 @@ def metrics_full(data_dir: str) -> dict[str, dict]:
     metrics_full = {}
 
     for name in variations_sorted:
+        path = os.path.join(data_dir, name)
+
         metrics_full[name] = load_multiple_metrics(path, "metrics")
 
         mask_sensory_metrics = load_multiple_metrics(

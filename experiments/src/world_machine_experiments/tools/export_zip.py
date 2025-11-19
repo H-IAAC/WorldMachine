@@ -56,7 +56,8 @@ def create_zip(file_name: str,
 
 
 def get_extensions_recursive(base_directory: str) -> set[str]:
-    all_files = glob.glob("**\\*.*", root_dir=base_directory, recursive=True)
+    pattern = os.path.join("**", "*.*")
+    all_files = glob.glob(pattern, root_dir=base_directory, recursive=True)
     return {path.split(".")[-1] for path in all_files}
 
 
@@ -92,8 +93,10 @@ if __name__ == "__main__":
 
     extensions = get_extensions_recursive(base_directory)
 
-    n_process = min(mp.cpu_count(), len(extensions)+1)
     lock = mp.RLock()
+    tqdm.tqdm.set_lock(lock)
+
+    n_process = min(mp.cpu_count(), len(extensions)+1)
     pool = ProcessPoolExecutor(n_process,
                                initializer=worker_initializer,
                                initargs=(lock,))
@@ -108,12 +111,13 @@ if __name__ == "__main__":
         future = pool.submit(worker_func, args)
         futures.append(future)
 
-    args = {"file_name": experiment_name+"_final_results",
-            "base_directory": base_directory,
-            "export_directory": export_directory,
-            "include_dirs": ["final_results"]}
-    future = pool.submit(worker_func, args)
-    futures.append(future)
+    if os.path.isdir(os.path.join(base_directory, "final_results")):
+        args = {"file_name": experiment_name+"_final_results",
+                "base_directory": base_directory,
+                "export_directory": export_directory,
+                "include_dirs": ["final_results"]}
+        future = pool.submit(worker_func, args)
+        futures.append(future)
 
     for future in tqdm.tqdm(as_completed(futures), position=0, desc="Compressing Results"):
         try:

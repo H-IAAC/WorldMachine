@@ -28,6 +28,7 @@ if __name__ == "__main__":
 
     else:
         devices.append('cpu')
+        n_device = 1
 
     max_jobs_per_device = 12
     n_worker = n_device * max_jobs_per_device

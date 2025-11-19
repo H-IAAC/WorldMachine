@@ -29,6 +29,7 @@ dependencies = [
     "networkx[default]",
     "pydot",
     "graphviz",
+    "zenodo_client"
 ]
 
 [project.readme]
