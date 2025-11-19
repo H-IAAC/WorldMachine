@@ -21,7 +21,10 @@ if __name__ == "__main__":
 
     args = {"sequence_length": 1000,
             "n_sequence": 10000,
-            "context_size": 200}
+            "context_size": 200,
+            "state_control": "periodic",
+            "state_dimensions": [0],
+            }
 
     base_seed = 42
     for seed in range(15):
