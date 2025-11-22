@@ -4,7 +4,7 @@ import uuid
 
 import torch
 
-from world_machine.train import DatasetPassMode
+from world_machine.train.mode import DatasetPassMode
 
 from .train_stage import TrainStage
 

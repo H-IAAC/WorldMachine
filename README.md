@@ -48,7 +48,7 @@ See more projects from the group [here](https://h-iaac.github.io/HIAAC-Index).
     pip install .
     ```
 
-See the "First World Machine" example for how to create and train a model.
+See the "My First World Machine" example for how to create and train a model.
 
 ## Citation
 

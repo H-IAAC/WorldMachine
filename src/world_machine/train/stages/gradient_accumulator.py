@@ -7,9 +7,9 @@ from torch import Generator
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from world_machine import WorldMachine
 from world_machine.data import WorldMachineDataset
-from world_machine.train import DatasetPassMode
+from world_machine.train.mode import DatasetPassMode
+from world_machine.world_machine import WorldMachine
 
 from .simple_optimizer import SimpleOptimizer
 

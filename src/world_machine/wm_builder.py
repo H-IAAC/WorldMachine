@@ -5,7 +5,7 @@ from .world_machine import WorldMachine
 
 
 class WorldMachineBuilder:
-    def __init__(self, state_size: int, max_context_size: int, positional_encoder_type: str | None = "sine",
+    def __init__(self, state_size: int, max_context_size: int, positional_encoder_type: str | None = "alibi",
                  learn_sensory_mask: bool = False):
         self._state_size = state_size
         self._max_context_size = max_context_size

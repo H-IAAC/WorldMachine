@@ -3,6 +3,7 @@ from .gradient_accumulator import GradientAccumulator
 from .lambda_stage import LambdaStage
 from .local_setter import LocalSetter
 from .loss_manager import LossManager
+from .lrscheduler_step import LRScheduler_Step
 from .noise_adder import NoiseAdder
 from .prepare_model import PrepareModel
 from .sensory_masker import SensoryMasker

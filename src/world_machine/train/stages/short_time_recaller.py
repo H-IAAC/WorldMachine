@@ -4,8 +4,8 @@ from tensordict import TensorDict
 from torch.nn import Module, ModuleDict
 from torch.optim import Optimizer
 
-from world_machine import WorldMachine
 from world_machine.layers import PointwiseFeedforward
+from world_machine.world_machine import WorldMachine
 
 from .train_stage import TrainStage
 

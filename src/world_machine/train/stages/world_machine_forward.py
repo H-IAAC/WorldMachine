@@ -1,7 +1,7 @@
 from tensordict import TensorDict
 
-from world_machine import WorldMachine
-from world_machine.train import DatasetPassMode
+from world_machine.train.mode import DatasetPassMode
+from world_machine.world_machine import WorldMachine
 
 from .train_stage import TrainStage
 

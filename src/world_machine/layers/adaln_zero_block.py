@@ -17,7 +17,7 @@ class AdaLNZeroBlock(ConditioningBlock):
         self._compatibility_version = CURRENT_COMPATIBILITY_VERSION
 
         self.conditioning_mlp = torch.nn.Sequential(torch.nn.SiLU(),
-                                                    torch.nn.Linear(conditioning_dim, 6*conditioning_dim, bias=True))
+                                                    torch.nn.Linear(conditioning_dim, 6*embed_dim, bias=True))
 
         self.layer_norm1 = torch.nn.LayerNorm(embed_dim)
         self.modulate1 = Modulate()
