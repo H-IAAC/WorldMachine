@@ -182,7 +182,7 @@ class WorldMachineDataset(Dataset, abc.ABC):
 
     def __setstate__(self, state):
         upgrade(state)
-        return super().__setstate__(state)
+        self.__dict__.update(state)
 
 
 atexit.register(WorldMachineDataset._delete_files)
