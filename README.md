@@ -69,22 +69,3 @@ url = {https://h-iaac.github.io/WorldMachine/}
 
 
 Project supported by the brazilian Ministry of Science, Technology and Innovations, with resources from Law No. 8,248, of October 23, 1991
-
->Outros arquivos e informações que o repositório precisa ter:
-> - Preencha a descrição do repositóio
->   - É necessário um _role_ de _admin_ no repositório para alterar sua descrição. Pessoas com [_role_ de _owner_](https://github.com/orgs/H-IAAC/people?query=role%3Aowner) na organização do GitHub podem alterar os papéis por repositório.
->   - Na página principal do repositório, na coluna direita, clique na engrenagem ao lado de "About"
->   - É recomendável também adicionar "topics" aos dados do repositório
-> - Um arquivo LICENSE contendo a licença do repositório. Recomendamos a licença [LGPLv3](https://choosealicense.com/licenses/lgpl-3.0/).
->   - Converse com seu orientador caso acredite que essa licença não seja adequada. 
-> - Um arquivo CFF contendo as informações sobre como citar o repositório.
->   - Este arquivo é lido automaticamente por ferramentas como o próprio GitHub ou o Zenodo, que geram automaticamente as citações.
->   - Existem ferramentas para auxiliar a criação do arquivo, como o [CFF Init](https://bit.ly/cffinit).    
->   - O script `generate_citation.py` pode ser utilizado para preencher o bloco de citação deste README automaticamente:
->     - ```bash
->         python -m pip install cffconvert
->         python generate_citation.py
->         ```
->   - Caso o arquivo tenha a tag `doi: <DOI>`, ele será lido automaticamente pelo Index.
-> - Opcionalmente, o repositório pode ser preservado utilizando o Zenodo, que gerará um DOI para ele. [Tutorial](https://help.zenodo.org/docs/github/enable-repository/).
->   - É necessário um _role_ de _admin_ no repositório para publicar um repositório utilizando o Zenodo. Pessoas com [_role_ de _owner_](https://github.com/orgs/H-IAAC/people?query=role%3Aowner) na organização do GitHub podem alterar os papéis por repositório.
