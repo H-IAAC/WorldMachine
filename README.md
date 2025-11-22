@@ -61,10 +61,6 @@ url = {https://h-iaac.github.io/WorldMachine/}
 ```
 
 ## Authors
-
-> Lista ordenada por data das pessoas que desenvolveram algo neste repositório. Deve ter ao menos 1 autor. Inclua todas as pessoas envolvidas no projeto e desenvolvimento
->
-> Você também pode indicar um link para o perfil de algum autor: \[Nome do Autor]\(Link para o Perfil)
   
 - (2025-) Elton Cardoso do Nascimento: M. Eng. student, FEEC-UNICAMP
 - (Advisor, 2025-) Paula Dornhofer Paro Costa: Professor, FEEC-UNICAMP
