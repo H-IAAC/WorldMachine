@@ -6,8 +6,8 @@ The graph below shows the artifacts generated in this research. Hover your mouse
 
 <script>
     window.define = undefined;
-    window.ARTIFACTS_JSON = "../../_static/artifacts.json";
+    window.ARTIFACTS_JSON = "/WorldMachine/_static/artifacts.json";
 </script>
 
-<script src="../../_static/d3.v7.min.js"></script>
-<script src="../../_static/artifact_explorer.js"></script>
+<script src="/WorldMachine/_static/d3.v7.min.js"></script>
+<script src="/WorldMachine/_static/artifact_explorer.js"></script>
