@@ -3,7 +3,7 @@ requires = ["setuptools>=61.2", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "world_machine"
+name = "world_machine_page"
 authors = [
     { name = "Elton Cardoso do Nascimento", email = "e233840@dac.unicamp.br" },
 ]
@@ -13,11 +13,16 @@ classifiers = [
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Intended Audience :: Science/Research",
 ]
 requires-python = ">= 3.10"
 dynamic = ["version"]
-dependencies = ["torch", "tensordict", "numba"]
+dependencies = [
+    "sphinx",
+    "pydata-sphinx-theme",
+    "sphinx-mdinclude",
+    "sphinx_favicon",
+    "myst_parser",
+]
 
 [project.readme]
 file = "README.md"
@@ -41,3 +46,4 @@ where = ["src"]
 namespaces = false
 
 [tool.setuptools_scm]
+root = ".."

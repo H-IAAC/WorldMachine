@@ -1,0 +1,80 @@
+{
+    "artifacts": [
+        {
+            "type": "code_version",
+            "name": "world_machine:0.1",
+            "date": "14/10/2025",
+            "url": "https://github.com/EltonCN/WorldMachine/releases/tag/0.1"
+        },
+        {
+            "type": "code_version",
+            "name": "world_machine:0.2",
+            "previous_version": "world_machine:0.1",
+            "date": "23/11/2025",
+            "url": "https://github.com/EltonCN/WorldMachine/releases/tag/0.1"
+        },
+        {
+            "type": "docker_image",
+            "name": "Docker Image:0.1",
+            "date": "10/10/2025",
+            "url": "https://doi.org/10.5281/zenodo.17545426",
+            "dependencies": [
+                "world_machine:0.1"
+            ],
+            "description": "The Docker image can be used to run the World Machine and to research experiments created with it."
+        },
+        {
+            "type": "docker_image",
+            "name": "Docker Image:0.2",
+            "previous_version": "Docker Image:0.1",
+            "date": "23/11/2025",
+            "dependencies": [
+                "world_machine:0.2"
+            ],
+            "description": "The Docker image can be used to run the World Machine and to research experiments created with it."
+        },
+        {
+            "type": "dataset",
+            "name": "Toy1D",
+            "dependencies": [
+                "Docker Image:0.2"
+            ],
+            "date": "14/10/2025",
+            "url": "https://doi.org/10.5281/zenodo.17653221",
+            "description": "Toy1D is a synthetic dataset of one-dimensional time series. We designed it for the study of computational world model."
+        },
+        {
+            "type": "experiment_data",
+            "name": "Toy1D - Experiment 0 Protocol Test",
+            "dependencies": [
+                "Toy1D",
+                "Docker Image:0.2"
+            ],
+            "date": "14/10/2025",
+            "url": "https://doi.org/10.5281/zenodo.17352548",
+            "description": "In this World Machine experiment, our goal is to perform an initial check of whether the model is trainable using the state-discovery approach."
+        },
+        {
+            "type": "experiment_data",
+            "name": "Toy1D - Experiment 1 Configuration Test",
+            "dependencies": [
+                "Toy1D",
+                "Docker Image:0.2"
+            ],
+            "date": "14/10/2025",
+            "url": "https://doi.org/10.5281/zenodo.17661654",
+            "description": "We investigate in this experiment the specific impact of each protocol step and several model architecture elements."
+        },
+        {
+            "type": "experiment_data",
+            "name": "Toy1D - Experiment 2 Best Long",
+            "dependencies": [
+                "Toy1D",
+                "Docker Image:0.2"
+            ],
+            "date": "14/10/2025",
+            "url": "https://doi.org/10.5281/zenodo.17653180",
+            "description": "In this experiment, we investigate what happens when we train the model for longer. Also, we took this opportunity to explore the effect of the learning rate scheduler used, Cosine Annealing with Warmup."
+        }
+    ]
+}

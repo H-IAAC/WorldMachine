@@ -19,7 +19,7 @@ See more projects from the group [here](https://h-iaac.github.io/HIAAC-Index).
 
 - src: _world_machine_ source code.
 - experiments: code for the developed experiments
-- docs: project page source.
+- page: project page source.
 - benchmark: code performance benchmark.
 - ci_cd: deploy scripts.
 - examples: examples of how to use World Machine.
@@ -52,7 +52,7 @@ See the "My First World Machine" example for how to create and train a model.
 
 ## Citation
 
-```bibtext
+```bibtex
 @software{my_citation,
 author = {Cardoso do Nascimento, Elton and Dornhofer Paro Costa, Paula},
 title = {World Machine},
