@@ -22,6 +22,7 @@ dependencies = [
     "sphinx-mdinclude",
     "sphinx_favicon",
     "myst_parser",
+    "nbsphinx",
 ]
 
 [project.readme]
