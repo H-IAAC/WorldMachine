@@ -1,6 +1,6 @@
 // AI (ChatGPT) GENERATED CODE
 
-d3.json("/_static/artifacts.json").then(data => {
+d3.json(window.ARTIFACTS_JSON).then(data => {
     // ---------- Configuration ----------
     const container = d3.select("#artifact-graph");
     container.selectAll("*").remove();
