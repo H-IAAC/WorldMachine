@@ -12,4 +12,4 @@
    artifact_explorer/index
    examples/index
    reports/index
-   
+   blog/index

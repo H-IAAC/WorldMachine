@@ -23,6 +23,7 @@ dependencies = [
     "sphinx_favicon",
     "myst_parser",
     "nbsphinx",
+    "ablog",
 ]
 
 [project.readme]

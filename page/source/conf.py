@@ -19,7 +19,9 @@ extensions = [
     # "sphinx_mdinclude",
     "sphinx_favicon",
     "myst_parser",
-    "nbsphinx"
+    "nbsphinx",
+    "ablog",
+    'sphinx.ext.intersphinx'
 ]
 
 templates_path = ['_templates']
@@ -34,7 +36,6 @@ html_static_path = ['_static']
 html_js_files = [
     ("custom-icons.js", {"defer": "defer"})
 ]
-
 # source_suffix = ['.rst']
 
 
@@ -53,6 +54,11 @@ myst_enable_extensions = [
     "html_admonition",
     "html_image",
 ]
+
+# Ablog
+
+blog_path = "blog/index"
+blog_title = "Blog"
 
 myst_html_meta = {}
 
