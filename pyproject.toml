@@ -7,7 +7,7 @@ name = "world_machine"
 authors = [
     { name = "Elton Cardoso do Nascimento", email = "e233840@dac.unicamp.br" },
 ]
-description = ""
+description = "Investigating the concept and creation of computational world models."
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -25,7 +25,7 @@ content-type = "text/markdown"
 
 [project.urls]
 Homepage = "https://h-iaac.github.io/WorldMachine/"
-"Bug Tracker" = "https://github.com/EltonCN/WorldMachine/issues"
+"Bug Tracker" = "https://github.com/H-IAAC/WorldMachine/issues"
 # Documentation =
 
 [project.optional-dependencies]

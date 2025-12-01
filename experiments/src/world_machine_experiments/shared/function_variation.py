@@ -46,7 +46,11 @@ class function_variation():
 
             kwargs.update(self.literal_dependencies)
 
-            return func(*args, **kwargs)
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                e.add_note(f"While calling function variation: {name}")
+                raise
 
         return wrapper
 
