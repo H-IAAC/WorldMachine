@@ -29,14 +29,21 @@ jobs:
 
             - name: Build release distributions
               run: |
-                  # NOTE: put your own distribution build steps here.
                   python -m pip install build
+                  python -m build
+                  cd experiments
                   python -m build
 
             - name: Upload distributions
               uses: actions/upload-artifact@v4
               with:
                   name: release-dists
+                  path: dist/
+
+            - name: Upload distributions - Experiments
+              uses: actions/upload-artifact@v4
+              with:
+                  name: release-dists-experiments
                   path: dist/
 
     pypi-publish:
@@ -62,5 +69,16 @@ jobs:
                   name: release-dists
                   path: dist/
 
+            - name: Retrieve release distributions - Experiments
+              uses: actions/download-artifact@v4
+              with:
+                  name: release-dists-experiments
+                  path: experiments/dist/
+
             - name: Publish release distributions to PyPI
               uses: pypa/gh-action-pypi-publish@release/v1
+
+            - name: Publish release distributions to PyPI - Experiments
+              uses: pypa/gh-action-pypi-publish@release/v1
+              with:
+                  packages-dir: experiments/dist
