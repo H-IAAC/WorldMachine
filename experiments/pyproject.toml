@@ -7,7 +7,7 @@ name = "world_machine_experiments"
 authors = [
     { name = "Elton Cardoso do Nascimento", email = "e233840@dac.unicamp.br" },
 ]
-description = ""
+description = "Experiments of the World Machine project, that investigates the concept and creation of computational world models"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -29,7 +29,7 @@ dependencies = [
     "networkx[default]",
     "pydot",
     "graphviz",
-    "zenodo_client"
+    "zenodo_client",
 ]
 
 [project.readme]
@@ -37,7 +37,7 @@ file = "README.md"
 content-type = "text/markdown"
 
 [project.urls]
-#Homepage = "https://hiaac.unicamp.br"
+Homepage = "https://h-iaac.github.io/WorldMachine/"
 "Bug Tracker" = "https://github.com/EltonCN/WorldMachine/issues"
 # Documentation =
 
