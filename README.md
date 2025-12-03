@@ -74,8 +74,7 @@ Project supported by the brazilian Ministry of Science, Technology and Innovatio
 ## License
 
 ```
-Copyright 2025 Elton Cardoso do Nascimento & Paula Dornhofer Paro Costa
- 
+Copyright 2025 Elton Cardoso do Nascimento & Paula Dornhofer Paro Costa 
 
 Licensed under the GNU LESSER GENERAL PUBLIC LICENSE, Version 3 (the "License");
 you may not use this file except in compliance with the License.

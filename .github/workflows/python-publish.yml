@@ -44,7 +44,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                   name: release-dists-experiments
-                  path: dist/
+                  path: experiments/dist/
 
     pypi-publish:
         runs-on: ubuntu-latest
