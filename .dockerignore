@@ -203,8 +203,3 @@ dev/**/*.txt
 
 # setuptools-scm need some .git data, we can't ignore all
 .git/*
-!.git/HEAD
-!.git/refs
-!.git/objects
-!.git/config
-!.git/packed-refs
