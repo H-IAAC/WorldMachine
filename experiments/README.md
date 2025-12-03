@@ -3,3 +3,37 @@
 
 # World Machine Experiments
 
+Here are the experiments conducted in the World Machine project. For more information on each specific experiment, see our [reports](https://h-iaac.github.io/WorldMachine/reports/index.html).
+
+World Machine is a research project that investigates the concept and creation of computational world models. These AI systems create internal representations to understand and make predictions about the external world. See the [project page](https://h-iaac.github.io/WorldMachine/) for more information. The project is part of the [H.IAAC](https://hiaac.unicamp.br/en/), the Hub for Artificial Intelligence and Cognitive Architecture, located at the Universidade Estadual de Campinas (UNICAMP), Brazil.
+
+## Installation / Usage
+
+- Installing using pip:
+
+    ```bash
+    pip install --upgrade pip
+    pip install world_machine_experiments
+    ```
+
+- For installing from the repository:
+
+    ```bash
+    git clone https://github.com/H-IAAC/WorldMachine
+    cd WorldMachine/experiments
+    pip install --upgrade pip
+    pip install .
+    ```
+
+See the [report](https://h-iaac.github.io/WorldMachine/reports/index.html) of the experiment you wish to reproduce, for more information on how to perform it.
+
+
+## Authors
+  
+- (2025-) Elton Cardoso do Nascimento: M. Eng. student, FEEC-UNICAMP
+- (Advisor, 2025-) Paula Dornhofer Paro Costa: Professor, FEEC-UNICAMP
+  
+## Acknowledgements
+
+
+Project supported by the brazilian Ministry of Science, Technology and Innovations, with resources from Law No. 8,248, of October 23, 1991
