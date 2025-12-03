@@ -1,6 +1,6 @@
 {
     "title": "World Machine Docker Image",
-    "license": "",
+    "license": "lgpl-3.0-or-later",
     "keywords": [
         "docker image",
         "mesh:D001185",
