@@ -12,15 +12,16 @@ authors:
     family-names: Cardoso do Nascimento
     email: e233840@dac.unicamp.br
     affiliation: UNICAMP
-    orcid: 'https://orcid.org/0009-0005-0480-6970'
+    orcid: "https://orcid.org/0009-0005-0480-6970"
   - given-names: Paula
     family-names: Dornhofer Paro Costa
     email: paulad@unicamp.br
     affiliation: UNICAMP
-    orcid: 'https://orcid.org/0000-0002-1534-5744'
-repository-code: 'https://github.com/H-IAAC/WorldMachine'
-url: 'https://h-iaac.github.io/WorldMachine/'
-repository-artifact: 'https://pypi.org/project/world_machine/'
+    orcid: "https://orcid.org/0000-0002-1534-5744"
+repository-code: "https://github.com/H-IAAC/WorldMachine"
+doi: 10.5281/zenodo.17806741
+url: "https://h-iaac.github.io/WorldMachine/"
+repository-artifact: "https://pypi.org/project/world_machine/"
 abstract: >-
   World Machine is a research project that investigates the
   concept and creation of computational world models.
