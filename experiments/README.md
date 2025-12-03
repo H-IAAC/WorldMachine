@@ -7,6 +7,11 @@ Here are the experiments conducted in the World Machine project. For more inform
 
 World Machine is a research project that investigates the concept and creation of computational world models. These AI systems create internal representations to understand and make predictions about the external world. See the [project page](https://h-iaac.github.io/WorldMachine/) for more information. The project is part of the [H.IAAC](https://hiaac.unicamp.br/en/), the Hub for Artificial Intelligence and Cognitive Architecture, located at the Universidade Estadual de Campinas (UNICAMP), Brazil.
 
+## Structure
+
+- src: _world_machine_experiments_ source code.
+- reports: source of the experiment reports.
+
 ## Installation / Usage
 
 - Installing using pip:
