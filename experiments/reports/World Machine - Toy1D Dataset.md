@@ -93,8 +93,8 @@ Together, these elements produce an input sequence that is neither purely determ
 ## How to use the dataset
 
 For using the dataset:
-- Download it from the [Zenodo record]()
-- Install [_world_machine_ package]() ATUALIZAR LINK
+- Download it from the [Zenodo record](https://doi.org/10.5281/zenodo.17653221)
+- Install [_world_machine_ package](https://github.com/H-IAAC/WorldMachine)
 - Use this code to load a dataset variation:
 
 ```python
