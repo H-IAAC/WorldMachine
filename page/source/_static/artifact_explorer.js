@@ -89,7 +89,7 @@ d3.json(window.ARTIFACTS_JSON).then(data => {
 
     const columnX = d3.scaleBand()
         .domain(columnIndices)
-        .range([200, Math.max(600, containerWidth) - 100])
+        .range([100, Math.max(600, containerWidth) - 100])
         .padding(0.45);
 
     nodes.forEach(n => {
@@ -100,14 +100,14 @@ d3.json(window.ARTIFACTS_JSON).then(data => {
 
         const centralY = yScale(dateKey);
         const spread = Math.min(20 + groupSize * 4, 60);
-        const offset = (indexInGroup - (groupSize - 1) / 2) * (spread / Math.max(1, groupSize - 1));
+        const offset = (((groupSize - 1) / 2) - indexInGroup) * (spread / Math.max(1, groupSize - 1));
 
         n.y = centralY + offset;
 
         const ts = typeStyles[n.type] || { column: 3 };
         n.column = ts.column ?? 3;
 
-        const jitter = (indexInGroup % 3) * 6 - 6;
+        const jitter = 0;// (indexInGroup % 3) * 6 - 6;
         n.x = columnX(n.column) + jitter;
     });
 
@@ -187,9 +187,31 @@ d3.json(window.ARTIFACTS_JSON).then(data => {
         .attr("d", "M 0 0 L 10 5 L 0 10 z")
         .attr("fill", edgeColorDep);
 
-    function orthPath(sx, sy, tx, ty) {
-        const midX = sx + (tx - sx) * 0.45;
-        return `M ${sx} ${sy} L ${midX} ${sy} L ${midX} ${ty} L ${tx} ${ty}`;
+    function computMidX(sx, tx) {
+        if (Math.abs(tx - sx) > 100) {
+            var alpha = 0.75;
+        }
+        else {
+            var alpha = 0.5;
+        }
+
+        const midX = (sx * (1 - alpha)) + (tx * alpha);
+        return midX;
+    }
+
+    function orthPath(sx, sy, tx, ty, t) {
+        var midX = computMidX(sx, tx);
+        var spreadY = 0;
+        if (targetCounts[t.raw.name] > 1) {
+            const y_range = 10;
+            const y_offset = y_range / targetCounts[t.raw.name];
+
+            spreadY -= y_range / 2;
+            spreadY += connectedCounts[t.raw.name] * y_offset;
+            connectedCounts[t.raw.name] += 1;
+        }
+
+        return `M ${sx} ${sy} L ${midX} ${sy} L ${midX} ${ty + spreadY} L ${tx} ${ty + spreadY}`;
     }
 
     const linkG = content.append("g");
@@ -199,15 +221,58 @@ d3.json(window.ARTIFACTS_JSON).then(data => {
         edgeKeyCounts[key] = (edgeKeyCounts[key] || 0) + 1;
     });
 
+    const targetCounts = {};
+    links.forEach(l => {
+        targetCounts[l.target] = 0;
+    })
+
+    links.forEach(l => {
+        targetCounts[l.target] += 1;
+    })
+
+    const connectedCounts = {};
+    links.forEach(l => {
+        connectedCounts[l.target] = 0;
+    })
+
+    function rotateColor(x) {
+
+        while (x > 255) {
+            x -= 255;
+        }
+        while (x < 0) {
+            x += 255;
+        }
+        return x;
+    }
+
+    function getRandomEdgeColor() {
+        const offsetRange = 100;
+
+        colorsOnly = edgeColorDep.substring(edgeColorDep.indexOf('(') + 1, edgeColorDep.lastIndexOf(')')).split(/,\s*/);
+
+        for (var i = 0; i < 3; i++) {
+            colorsOnly[i] = parseInt(colorsOnly[i]);
+            colorsOnly[i] += Math.floor((Math.random() * offsetRange) - (offsetRange / 2));
+            colorsOnly[i] = rotateColor(colorsOnly[i])
+        }
+
+        return `rgba(${colorsOnly[0]}, ${colorsOnly[1]}, ${colorsOnly[2]}, ${colorsOnly[3]})`;
+    }
+
+    nodes.forEach(n => {
+        n.link_color = getRandomEdgeColor();
+    })
+
     linkG.selectAll("path")
         .data(links)
         .enter()
         .append("path")
         .attr("fill", "none")
-        .attr("stroke", d => d.kind === "version" ? edgeColorVersion : edgeColorDep)
+        .attr("stroke", d => d.kind === "version" ? edgeColorVersion : nodeMap.get(d.source).link_color)
         .attr("stroke-width", d => d.kind === "version" ? 2.4 : 1.6)
-        .attr("stroke-dasharray", d => d.kind === "dep" ? "4 3" : "0")
-        .attr("marker-end", d => d.kind === "version" ? "url(#arrow-version)" : "url(#arrow-dep)")
+        .attr("stroke-dasharray", d => d.kind === "dep" ? "0" : "4 3")
+        .attr("marker-end", d => d.kind === "version" ? "" : "url(#arrow-dep)")
         .attr("opacity", 0.95)
         .attr("d", function (d) {
             const s = nodeMap.get(d.source);
@@ -216,12 +281,12 @@ d3.json(window.ARTIFACTS_JSON).then(data => {
             const key = `${d.source}=>${d.target}`;
             const count = edgeKeyCounts[key];
 
-            if (count === 1) return orthPath(s.x, s.y, t.x, t.y);
+            if (count === 1) return orthPath(s.x, s.y, t.x, t.y, t);
 
             const same = links.filter(x => `${x.source}=>${x.target}` === key);
             const index = same.indexOf(d);
 
-            const baseMid = s.x + (t.x - s.x) * 0.45;
+            const baseMid = computMidX(s.x, t.x);
             const spread = 8 * (index - (count - 1) / 2);
             const midX = baseMid + spread;
 
@@ -269,7 +334,7 @@ d3.json(window.ARTIFACTS_JSON).then(data => {
             .attr("x", bbox.x - 4).attr("y", bbox.y - 2)
             .attr("width", bbox.width + 8).attr("height", bbox.height + 4)
             .attr("rx", 4)
-            .attr("fill", darkMode ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.75)")
+            .attr("fill", darkMode ? "rgba(0,0,0,0.8)" : "rgba(255,255,255,0.75)")
             .attr("stroke", darkMode ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)")
             .attr("stroke-width", 0.5);
     });
