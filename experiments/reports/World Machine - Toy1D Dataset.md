@@ -1,7 +1,3 @@
----
-date created: 2025-11-21 17:29:54
-date modified: 2025-11-21 17:46:53
----
 # World Machine - Toy1D Dataset
 
 _Toy1D_ is a synthetic dataset of one-dimensional time series. The series represents a damped physical system with external influences. We designed it for the study of computational world models, a computational system that makes predictions about the current and future state of a "world" based on the sensory data it receives, but inferring the internal structure of that world. It is designed to be simple, while requiring the ability to infer information about the signal to predict its future. 
@@ -12,9 +8,24 @@ World Machine is a research project that investigates the concept and creation o
 
 These are the artifact versions used to generate this dataset, and the dataset itself:
 
-- Code: \[version](release GitHub)+LINK
-- Doker Container: BADGE+LINK \[eltoncn/world-machine:ver](link zenodo)
-- Dataset: BADGE+LINK
+- Code: World Machine version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17806741-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17806741)
+- Docker Image: World Machine Docker Image version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17807040-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17807040)
+- Dataset: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17653221-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17653221)
+
+## Authors
+
+- Elton Cardoso do Nascimento: M. Eng. student, 1
+- Paula Dornhofer Paro Costa: Professor, 1
+
+1. Universidade Estadual de Campinas (UNICAMP), Faculdade de Engenharia Elétrica e de Computação (FEEC)
+
+## Acknowledgements
+
+Project supported by the brazilian Ministry of Science, Technology and Innovations, with resources from Law No. 8,248, of October 23, 1991
+
+## License
+
+This report is licensed under CC BY-NC-SA 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 ## Dataset Definition
 

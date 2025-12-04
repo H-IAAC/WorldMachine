@@ -1,7 +1,3 @@
----
-date created: 2025-11-21 15:49:56
-date modified: 2025-11-21 15:50:11
----
 # World Machine - Toy1D - Experiment 2 Best Long
 
 In the previous experiment, [Experiment 1 Configuration Test](https://doi.org/10.5281/zenodo.17661654), we found the best model configuration for a World Machine trained on the Toy1D dataset. However, a question that arises after that is: what is the maximum performance we can achieve with this configuration? In this experiment, we investigate what happens when we train the model for longer. Also, we took this opportunity to explore the effect of the learning rate scheduler used, Cosine Annealing with Warmup.
@@ -13,11 +9,26 @@ World Machine is a research project that investigates the concept and creation o
 These are the artifact versions related to this experiment.
 If trying to re-run, please use these artifacts (mainly the Docker container).
 
-Also, note that the experiment-generated data is available in the "Experiment Data" artifact.
+Also, note that the experiment-generated data is available in the "Experiment Results" artifact.
 
-- Code: \[version](release GitHub)+LINK
-- Doker Container: BADGE+LINK \[eltoncn/world-machine:ver](link zenodo)
-- Experiment Results: BADGE+LINK
+- Code: World Machine version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17806741-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17806741)
+-  Docker Image: World Machine Docker Image version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17807040-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17807040)
+- Experiment Results: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17653180-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17653180)
+
+## Authors
+
+- Elton Cardoso do Nascimento: M. Eng. student, 1
+- Paula Dornhofer Paro Costa: Professor, 1
+
+1. Universidade Estadual de Campinas (UNICAMP), Faculdade de Engenharia Elétrica e de Computação (FEEC)
+
+## Acknowledgements
+
+Project supported by the brazilian Ministry of Science, Technology and Innovations, with resources from Law No. 8,248, of October 23, 1991
+
+## License
+
+This report is licensed under CC BY-NC-SA 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 ## Concepts
 

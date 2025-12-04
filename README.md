@@ -68,7 +68,6 @@ url = {https://h-iaac.github.io/WorldMachine/}
   
 ## Acknowledgements
 
-
 Project supported by the brazilian Ministry of Science, Technology and Innovations, with resources from Law No. 8,248, of October 23, 1991
 
 ## License

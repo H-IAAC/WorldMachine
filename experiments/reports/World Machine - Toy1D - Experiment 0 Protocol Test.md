@@ -1,23 +1,35 @@
----
-date created: 2025-10-15 14:59:03
-date modified: 2025-10-15 16:26:17
----
 # World Machine - Toy1D - Experiment 0 Protocol Test
 
 In this World Machine experiment, our goal is to perform an initial check of whether the model is trainable using the state-discovery approach. We also assess the potential impact of the training protocol by observing the performance of trained models across the defined tasks.
 
 World Machine is a research project that investigates the concept and creation of computational world models. These AI systems create internal representations to understand and make predictions about the external world. See the [project page](https://h-iaac.github.io/WorldMachine/) for more information. The project is part of the [H.IAAC](https://hiaac.unicamp.br/en/), the Hub for Artificial Intelligence and Cognitive Architecture, located at the Universidade Estadual de Campinas (UNICAMP), Brazil.
 
+
 ## Artifacts 
 
 These are the artifact versions related to this experiment.
 If trying to re-run, please use these artifacts (mainly the Docker container).
 
-Also, note that the experiment-generated data is available in the "Experiment Data" artifact.
+Also, note that the experiment-generated data is available in the "Experiment Results" artifact.
 
-- Code: [0.1](https://github.com/H-IAAC/WorldMachine/releases/tag/0.1)
-- Docker Container: [eltoncn/world-machine:0.1](https://hub.docker.com/repository/docker/eltoncn/world-machine/tags/0.1/sha256-f3645e07e3d5863d12f51955aad0b61c38ce6b3be4ec61aac16ea32ce4420f22)
+- Code: World Machine version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17806741-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17806741)
+- Docker Image: World Machine Docker Image version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17807040-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17807040)
 - Experiment Results: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17352548-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17352548)
+
+## Authors
+
+- Elton Cardoso do Nascimento: M. Eng. student, 1
+- Paula Dornhofer Paro Costa: Professor, 1
+
+1. Universidade Estadual de Campinas (UNICAMP), Faculdade de Engenharia Elétrica e de Computação (FEEC)
+
+## Acknowledgements
+
+Project supported by the brazilian Ministry of Science, Technology and Innovations, with resources from Law No. 8,248, of October 23, 1991
+
+## License
+
+This report is licensed under CC BY-NC-SA 4.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-nc-sa/4.0/
 
 ## Concepts
 
