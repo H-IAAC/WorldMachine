@@ -236,10 +236,12 @@ class MetricsGenerator:
                     model.local_mode = False
 
                 if return_logits:
-                    all_logits["use_state"].append(
-                        itens["use_state"][0]["logits"].cpu())
-                    all_logits["prediction"].append(
-                        itens["prediction"][0]["logits"].cpu())
+                    if compute_use_state:
+                        all_logits["use_state"].append(
+                            itens["use_state"][0]["logits"].cpu())
+                    if compute_prediction:
+                        all_logits["prediction"].append(
+                            itens["prediction"][0]["logits"].cpu())
 
                     if compute_prediction_shallow:
                         all_logits["prediction_shallow"].append(

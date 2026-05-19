@@ -44,8 +44,7 @@ class LossManager(TrainStage):
 
         losses.clear()
         losses["epoch"] = total_loss
-
-        self.n = 0
+        losses["n"] = 0
 
     def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset, epoch_index: int,
                      criterions: dict[str, dict[str, Module]], mode: DatasetPassMode, device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
@@ -132,7 +131,7 @@ class LossManager(TrainStage):
 
         total_loss["optimizer_loss"] += item_losses["optimizer_loss"] * \
             targets.size(0)
-        self.n += targets.size(0)
+        losses["n"] += targets.size(0)
 
         losses["optimizer_loss"] = optimizer_loss
 
@@ -146,11 +145,11 @@ class LossManager(TrainStage):
 
         for channel in total_loss:
             if channel == "optimizer_loss":
-                total_loss[channel] /= self.n
+                total_loss[channel] /= losses["n"]
                 total_loss[channel] = total_loss[channel].detach()
             else:
                 for criterion_name in total_loss[channel]:
-                    total_loss[channel][criterion_name] /= self.n
+                    total_loss[channel][criterion_name] /= losses["n"]
                     total_loss[channel][criterion_name] = total_loss[channel][criterion_name].detach(
                     )
 
