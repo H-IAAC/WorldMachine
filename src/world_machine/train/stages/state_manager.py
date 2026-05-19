@@ -1,8 +1,10 @@
 import enum
 
+import numpy as np
 import torch
 from tensordict import TensorDict
 from torch.nn import Module
+from torch.utils.data import Subset
 
 from world_machine.data import WorldMachineDataset
 from world_machine.train.mode import DatasetPassMode
@@ -45,7 +47,7 @@ class StateManager(TrainStage):
 
                 item["inputs"]["state"] = state
 
-    def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset, epoch_index: int,
+    def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset | Subset, epoch_index: int,
                      criterions: dict[str, dict[str, Module]], mode: DatasetPassMode,
                      device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
 
@@ -80,4 +82,14 @@ class StateManager(TrainStage):
             indexes = item["index"]
 
             if (epoch_index % self._stable_state_epochs == 0):
-                dataset.set_state(indexes, state_current)
+
+                if isinstance(dataset, Subset):
+                    subset_indices = np.array(dataset.indices)
+                    where_indices = np.where(
+                        np.isin(subset_indices, indexes.cpu()))[0]
+                    indices = subset_indices[where_indices]
+                    indices = torch.tensor(indices)
+
+                    dataset.dataset.set_state(indices, state_current)
+                else:
+                    dataset.set_state(indexes, state_current)
