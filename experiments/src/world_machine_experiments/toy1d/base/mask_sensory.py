@@ -35,7 +35,8 @@ def toy1d_mask_sensory_metrics(toy1d_model_trained: WorldMachine,
                                     toy1d_dataloaders["val"],
                                     compute_prediction=False,
                                     compute_use_state=False,
-                                    compute_prediction_shallow=False)
+                                    compute_prediction_shallow=False,
+                                    compute_prediction_local=False)
 
         all_metrics[str(pct)] = metrics["normal"]
 

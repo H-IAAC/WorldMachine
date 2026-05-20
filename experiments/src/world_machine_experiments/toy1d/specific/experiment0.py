@@ -201,7 +201,7 @@ def metrics_box_plots(metrics_full: dict[str, dict]) -> dict[str, Figure]:
             labels[i] = labels[i].replace(" ", "\n")
             labels[i] = labels[i].replace("@", "\n@")
         ax.legend(handles, labels,
-                  bbox_to_anchor=(0.25, 0.98), borderaxespad=0)
+                  )  # bbox_to_anchor=(0.25, 0.98), borderaxespad=0)
 
         xticks = plt.xticks()
         labels = xticks[1]
