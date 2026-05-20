@@ -151,9 +151,9 @@ class Trainer:
                 item = item.to(device)
 
                 itens = [item]
-                batch_size = item["inputs"].batch_size[0]
-                seq_len = item["inputs"][next(
-                    iter(item["inputs"].keys()))].shape[1]
+                batch_size = item.inputs.batch_size[0]
+                seq_len = item.inputs[next(
+                    iter(item.inputs.keys()))].shape[1]
                 epoch_index = self._epoch_index
                 state_size = model._state_size
                 dataset = loader.dataset

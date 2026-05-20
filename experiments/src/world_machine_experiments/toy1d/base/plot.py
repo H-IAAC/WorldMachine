@@ -19,8 +19,8 @@ def toy1d_prediction_plots(toy1d_model_trained: WorldMachine, toy1d_dataloaders:
     for name in ["train", "val"]:
         item = next(iter(toy1d_dataloaders[name]))
 
-        inputs: torch.Tensor = item["inputs"].to(device)
-        targets: torch.Tensor = item["targets"]["state_decoded"]
+        inputs: torch.Tensor = item.inputs.to(device)
+        targets: torch.Tensor = item.inputs["state_decoded"]
 
         with torch.no_grad():
             logits: torch.Tensor = toy1d_model_trained(

@@ -15,8 +15,13 @@ class PrepareModel(TrainStage):
         self.original_model_state: bool
         self.original_grad_state: bool
 
-    def pre_batch(self, model: WorldMachine, mode: DatasetPassMode,
-                  criterions: dict[str, dict[str, Module]], optimizer: Optimizer, device: torch.device, losses: dict, train_criterions: dict[str, dict[str, float]]) -> None:
+    def pre_batch(self, model: WorldMachine,
+                  mode: DatasetPassMode,
+                  criterions: dict[str, dict[str, Module]] | None,
+                  optimizer: Optimizer | None,
+                  device: torch.device | None,
+                  losses: dict | None,
+                  train_criterions: dict[str, dict[str, float]] | None) -> None:
 
         self.original_grad_state = torch.is_grad_enabled()
         self.original_model_state = model.training
@@ -27,16 +32,18 @@ class PrepareModel(TrainStage):
         elif mode == DatasetPassMode.MODE_TRAIN:
             model.train()
             torch.set_grad_enabled(True)
-            optimizer.zero_grad()
+            if optimizer is not None:
+                optimizer.zero_grad()
+
         else:
             raise ValueError(f"Unknown mode: {mode}.")
 
     def post_batch(self,
                    model: WorldMachine,
-                   losses: dict,
-                   criterions: dict[str, dict[str, Module]],
-                   train_criterions: dict[str, dict[str, float]],
-                   mode: DatasetPassMode) -> None:
+                   losses: dict | None,
+                   criterions: dict[str, dict[str, Module]] | None,
+                   train_criterions: dict[str, dict[str, float]] | None,
+                   mode: DatasetPassMode | None) -> None:
         # Return original state
         torch.set_grad_enabled(self.original_grad_state)
 

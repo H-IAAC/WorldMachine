@@ -34,7 +34,7 @@ class WorldMachine(torch.nn.Module):
                  sensory_decoders: torch.nn.ModuleDict | None = None,
                  state_encoder: torch.nn.Module | None = None,
                  state_decoder: torch.nn.Module | None = None,
-                 detach_decoders: set[str] = None,
+                 detach_decoders: set[str] | None = None,
                  positional_encoder_type: str | None = "sine",
                  remove_positional_encoding: bool = False,
                  state_activation: str | None = "tanh",

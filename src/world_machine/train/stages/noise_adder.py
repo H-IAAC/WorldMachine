@@ -29,14 +29,14 @@ class NoiseAdder(TrainStage):
 
             with torch.no_grad():
                 for key in self.means:
-                    if key == "state" and epoch_index == 0 and key not in item["inputs"]:
+                    if key == "state" and epoch_index == 0 and key not in item.inputs:
                         continue
 
-                    noise = torch.empty_like(item["inputs"][key]).normal_(
+                    noise = torch.empty_like(item.inputs[key]).normal_(
                         self.means[key], self.stds[key], generator=self.torch_generator)
 
-                    item["inputs"][key] += noise
+                    item.inputs[key] += noise
 
                     if key in self.mins or key in self.maxs:
-                        item["inputs"][key].clamp(
+                        item.inputs[key].clamp(
                             self.mins[key], self.maxs[key])

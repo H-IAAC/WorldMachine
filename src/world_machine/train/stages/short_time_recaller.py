@@ -76,15 +76,15 @@ class ShortTimeRecaller(TrainStage):
         item = itens[0]
 
         if "target_masks" not in item:
-            item["target_masks"] = TensorDict(
-                batch_size=item["targets"].batch_size)
+            item.target_masks = TensorDict(
+                batch_size=item.inputs.batch_size)
 
         with torch.no_grad():
             for channel in self._channels:
-                data: torch.Tensor = item["targets"][channel]
+                data: torch.Tensor = item.inputs[channel]
 
-                if channel in item["target_masks"]:
-                    mask = item["target_masks"][channel]
+                if channel in item.target_masks:
+                    mask = item.target_masks[channel]
                 else:
                     mask = torch.ones([batch_size, seq_len],
                                       dtype=bool, device=device)
@@ -101,9 +101,9 @@ class ShortTimeRecaller(TrainStage):
                         future_data).detach()
                     future_mask[:, future_mask.shape[0]-i:] = False
 
-                    item["targets"][future_channel_name] = future_data
+                    item.inputs[future_channel_name] = future_data
 
-                    item["target_masks"][future_channel_name] = future_mask
+                    item.target_masks[future_channel_name] = future_mask
 
                 for i in range(self._n_past):
                     past_channel_name = f"past{i}_{channel}"
@@ -116,8 +116,8 @@ class ShortTimeRecaller(TrainStage):
                         past_data).detach()
                     past_mask[:, :i+1] = False
 
-                    item["targets"][past_channel_name] = past_data
-                    item["target_masks"][past_channel_name] = past_mask
+                    item.inputs[past_channel_name] = past_data
+                    item.target_masks[past_channel_name] = past_mask
 
     def post_train(self, model: WorldMachine,
                    criterions: dict[str, dict[str, Module]],

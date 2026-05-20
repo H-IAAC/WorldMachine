@@ -34,6 +34,7 @@ if __name__ == "__main__":
     state = torch.zeros([32, 100, 128], device=device)
 
     with torch.no_grad():
+        prof = None
         if torch_profiler:
             prof = profile(activities=[
                            ProfilerActivity.CPU, ProfilerActivity.CUDA], profile_memory=True, record_shapes=True)
@@ -41,14 +42,14 @@ if __name__ == "__main__":
 
         for _ in range(2):
             model.inference(
-                state, sensory_data=item["inputs"], sensory_masks=item["input_masks"])
+                state, sensory_data=item.inputs, sensory_masks=item.input_masks)
 
             torch.cuda.synchronize()
 
-        if torch_profiler:
+        if torch_profiler and prof is not None:
             prof.__exit__(None, None, None)
 
-    if torch_profiler:
+    if torch_profiler and prof is not None:
         prof.export_chrome_trace("bench_inference_trace.json")
 
         print(prof.key_averages().table())

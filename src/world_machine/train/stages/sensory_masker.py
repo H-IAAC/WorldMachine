@@ -57,7 +57,7 @@ class SensoryMasker(TrainStage):
         if mode == DatasetPassMode.MODE_TRAIN or self._force_sensory_mask:
             item = itens[0]
 
-            inputs: TensorDict = item["inputs"]
+            inputs: TensorDict = item.inputs
 
             with torch.no_grad():
                 if "input_masks" not in item:
@@ -69,7 +69,7 @@ class SensoryMasker(TrainStage):
                         sensory_masks[name] = torch.ones(
                             (batch_size, seq_len), dtype=bool, device=device)
                 else:
-                    sensory_masks = item["input_masks"]
+                    sensory_masks = item.input_masks
 
                 mask_percentage = self._generate_mask_percentage(
                     sensory_masks.keys(), epoch_index)
@@ -77,8 +77,8 @@ class SensoryMasker(TrainStage):
                 sensory_masks = generate_masks(sensory_masks,
                                                mask_percentage, batch_size, device)
 
-            item["input_masks"] = sensory_masks
-            item["input_masks"].batch_size = [batch_size, seq_len]
+            item.input_masks = sensory_masks
+            item.input_masks.batch_size = [batch_size, seq_len]
 
 
 @profile_range("SensoryMasker_mask_mask", category="train_stage", domain="world_machine")

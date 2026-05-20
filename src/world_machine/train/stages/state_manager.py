@@ -1,4 +1,5 @@
 import enum
+from typing import cast
 
 import numpy as np
 import torch
@@ -6,7 +7,7 @@ from tensordict import TensorDict
 from torch.nn import Module
 from torch.utils.data import Subset
 
-from world_machine.data import WorldMachineDataset
+from world_machine.data import IndexedDatasetItem, WorldMachineDataset
 from world_machine.train.mode import DatasetPassMode
 from world_machine.world_machine import WorldMachine
 
@@ -31,13 +32,13 @@ class StateManager(TrainStage):
         self._state_save_method = state_save_method
         self._reset_in_epoch0 = reset_in_epoch0
 
-    def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
+    def pre_segment(self, itens: list[IndexedDatasetItem], losses: dict, batch_size: int,
                     seq_len: int, epoch_index: int, device: torch.device, state_size: int, mode: DatasetPassMode, model: WorldMachine) -> None:
 
-        if (epoch_index == 0 and self._reset_in_epoch0) or "state" not in itens[0]["inputs"]:
+        if (epoch_index == 0 and self._reset_in_epoch0) or "state" not in itens[0].inputs:
             for item in itens:
-                seq_len = item["inputs"][next(
-                    iter(item["inputs"].keys()))].shape[1]
+                seq_len = item.inputs[next(
+                    iter(item.inputs.keys()))].shape[1]
 
                 state = torch.rand(
                     (batch_size, seq_len, state_size), device=device, generator=self.torch_generator)
@@ -45,29 +46,31 @@ class StateManager(TrainStage):
 
                 state[:, 0, :] = 0
 
-                item["inputs"]["state"] = state
+                item.inputs["state"] = state
 
-    def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset | Subset, epoch_index: int,
+    def post_segment(self, itens: list[IndexedDatasetItem], losses: dict, dataset: WorldMachineDataset | Subset, epoch_index: int,
                      criterions: dict[str, dict[str, Module]], mode: DatasetPassMode,
                      device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
 
         batch_size = itens[0].batch_size[0]
 
         for item in itens:
-            state_input = item["inputs"]["state"]
-            state_next = item["logits"]["state"]
+            assert (item.logits is not None)
+
+            state_input = item.inputs["state"]
+            state_next = item.logits["state"]
 
             state_current = torch.roll(state_next, 1, 1)
             state_current[:, 0] = state_input[:, 0]
 
-            if mode == DatasetPassMode.MODE_TRAIN and self._check_input_masks and "input_masks" in item:
-                input_masks = item["input_masks"]
+            if mode == DatasetPassMode.MODE_TRAIN and self._check_input_masks and item.input_masks is not None:
+                input_masks = item.input_masks
 
-                seq_len = item["inputs"][next(
-                    iter(item["inputs"].keys()))].shape[1]
+                seq_len = item.inputs[next(
+                    iter(item.inputs.keys()))].shape[1]
 
                 mask = torch.zeros((batch_size, seq_len),
-                                   dtype=bool, device=device)
+                                   dtype=torch.bool, device=device)
 
                 for channel in input_masks.keys():
                     mask = torch.bitwise_or(mask, input_masks[channel])
@@ -79,7 +82,7 @@ class StateManager(TrainStage):
             if self._state_save_method == StateSaveMethod.MEAN:
                 state_current = (state_current+state_input)/2
 
-            indexes = item["index"]
+            indexes = cast(torch.Tensor, item.index)
 
             if (epoch_index % self._stable_state_epochs == 0):
 
@@ -90,6 +93,7 @@ class StateManager(TrainStage):
                     indices = subset_indices[where_indices]
                     indices = torch.tensor(indices)
 
-                    dataset.dataset.set_state(indices, state_current)
+                    cast(WorldMachineDataset, dataset.dataset).set_state(
+                        indices, state_current)
                 else:
                     dataset.set_state(indexes, state_current)

@@ -10,8 +10,8 @@ def toy1d_simple_shift_loss(toy1d_dataloaders: dict[str, DataLoader]) -> float:
 
     with torch.no_grad():
         for item in toy1d_dataloaders["train"]:
-            inputs: torch.Tensor = item["inputs"]
-            targets: torch.Tensor = item["targets"]
+            inputs = item.inputs
+            targets = item.inputs
 
             prev_values = inputs["state_decoded"][:, :, 0]
             next_values = targets["state_decoded"][:, :, 0]

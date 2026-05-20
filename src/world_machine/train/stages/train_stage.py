@@ -7,7 +7,8 @@ from torch import Generator
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from world_machine.data import WorldMachineDataset
+from world_machine.data import (
+    DatasetItem, IndexedDatasetItem, WorldMachineDataset)
 from world_machine.profile import profile_range
 from world_machine.train.mode import DatasetPassMode
 from world_machine.world_machine import WorldMachine
@@ -69,21 +70,21 @@ class TrainStage(abc.ABC):
                   criterions: dict[str, dict[str, Module]], optimizer: Optimizer, device: torch.device, losses: dict, train_criterions: dict[str, dict[str, float]]) -> None:
         ...
 
-    def pre_segment(self, itens: list[TensorDict], losses: dict, batch_size: int,
+    def pre_segment(self, itens: list[IndexedDatasetItem], losses: dict, batch_size: int,
                     seq_len: int, epoch_index: int, device: torch.device,
                     state_size: int, mode: DatasetPassMode, model: WorldMachine) -> None:
         ...
 
-    def pre_forward(self, item_index: int,  itens: list[TensorDict], mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
+    def pre_forward(self, item_index: int,  itens: list[IndexedDatasetItem], mode: DatasetPassMode, batch_size: int, device: torch.device, epoch_index: int) -> None:
         ...
 
-    def forward(self, model: WorldMachine, segment: TensorDict,  mode: DatasetPassMode) -> None:
+    def forward(self, model: WorldMachine, segment: IndexedDatasetItem,  mode: DatasetPassMode) -> None:
         ...
 
-    def post_forward(self, item_index: int,  itens: list[TensorDict], dataset: WorldMachineDataset, losses: dict, mode: DatasetPassMode) -> None:
+    def post_forward(self, item_index: int,  itens: list[IndexedDatasetItem], dataset: WorldMachineDataset, losses: dict, mode: DatasetPassMode) -> None:
         ...
 
-    def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset,
+    def post_segment(self, itens: list[DatasetItem], losses: dict, dataset: WorldMachineDataset,
                      epoch_index: int, criterions: dict[str, dict[str, Module]], mode: DatasetPassMode,
                      device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
         ...

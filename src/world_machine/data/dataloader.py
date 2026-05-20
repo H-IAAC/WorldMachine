@@ -7,8 +7,10 @@ import torch
 from tensordict import LazyStackedTensorDict, stack
 from torch.utils.data import DataLoader
 
+from world_machine.data.dataset import IndexedDatasetItem
 
-class WorldMachineDataLoader(DataLoader):
+
+class WorldMachineDataLoader(DataLoader[IndexedDatasetItem]):
     def __init__(self, dataset,
                  batch_size=1,
                  shuffle=None,

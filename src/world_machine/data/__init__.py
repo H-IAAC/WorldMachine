@@ -1,2 +1,2 @@
 from .dataloader import WorldMachineDataLoader
-from .dataset import WorldMachineDataset
+from .dataset import DatasetItem, IndexedDatasetItem, WorldMachineDataset

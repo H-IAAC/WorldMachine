@@ -1,9 +1,11 @@
+from typing import cast
+
 import torch
 from tensordict import TensorDict
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from world_machine.data import WorldMachineDataset
+from world_machine.data import DatasetItem, WorldMachineDataset
 from world_machine.train.mode import DatasetPassMode
 from world_machine.world_machine import WorldMachine
 
@@ -29,15 +31,16 @@ class LossManager(TrainStage):
         self._state_cov_regularizer = state_cov_regularizer
         self._multiply_target_masks = multiply_target_masks
 
-    def pre_batch(self, model: WorldMachine, mode: DatasetPassMode,
-                  criterions: dict[str, dict[str, Module]], optimizer: Optimizer,
-                  device: torch.device, losses: dict, train_criterions: dict[str, dict[str, float]]) -> None:
+    def pre_batch(self, model: WorldMachine | None, mode: DatasetPassMode | None,
+                  criterions: dict[str, dict[str, Module]], optimizer: Optimizer | None,
+                  device: torch.device, losses: dict, train_criterions: dict[str, dict[str, float]] | None) -> None:
         total_loss: dict[str, dict[str, torch.Tensor] | torch.Tensor] = {}
         for channel in criterions:
-            total_loss[channel] = {}
+            channel_losses = {}
             for criterion_name in criterions[channel]:
-                total_loss[channel][criterion_name] = torch.tensor(
+                channel_losses[criterion_name] = torch.tensor(
                     0, dtype=torch.float32, device=device)
+            total_loss[channel] = channel_losses
 
         total_loss["optimizer_loss"] = torch.tensor(
             0, dtype=torch.float32, device=device)
@@ -46,16 +49,16 @@ class LossManager(TrainStage):
         losses["epoch"] = total_loss
         losses["n"] = 0
 
-    def post_segment(self, itens: list[TensorDict], losses: dict, dataset: WorldMachineDataset, epoch_index: int,
+    def post_segment(self, itens: list[DatasetItem], losses: dict, dataset: WorldMachineDataset, epoch_index: int,
                      criterions: dict[str, dict[str, Module]], mode: DatasetPassMode, device: torch.device, train_criterions: dict[str, dict[str, float]]) -> None:
 
         item = itens[0]
-        targets = item["targets"]
-        logits = item["logits"]
+        targets = cast(TensorDict, item.inputs)
+        logits = cast(TensorDict, item.logits)
 
         targets_masks = None
-        if "target_masks" in item:
-            targets_masks = item["target_masks"]
+        if item.target_masks is not None:
+            targets_masks = cast(TensorDict, item.target_masks)
 
         total_loss = losses["epoch"]
 
@@ -64,8 +67,8 @@ class LossManager(TrainStage):
             if len(criterions[channel]) == 0:
                 continue
 
-            logits_channel = logits[channel]
-            targets_channel = targets[channel]
+            logits_channel = cast(TensorDict, logits[channel])
+            targets_channel = cast(TensorDict, targets[channel])
 
             mask_factor = 1.0
 
@@ -84,27 +87,30 @@ class LossManager(TrainStage):
                     targets_channel = targets_channel[:,
                                                       targets_masks[channel][0]]
 
-            item_losses[channel] = {}
+            channel_losses = {}
             for criterion_name in criterions[channel]:
                 if criterion_name not in train_criterions[channel]:
                     torch.set_grad_enabled(False)
 
-                item_losses[channel][criterion_name] = criterions[channel][criterion_name](
+                channel_losses[criterion_name] = criterions[channel][criterion_name](
                     logits_channel, targets_channel) * mask_factor
 
-                total_loss[channel][criterion_name] += item_losses[channel][criterion_name] * \
+                total_loss[channel][criterion_name] += channel_losses[criterion_name] * \
                     targets.size(0)
 
                 torch.set_grad_enabled(
                     mode == DatasetPassMode.MODE_TRAIN)
+            item_losses[channel] = channel_losses
 
         optimizer_loss = torch.tensor(
             0, dtype=torch.float32, device=device)
         total_weight = 0
 
         for channel in train_criterions:
+            channel_losses = cast(
+                dict[str, torch.Tensor], item_losses[channel])
             for criterion_name in train_criterions[channel]:
-                optimizer_loss += item_losses[channel][criterion_name] * \
+                optimizer_loss += channel_losses[criterion_name] * \
                     train_criterions[channel][criterion_name]
 
                 total_weight += train_criterions[channel][criterion_name]

@@ -2,14 +2,97 @@ import abc
 import atexit
 import os
 from collections import deque
+from dataclasses import KW_ONLY
+from typing import Any, Self, cast, overload
 
 import torch
-from tensordict import MemoryMappedTensor, TensorDict
+from tensordict import MemoryMappedTensor, TensorClass, TensorDict
 from torch.utils.data import Dataset
 
 from world_machine.current_version import CURRENT_COMPATIBILITY_VERSION
 from world_machine.profile import profile_range
 from world_machine.version_upgrader import upgrade
+
+
+class DatasetItem(TensorClass):
+    _inputs: TensorDict
+    _targets: TensorDict
+    _input_masks: TensorDict | None = None
+    _target_masks: TensorDict | None = None
+    _logits: TensorDict | None = None
+
+    @property
+    def inputs(self) -> TensorDict:
+        return self._inputs
+
+    @inputs.setter
+    def inputs(self, value: TensorDict) -> None:
+        self._inputs = value
+
+    @property
+    def targets(self) -> TensorDict:
+        return self._targets
+
+    @targets.setter
+    def targets(self, value: TensorDict) -> None:
+        self._targets = value
+
+    @property
+    def input_masks(self) -> TensorDict | None:
+        return self._input_masks
+
+    @input_masks.setter
+    def input_masks(self, value: TensorDict | None) -> None:
+        self._input_masks = value
+
+    @property
+    def target_masks(self) -> TensorDict | None:
+        return self._target_masks
+
+    @target_masks.setter
+    def target_masks(self, value: TensorDict | None) -> None:
+        self._target_masks = value
+
+    @property
+    def logits(self) -> TensorDict | None:
+        return self._logits
+
+    @logits.setter
+    def logits(self, value: TensorDict | None) -> None:
+        self._logits = value
+
+    def index_item(self, index) -> "IndexedDatasetItem":
+        item = IndexedDatasetItem(inputs=self.inputs,
+                                  targets=self.targets,
+                                  input_masks=self.input_masks,
+                                  target_masks=self.target_masks,
+                                  logits=self.logits,
+                                  index=index)
+
+        item.batch_size = item.inputs.batch_size[:1]
+        return item
+
+
+class IndexedDatasetItem(DatasetItem):
+    _: KW_ONLY
+    _index: int | torch.Tensor
+
+    @property
+    def index(self) -> int | torch.Tensor:
+        return self._index
+
+    @index.setter
+    def index(self, value: int | torch.Tensor) -> None:
+        self._index = value
+
+    def deindex(self) -> DatasetItem:
+        item = DatasetItem(inputs=self.inputs,
+                           targets=self.targets,
+                           input_masks=self.input_masks,
+                           logits=self.logits,
+                           target_masks=self.target_masks)
+        item.batch_size = self.inputs.batch_size
+        return item
 
 
 class WorldMachineDataset(Dataset, abc.ABC):
@@ -82,41 +165,46 @@ class WorldMachineDataset(Dataset, abc.ABC):
         ...
 
     @profile_range("__getitem__", category="wm_dataset", domain="world_machine")
-    def __getitem__(self, index):
-        item = TensorDict(
-            {"inputs": TensorDict(), "targets": TensorDict(), "index": index}, batch_size=[])
+    def __getitem__(self, index) -> IndexedDatasetItem:
+        item = IndexedDatasetItem(inputs=TensorDict(),
+                                  targets=TensorDict(),
+                                  index=index,
+                                  batch_size=[])
 
         self.load_data(index)
         for channel in self._sensory_channels:
-            item["inputs"][channel], item["targets"][channel] = self.get_channel_item(
+            item.inputs[channel], item.targets[channel] = self.get_channel_item(
                 channel, index)
 
         if self._has_state_decoded:
-            item["inputs"]["state_decoded"], item["targets"]["state_decoded"] = self.get_channel_item(
+            item.inputs["state_decoded"], item.targets["state_decoded"] = self.get_channel_item(
                 "state_decoded", index)
 
         if self._states != None:
-            item["inputs"]["state"] = self._states[index]
+            item.inputs["state"] = self._states[index]
 
-        seq_len = item["inputs"][next(iter(item["inputs"].keys()))].shape[0]
+        seq_len = cast(int, item.inputs[next(
+            iter(item.inputs.keys()))].shape[0])
 
-        item["inputs"].batch_size = [seq_len]
-        item["targets"].batch_size = [seq_len]
+        item.inputs.batch_size = torch.Size([seq_len])
+        item.targets.batch_size = torch.Size([seq_len])
 
         if self._has_masks:
-            item["input_masks"] = TensorDict()
-            item["target_masks"] = TensorDict()
+            item.input_masks = TensorDict()
+            item.target_masks = TensorDict()
 
             for channel in self._sensory_channels:
-                (item["input_masks"][channel],
-                 item["target_masks"][channel]) = self.get_channel_mask(channel, index)
+                (item.input_masks[channel],
+                 item.target_masks[channel]) = self.get_channel_mask(channel, index)
 
             if self._has_state_decoded:
-                (item["input_masks"]["state_decoded"],
-                 item["target_masks"]["state_decoded"]) = self.get_channel_mask("state_decoded", index)
+                (item.input_masks["state_decoded"],
+                 item.target_masks["state_decoded"]) = self.get_channel_mask("state_decoded", index)
 
-            item["input_masks"].batch_size = [seq_len]
-            item["target_masks"].batch_size = [seq_len]
+            cast(TensorDict, item.input_masks).batch_size = torch.Size(
+                [seq_len])
+            cast(TensorDict, item.target_masks).batch_size = torch.Size(
+                [seq_len])
 
         self.dispose_data(index)
         return item
@@ -133,6 +221,7 @@ class WorldMachineDataset(Dataset, abc.ABC):
 
             if self._map_state_to_disk:
                 i = 0
+                filename = f"TempStates_{self.__class__.__name__}_{i}.bin"
                 while self._states is None:
                     while True:
                         filename = f"TempStates_{self.__class__.__name__}_{i}.bin"
@@ -182,7 +271,15 @@ class WorldMachineDataset(Dataset, abc.ABC):
 
     def __setstate__(self, state):
         upgrade(state)
-        self.__dict__.update(state)
+        cast(dict[str, Any], self.__dict__).update(state)
+
+
+class DummyDataset(WorldMachineDataset):
+    def __init__(self):
+        super().__init__([], 0)
+
+    def get_channel_item(self, channel: str, index: int) -> tuple[torch.Tensor, torch.Tensor]:
+        return (torch.tensor([]), torch.tensor([]))
 
 
 atexit.register(WorldMachineDataset._delete_files)

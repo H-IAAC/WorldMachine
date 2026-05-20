@@ -58,8 +58,8 @@ def toy1d_metrics_sample_logits(toy1d_model_trained: WorldMachine,
     logits["targets"] = []
 
     for item in dataloader:
-        item["targets"]["state"] = torch.roll(item["inputs"]["state"], -1, 1)
-        logits["targets"].append(item["targets"])
+        item.inputs["state"] = torch.roll(item.inputs["state"], -1, 1)
+        logits["targets"].append(item.inputs)
         logits["targets"]
     logits["targets"] = torch.cat(logits["targets"], 0)
 

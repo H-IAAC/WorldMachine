@@ -3,7 +3,7 @@ from typing import Any
 # Upgrade from model version = None to model version = 1
 
 
-def update_key(x: dict[str:Any], original_key: str, new_key: str) -> None:
+def update_key(x: dict[str, Any], original_key: str, new_key: str) -> None:
     x[new_key] = x[original_key]
     del x[original_key]
 

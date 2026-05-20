@@ -55,7 +55,7 @@ class Toy1dDataset(WorldMachineDataset):
             if channel == "measurement":
                 item[i] = np.tanh(item[i])
 
-        return item
+        return item[0], item[1]
 
 
 def toy1d_datasets(toy1d_data_splitted: dict[str, dict[str, np.ndarray]], context_size: int,
