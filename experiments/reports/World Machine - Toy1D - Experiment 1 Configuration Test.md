@@ -11,9 +11,9 @@ If trying to re-run, please use these artifacts (mainly the Docker container).
 
 Also, note that the experiment-generated data is available in the "Experiment Results" artifact.
 
-- Code: World Machine version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17806741-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17806741)
--  Docker Image: World Machine Docker Image version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17807040-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17807040)
-- Experiment Results: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17661654-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17661654)
+- Code: World Machine version 0.2.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.20330332-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.20330332)
+-  Docker Image: World Machine Docker Image version 0.2.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.20330370-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.20330370)
+- Experiment Results: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.20331161-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.20331161)
 
 ## Authors
 
@@ -355,8 +355,8 @@ We present the experimental results and observations in this section.
 ![500](toy1d_experiment1/pearson_mse_between_tasks.png)
 
 - O3.1: Not all tasks are very highly correlated. This indicates that they actually measure different aspects, and that it may be helpful to evaluate the model across multiple tasks.
-- O3.2: There is a very high correlation between Use State and all other tasks, indicating this can be a good task to evaluate models.
-- O3.3: Prediction Shallow only has a very high correlation with Use State, indicating this is a highly distinct task and can be a good one to evaluate models.
+- O3.2: There is a very high correlation between Use State and two other tasks, indicating this can be a good task to evaluate models.
+- O3.3: Prediction Shallow does not have very high correlation with any task, indicating this is a highly distinct task and can be a good one to evaluate models.
 
 ### Impact on Task Performance
 ![](toy1d_experiment1/variable_impact_on_tasks.png)
@@ -387,31 +387,128 @@ We present the experimental results and observations in this section.
 ### Best Configurations
 
 
-<table style="border-collapse:collapse;border-spacing:0" class="tg"><thead>
-<tr><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Best in</th><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Type</th><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Variables</th><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">Normal</th>
-<th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">Use State</th><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">Prediction</th><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">Prediction Shallow</th><th style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-weight:bold;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">Prediction Local</th></tr>
-</thead>
+<style type="text/css">
+.tg  {border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-83d4{border-color:inherit;font-style:italic;text-align:right;vertical-align:top}
+.tg .tg-3178{background-color:#EFEFEF;border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-9ew1{background-color:#EFEFEF;border-color:inherit;text-align:right;vertical-align:top}
+.tg .tg-o700{background-color:#EFEFEF;border-color:inherit;font-style:italic;text-align:right;vertical-align:top}
+.tg .tg-fymr{border-color:inherit;font-weight:bold;text-align:left;vertical-align:top}
+.tg .tg-6ic8{border-color:inherit;font-weight:bold;text-align:right;vertical-align:top}
+.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
+.tg .tg-dvpl{border-color:inherit;text-align:right;vertical-align:top}
+</style>
+<table class="tg"><thead>
+  <tr>
+    <th class="tg-fymr"><span style="font-weight:bold">Best in</span></th>
+    <th class="tg-fymr"><span style="font-weight:bold">Type</span></th>
+    <th class="tg-fymr"><span style="font-weight:bold">Variables</span></th>
+    <th class="tg-6ic8"><span style="font-weight:bold">Normal</span></th>
+    <th class="tg-6ic8"><span style="font-weight:bold">Use State</span></th>
+    <th class="tg-6ic8"><span style="font-weight:bold">Prediction</span></th>
+    <th class="tg-6ic8"><span style="font-weight:bold">Prediction Shallow</span></th>
+    <th class="tg-6ic8"><span style="font-weight:bold">Prediction Local</span></th>
+  </tr></thead>
 <tbody>
-<tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Normal</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Theoretical</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SM₂, NA₁, RF₄, RP₄</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00323</td>
-<td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00586</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0403</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.118</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0113</td></tr>
-<tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Empirical</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SM₂, MD₁, NA₁, RP₄</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00317</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00595</td>
-<td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0408</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.143</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0121</td></tr>
-<tr><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Use State</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Theoretical</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SM₂, NA₁, RP₄, RF₄</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00323</td>
-<td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00586</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0403</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.118</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0113</td></tr>
-<tr><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Empirical</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SM₂, NA₁, RP₄, RF₂</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00317</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00572</td>
-<td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0407</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.142</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0109</td></tr>
-<tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Prediction</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Theoretical</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MD₁, NA₁, NA₂, RP₄, RF₄</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00379</td>
-<td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00672</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0267</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.132</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0130</td></tr>
-<tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Empirical</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MD₁, NA₁, NA₂, RP₄, RF₄</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00379</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00672</td>
-<td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0267</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.132</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0130</td></tr>
-<tr><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Prediction Shallow</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Theoretical</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">MD₁, SB₂, NA₂, RP₄, RF₄, LM₁</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00454</td>
-<td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00772</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0430</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0832</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00658</td></tr>
-<tr><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Empirical</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SB₂, MD₁, NA₂, RP₄, RF₄</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00420</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00723</td>
-<td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0319</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0761</td><td style="border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00603</td></tr>
-<tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal" rowspan="2">Prediction Local</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Theoretical</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SB₂, SM₂, NA₁, RP₄, RF₂</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00335</td>
-<td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00584</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0485</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.121</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00516</td></tr>
-<tr><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">Empirical</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:left;vertical-align:top;word-break:normal">SM₂, NA₁, RP₂, RF₄, LM₁</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00346</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00605</td>
-<td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.0468</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.124</td><td style="background-color:#efefef;border-color:inherit;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;font-style:italic;overflow:hidden;padding:10px 5px;text-align:right;vertical-align:top;word-break:normal">0.00510</td></tr>
+  <tr>
+    <td class="tg-3178" rowspan="2"><span style="background-color:#EFEFEF">Normal</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">Theoretical</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">SM₂, NA₁, RF₄, RP₄</span></td>
+    <td class="tg-o700">0.0161522</td>
+    <td class="tg-9ew1">0.0292841</td>
+    <td class="tg-9ew1">0.201647</td>
+    <td class="tg-9ew1">0.588963</td>
+    <td class="tg-9ew1">0.0566982</td>
+  </tr>
+  <tr>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">Empirical</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">SM₂, MD₁, NA₁, RP₄</span></td>
+    <td class="tg-o700">0.0158366</td>
+    <td class="tg-9ew1">0.0297546</td>
+    <td class="tg-9ew1">0.203942</td>
+    <td class="tg-9ew1">0.718692</td>
+    <td class="tg-9ew1">0.0605751</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky" rowspan="2">Use State</td>
+    <td class="tg-0pky">Theoretical</td>
+    <td class="tg-0pky">SM₂, NA₁, RP₄, RF₄</td>
+    <td class="tg-dvpl">0.0161522</td>
+    <td class="tg-83d4">0.0292841</td>
+    <td class="tg-dvpl">0.201647</td>
+    <td class="tg-dvpl">0.588963</td>
+    <td class="tg-dvpl">0.0566982</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Empirical</td>
+    <td class="tg-0pky">SM₂, NA₁, RP₄, RF₂</td>
+    <td class="tg-dvpl">0.0158631</td>
+    <td class="tg-83d4">0.0285943</td>
+    <td class="tg-dvpl">0.203495</td>
+    <td class="tg-dvpl">0.70933</td>
+    <td class="tg-dvpl">0.0543793</td>
+  </tr>
+  <tr>
+    <td class="tg-3178" rowspan="2"><span style="background-color:#EFEFEF">Prediction</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">Theoretical</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">MD₁, NA₁, NA₂, RP₄, RF₄</span></td>
+    <td class="tg-9ew1">0.0189315</td>
+    <td class="tg-9ew1">0.0335762</td>
+    <td class="tg-o700">0.133412</td>
+    <td class="tg-9ew1">0.657532</td>
+    <td class="tg-9ew1">0.0648505</td>
+  </tr>
+  <tr>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">Empirical</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">MD₁, NA₁, NA₂, RP₄, RF₄</span></td>
+    <td class="tg-9ew1">0.0189315</td>
+    <td class="tg-9ew1">0.0335762</td>
+    <td class="tg-o700">0.133412</td>
+    <td class="tg-9ew1">0.657532</td>
+    <td class="tg-9ew1">0.0648505</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky" rowspan="2">Prediction Shallow</td>
+    <td class="tg-0pky">Theoretical</td>
+    <td class="tg-0pky">MD₁, SB₂, NA₂, RP₄, RF₄, LM₁</td>
+    <td class="tg-dvpl">0.0227216</td>
+    <td class="tg-dvpl">0.03862</td>
+    <td class="tg-dvpl">0.21513</td>
+    <td class="tg-83d4">0.416144</td>
+    <td class="tg-dvpl">0.0329225</td>
+  </tr>
+  <tr>
+    <td class="tg-0pky">Empirical</td>
+    <td class="tg-0pky">SB₂, MD₁, NA₂, RP₄, RF₄</td>
+    <td class="tg-dvpl">0.0210186</td>
+    <td class="tg-dvpl">0.0361465</td>
+    <td class="tg-dvpl">0.159683</td>
+    <td class="tg-83d4">0.380407</td>
+    <td class="tg-dvpl">0.0301363</td>
+  </tr>
+  <tr>
+    <td class="tg-3178" rowspan="2"><span style="background-color:#EFEFEF">Prediction Local</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">Theoretical</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">SB₂, SM₂, NA₁, RP₄, RF₂</span></td>
+    <td class="tg-9ew1">0.0167738</td>
+    <td class="tg-9ew1">0.029201</td>
+    <td class="tg-9ew1">0.242502</td>
+    <td class="tg-9ew1">0.605277</td>
+    <td class="tg-o700">0.0258246</td>
+  </tr>
+  <tr>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">Empirical</span></td>
+    <td class="tg-3178"><span style="background-color:#EFEFEF">SM₂, NA₁, RP₂, RF₄, LM₁</span></td>
+    <td class="tg-9ew1">0.0172787</td>
+    <td class="tg-9ew1">0.0302693</td>
+    <td class="tg-9ew1">0.233932</td>
+    <td class="tg-9ew1">0.620833</td>
+    <td class="tg-o700">0.0254819</td>
+  </tr>
 </tbody></table>
 
 - O7.1: Many of the variables that were indicated as good choices in the theoretical settings are present in the empirical ones. However, the sets were identical only once.

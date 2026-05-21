@@ -12,9 +12,9 @@ If trying to re-run, please use these artifacts (mainly the Docker container).
 
 Also, note that the experiment-generated data is available in the "Experiment Results" artifact.
 
-- Code: World Machine version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17806741-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17806741)
-- Docker Image: World Machine Docker Image version 0.2  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17807040-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17807040)
-- Experiment Results: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17352548-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17352548)
+- Code: World Machine version 0.2.1  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.17806741-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.17806741)
+- Docker Image: World Machine Docker Image version 0.2.1  [![](https://img.shields.io/badge/DOI-10.5281/zenodo.20314869-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.20314869)
+- Experiment Results: [![](https://img.shields.io/badge/DOI-10.5281/zenodo.20314675-1082c3?style=for-the-badge)](https://doi.org/10.5281/zenodo.20314675)
 
 ## Authors
 
