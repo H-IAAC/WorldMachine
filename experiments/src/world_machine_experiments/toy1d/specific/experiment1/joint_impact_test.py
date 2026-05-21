@@ -144,20 +144,20 @@ def disjoint_mask(disjoint_groups: list[set[str]]) -> np.ndarray:
     return result
 
 
+EXPONENTS = {"normal": 4,
+             "use_state": 4,
+             "prediction": 2,
+             "prediction_shallow": 2,
+             "prediction_local": 3}
+
+
 def joint_impact_plots(joint_impact: dict,
                        disjoint_mask: np.ndarray) -> dict[str, Figure]:
 
     figures = {}
     for task in task_names:
-        if task in ["prediction_shallow", "prediction"]:
-            scale = 1e3
-            scale_exponent = 3
-        elif task in ["normal"]:
-            scale = 1e5
-            scale_exponent = 5
-        else:
-            scale = 1e4
-            scale_exponent = 4
+        scale_exponent = EXPONENTS[task]
+        scale = 10**scale_exponent
 
         fig = plt.figure(dpi=600)
 

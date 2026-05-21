@@ -32,7 +32,8 @@ def _add_diverge_mask(df: pd.DataFrame) -> None:
         data = df[f"{metric}_mse"].to_numpy()
 
         data_mask = np.bitwise_not(np.isnan(data))
-        data_mask = np.bitwise_and(data_mask, data < 1)
+        data_mask = np.bitwise_and(data_mask, np.bitwise_not(np.isinf(data)))
+        data_mask = np.bitwise_and(data_mask, data < 1000)
 
         data_max = data[data_mask].mean() + 3*data[data_mask].std()
 
